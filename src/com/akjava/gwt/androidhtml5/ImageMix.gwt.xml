@@ -3,11 +3,12 @@
 <module rename-to="imagemix">
 <inherits name="com.akjava.gwt.common.Common" />
 	<inherits name="com.google.gwt.user.User" />
-	<source path="client" />
+	
 	<entry-point class="com.akjava.gwt.androidhtml5.client.ImageMix" />
 	
 	<!-- 
 	<set-property name="user.agent" value="safari"/>
 	<add-linker name="sso" /> 
 	 -->
+	 <source path="client" />
 </module>

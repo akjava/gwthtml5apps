@@ -1,5 +1,8 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import java.io.IOException;
+import java.util.List;
+
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
@@ -10,19 +13,25 @@ import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.io.GWTLineReader;
+import com.akjava.lib.common.csv.CSVProcessor;
+import com.akjava.lib.common.utils.CSVUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
+import com.google.common.base.Joiner;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.http.client.Request;
+import com.google.gwt.http.client.RequestBuilder;
+import com.google.gwt.http.client.RequestCallback;
+import com.google.gwt.http.client.RequestException;
+import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -38,11 +47,13 @@ public class ImageMix implements EntryPoint {
 	private HorizontalPanel linkFolder;
 	
 	//must use canvas,if use img,can't tall image correctly in preview
-	private Canvas image1Canvas;
-	private Canvas image2Canvas;
+	//private Canvas image1Canvas;
+	//private Canvas image2Canvas;
 
+	private String appName="ImageMix";
 	private String version="1.0";
-	//private Image img2;
+	private Image img1;
+	private Image img2;
 	@Override
 	public void onModuleLoad() {
 		LogUtils.log("imageMix:version "+version);
@@ -50,10 +61,10 @@ public class ImageMix implements EntryPoint {
 		
 		RootLayoutPanel.get().add(root);
 		
-		/**
-		 * use toppanel because on small device,without topbar touch url wrongly
-		 */
-		HorizontalPanel topControler=new HorizontalPanel();
+		
+		
+		
+		topControler = new HorizontalPanel();
 		topControler.setWidth("100%");
 		topControler.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		topControler.setSpacing(4);
@@ -62,10 +73,13 @@ public class ImageMix implements EntryPoint {
 		
 		topControler.setStylePrimaryName("bg1");
 		
-		Label label=new Label("ImageMix "+version);
+		Label label=new Label("akjava.com "+appName+" "+version);
 		label.setStylePrimaryName("title");
 		topControler.add(label);
 		root.addNorth(topControler, 40);
+		
+		Anchor help=new Anchor("How to Use","http://android.akjava.com/");
+		topControler.add(help);
 		
 		mixedPanel = new TopBarPanel();
 		
@@ -78,11 +92,11 @@ public class ImageMix implements EntryPoint {
 					
 					@Override
 					public void onLoad(ImageElement element) {
-						CanvasUtils.clear(image1Canvas);
-						CanvasUtils.drawFitCenter(image1Canvas, element);
+						CanvasUtils.clear(mixedCanvas);
+						CanvasUtils.drawFitCenter(mixedCanvas, element);
 						//image1Canvas.getContext2d().drawImage(element, 0, 0);//TODO resize
-						//img1.setUrl(element.getSrc());
-						//img1.setVisible(true);
+						img1.setUrl(mixedCanvas.toDataUrl());
+						img1.setVisible(true);
 						updateMixedImage();
 					}
 					
@@ -108,12 +122,13 @@ public class ImageMix implements EntryPoint {
 					
 					@Override
 					public void onLoad(ImageElement element) {
-						CanvasUtils.clear(image2Canvas);
-						//img2.setUrl(element.getSrc());
-						//img2.setVisible(true);
+						CanvasUtils.clear(mixedCanvas);
+						
 						//LogUtils.log("uploaded:");
 						//image2Canvas.getContext2d().drawImage(element, 0, 0);//TODO resize
-						CanvasUtils.drawFitImage(image2Canvas, element,CanvasUtils.ALIGN_CENTER,CanvasUtils.VALIGN_MIDDLE);
+						CanvasUtils.drawFitImage(mixedCanvas, element,CanvasUtils.ALIGN_CENTER,CanvasUtils.VALIGN_MIDDLE);
+						img2.setUrl(mixedCanvas.toDataUrl());
+						img2.setVisible(true);
 						updateMixedImage();
 						//image1Uploader.setVisible(true);
 					}
@@ -188,28 +203,30 @@ public class ImageMix implements EntryPoint {
 		
 		scroll.setWidget(flow);
 		
-		/*
+		
 		img1 = new Image();
-		img1.setWidth("480px");
+		img1.setSize(canvasWidth+"px",canvasHeight+"px");
 		img1.setVisible(false);
 		image1Panel.add(img1);
 		
 		img2 = new Image();
-		img2.setWidth("480px");
+		img2.setSize(canvasWidth+"px",canvasHeight+"px");
 		img2.setVisible(false);
 		image2Panel.add(img2);
-		*/
-		image1Canvas = CanvasUtils.createCanvas(480, 480);
-		image1Panel.add(image1Canvas);
-		image2Canvas = CanvasUtils.createCanvas(480, 480);
-		image2Panel.add(image2Canvas);
 		
-		mixedCanvas = CanvasUtils.createCanvas(480, 480);
+		/*
+		image1Canvas = CanvasUtils.createCanvas(canvasWidth, canvasHeight);
+		image1Panel.add(image1Canvas);
+		image2Canvas = CanvasUtils.createCanvas(canvasWidth, canvasHeight);
+		image2Panel.add(image2Canvas);
+		*/
+		
+		mixedCanvas = CanvasUtils.createCanvas(canvasWidth, canvasHeight);
 
 		
 		mixedImage = new Image();
 		mixedPanel.add(mixedImage);
-		mixedPanel.setSize("480px", "520px");
+		mixedPanel.setSize(canvasWidth+"px", (canvasHeight+40)+"px");
 		GWTHTMLUtils.addFloatLeftStyle(mixedPanel);
 		flow.add(mixedPanel);
 		mixedPanel.setVisible(false);
@@ -217,9 +234,9 @@ public class ImageMix implements EntryPoint {
 		GWTHTMLUtils.addFloatLeftStyle(image1Panel);
 		GWTHTMLUtils.addFloatLeftStyle(image2Panel);
 		
-		image1Panel.setSize("480px", "520px");
+		image1Panel.setSize(canvasWidth+"px", (canvasHeight+40)+"px");
 		
-		image2Panel.setSize("480px", "520px");
+		image2Panel.setSize(canvasWidth+"px", (canvasHeight+40)+"px");
 		flow.add(image1Panel);
 		flow.add(image2Panel);
 		
@@ -227,9 +244,71 @@ public class ImageMix implements EntryPoint {
 		
 		
 		
-		mixedImage.setSize("480px", "480px");
+		mixedImage.setSize(canvasWidth+"px", canvasWidth+"px");
 		mixedImage.setVisible(false);
 		
+		parseCsv();
+	}
+	
+	private void parseCsv(){
+		try {
+			new RequestBuilder(RequestBuilder.GET, "/apps.csv").sendRequest(null, new RequestCallback() {
+				
+				@Override
+				public void onResponseReceived(Request request, Response response) {
+					
+					List<List<String>> csvs;
+					try {
+						
+						int size=CSVUtils.splitLinesWithGuava(response.getText()).size();
+						
+						
+						csvs = GWTLineReader.wrap(response.getText()).readLines(new CSVProcessor(','));
+						HorizontalPanel p1=new HorizontalPanel();
+						
+						p1.setSpacing(2);
+						//p1.add(new Label("Apps:"));
+						for(int i=0;i<csvs.size();i++){
+							
+							
+							
+							List<String> csv=csvs.get(i);
+							LogUtils.log(Joiner.on(",").join(csv));
+							LogUtils.log("csv-size:"+csv.size());
+							Anchor a=null;
+							if(csv.size()>1){
+								a=new Anchor(""+csv.get(0)+"",csv.get(1));
+								a.setStylePrimaryName("title");
+								p1.add(a);
+							}
+							if(csv.size()>2){
+								a.setTitle(csv.get(2));
+							}
+							
+							if(i<csvs.size()-1){
+								p1.add(new Label("|"));
+							}
+						}
+						
+						topControler.add(p1);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					
+					
+					
+				}
+				
+				@Override
+				public void onError(Request request, Throwable exception) {
+					LogUtils.log("csv not found");
+				}
+			});
+		} catch (RequestException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void createDownloadLink(){
@@ -244,30 +323,31 @@ public class ImageMix implements EntryPoint {
 		}
 	}
 	
-	private int canvasWidth=480;
-	private int canvasHeight=480;
+	private int canvasWidth=400;
+	private int canvasHeight=400;
 	private Image mixedImage;
-	//private Image img1;
+
 	private TopBarPanel mixedPanel;
 	private FileUploadForm image1Uploader;
 	private ListBox transparentBox;
+	private HorizontalPanel topControler;
 	
 	private void updateMixedImage() {
 		int transparent=ValuesUtils.toInt(transparentBox.getItemText(transparentBox.getSelectedIndex()), 50);
 		double tp=1-(0.01*transparent);
-		mixedCanvas.getContext2d().clearRect(0, 0, canvasWidth, canvasHeight);
-		/*
+		CanvasUtils.clear(mixedCanvas);
+		
 		if(img1.isVisible()){
-		CanvasUtils.drawFitCenter(mixedCanvas, ImageElement.as(img1.getElement()));
+			CanvasUtils.drawFitCenter(mixedCanvas, ImageElement.as(img1.getElement()));
 		}
-		*/
-		mixedCanvas.getContext2d().drawImage(image1Canvas.getCanvasElement(), 0, 0);
+		
+		//mixedCanvas.getContext2d().drawImage(image1Canvas.getCanvasElement(), 0, 0);
 		mixedCanvas.getContext2d().setGlobalAlpha(tp);
-		mixedCanvas.getContext2d().drawImage(image2Canvas.getCanvasElement(), 0, 0);
-		/*
+		//mixedCanvas.getContext2d().drawImage(image2Canvas.getCanvasElement(), 0, 0);
+		
 		if(img2.isVisible()){
-		CanvasUtils.drawFitCenter(mixedCanvas, ImageElement.as(img2.getElement()));
-		}*/
+			CanvasUtils.drawFitCenter(mixedCanvas, ImageElement.as(img2.getElement()));
+		}
 		mixedCanvas.getContext2d().setGlobalAlpha(1);
 		
 		mixedImage.setUrl(mixedCanvas.toDataUrl());
