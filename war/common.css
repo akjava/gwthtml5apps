@@ -1,0 +1,13 @@
+.bg1{
+	background: #eee;
+}
+.title{
+		font-family: 'Audiowide', cursive;
+}
+.bt{
+
+	background: orange;
+	padding: 2px;
+	margin: 2px;
+	border: 1px solid #000000;  
+}
