@@ -1,15 +1,19 @@
 package com.akjava.gwt.androidhtml5.client;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.File;
+import com.akjava.gwt.html5.client.file.FileHandler;
+import com.akjava.gwt.html5.client.file.FilePredicates;
+import com.akjava.gwt.html5.client.file.FileReader;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.webkit.FileEntry;
 import com.akjava.gwt.lib.client.CanvasResizer;
+import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
@@ -17,10 +21,8 @@ import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.SafeHtmlCell;
-import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -36,47 +38,62 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
-import com.google.gwt.view.client.SelectionChangeEvent;
-import com.google.gwt.view.client.SelectionChangeEvent.Handler;
-import com.google.gwt.view.client.SingleSelectionModel;
 
-public class SimpleResize implements EntryPoint {
+
+/*
+ * 
+ * explain of links
+ * top link to anchor of app list to show other apps
+ * 
+ * app link is directly apps,no annoying description page
+ */
+public class SimpleResize extends Html5DemoEntryPoint {
 
 	private Canvas canvas;
-	List<ImageData> datas=new ArrayList<SimpleResize.ImageData>();
-	private SimpleCellTable<ImageData> imageDataCellList;
 	
-	private SingleSelectionModel<ImageData> selectionModel;
 	private Image mainImage;
 	
-	private String appName="SimpleResize";
-	private String version="1.0";
+
 	private DockLayoutPanel dock;
+	private HorizontalPanel topPanel;
+	private EasyCellTableSet<ImageData> easyCellTableSet;
+
+	private ValueListBox<Integer> sizesList;
 	@Override
-	public void onModuleLoad() {
-		LogUtils.log(appName+":version "+version);
+	public void initializeWidget() {
+		DataUrlDropDockRootPanel root=new DataUrlDropDockRootPanel(Unit.PX,true){
+			@Override
+			public void loadFile(File file, String dataUrl) {
+				
+				SimpleResize.this.loadFile(file, dataUrl);
+			}
+		};
+		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
+		
 		canvas = Canvas.createIfSupported();
 		//canvas.setSize("100%", "100%");
 		
 		
 		
 		dock = new DockLayoutPanel(Unit.PX);
+		//dock.setSize("100%", "100%");
+		root.add(dock);
 		
-		HorizontalPanel top=new HorizontalPanel();
-		top.setWidth("100%");
-		top.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		top.setSpacing(4);
-		dock.addNorth(top,40);
+		topPanel = new HorizontalPanel();
+		topPanel.setWidth("100%");
+		topPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		topPanel.setSpacing(4);
+		dock.addNorth(topPanel,40);
 		
-		Label label=new Label("akjava.com "+appName+" "+version);
-		label.setStylePrimaryName("title");
-		top.add(label);
 		
-		final ValueListBox<Integer> sizesList=new ValueListBox<Integer>(new Renderer<Integer>() {
+		topPanel.add(createTitleWidget());
+		
+		sizesList = new ValueListBox<Integer>(new Renderer<Integer>() {
 			@Override
 			public String render(Integer value) {
 				return ""+value;
@@ -94,7 +111,7 @@ public class SimpleResize implements EntryPoint {
 		HorizontalPanel controler=new HorizontalPanel();
 		controler.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		controler.setSpacing(2);
-		top.add(controler);
+		//topPanel.add(controler);
 		
 		controler.add(new Label("Width:"));
 		sizesList.setValue(360);
@@ -115,58 +132,29 @@ public class SimpleResize implements EntryPoint {
 			}
 		});
 		
+		topPanel.add(new Anchor("Help", "resize_help.html"));
+		
 		//dock.add(canvas);
 		//canvas.removeFromParent();
 		//dock.add(canvas);
-		RootLayoutPanel.get().add(dock);
+		//RootLayoutPanel.get().add(dock);
 		
 		FileUploadForm fileUp=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			@Override
 			public void uploaded(File file, String asStringText) {
-				try{
-					//TODO create method
-				ImageElement element=Document.get().createImageElement();
-				element.setSrc(asStringText);
-				
-				//resize in here
-				int width=sizesList.getValue();
-				String dataUrl=CanvasResizer.on(canvas).image(element).width(width).toPngDataUrl();
-				
-				
-				//mainImage.setUrl("resize/clear.cache.gif");
-				//mainImage.setVisible(true);
-				
-				final ImageData data=new ImageData(file.getFileName(), dataUrl);
-				data.setWidth(width);
-				datas.add(data);
-				updateList();
-				
-				
-				//stack on mobile,maybe because of called async method
-				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
-					@Override
-					public void execute() {
-						selectionModel.setSelected(data, true);
-					}
-				});
-				
-				//doSelecct(data);//only way to update on Android Chrome
-				}catch (Exception e) {
-					e.printStackTrace();
-					LogUtils.log(e.getMessage());
-				}
+				loadFile(file,asStringText);
 			}
 		}, false);
 		controler.add(fileUp);
-		
-		imageDataCellList = new SimpleCellTable<SimpleResize.ImageData>(999) {
+
+		SimpleCellTable<ImageData> cellTable = new SimpleCellTable<SimpleResize.ImageData>(999) {
 			@Override
 			public void addColumns(CellTable<ImageData> table) {
 				 ButtonColumn<ImageData> removeBtColumn=new ButtonColumn<ImageData>() {
 						@Override
 						public void update(int index, ImageData object,
 								String value) {
-								datas.remove(object);
+								easyCellTableSet.removeItem(object);
 						}
 						@Override
 						public String getValue(ImageData object) {
@@ -204,26 +192,33 @@ public class SimpleResize implements EntryPoint {
 					    
 			}
 		};
-		imageDataCellList.setWidth("100%");
+		
+		DockLayoutPanel eastPanel=new DockLayoutPanel(Unit.PX);
+		eastPanel.addNorth(controler, 30);
+		
+		ScrollPanel cellScroll=new ScrollPanel();
+		cellScroll.setSize("100%", "100%");
 		
 		
-		dock.addEast(imageDataCellList, 400);
-		
-		selectionModel=new SingleSelectionModel<SimpleResize.ImageData>();
-		selectionModel.addSelectionChangeHandler(new Handler() {
+		cellTable.setWidth("100%");
+		cellScroll.add(cellTable);
+		easyCellTableSet=new EasyCellTableSet<SimpleResize.ImageData>(cellTable,false) {
 			@Override
-			public void onSelectionChange(SelectionChangeEvent event) {
-				doSelecct(selectionModel.getSelectedObject());
+			public void onSelect(ImageData selection) {
+				doSelect(selection);
 			}
-		});
+		};
 		
-		imageDataCellList.setSelectionModel(selectionModel);
-		imageDataCellList.getPager().setVisible(false);
+		eastPanel.add(cellScroll);
+		
+		
+		dock.addEast(eastPanel, 400);
+		
+		
 		
 		mainImage = new Image();
+		mainImage.setVisible(false);
 		
-		//mainImage.setVisible(false);
-		//mainImage.setWidth("100%");
 		
 		ScrollPanel scroll=new ScrollPanel();
 		scroll.setWidth("100%");
@@ -231,20 +226,59 @@ public class SimpleResize implements EntryPoint {
 		dock.add(scroll);
 		scroll.add(mainImage);
 		
-		dock.forceLayout();
 	}
 	
+	protected void loadFile(File file, String asStringText) {
+		try{
+			//TODO create method
+		ImageElement element=ImageElementUtils.create(asStringText);
+		
+		//resize in here
+		int width=sizesList.getValue();
+		String dataUrl=CanvasResizer.on(canvas).image(element).width(width).toPngDataUrl();
+		
+		
+		//mainImage.setUrl("resize/clear.cache.gif");
+		//mainImage.setVisible(true);
+		
+		final ImageData data=new ImageData(file.getFileName(), dataUrl);
+		data.setWidth(width);
+		easyCellTableSet.addItem(data);
+		//updateList();
+		
+		
+		//stack on mobile,maybe because of called async method
+		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
+			@Override
+			public void execute() {
+				easyCellTableSet.setSelected(data, true);
+			}
+		});
+		
+		//doSelecct(data);//only way to update on Android Chrome
+		}catch (Exception e) {
+			e.printStackTrace();
+			LogUtils.log(e.getMessage());
+		}
+	}
+
 	public void clearImage(){
 		//GWT.getModuleName()+"/"
 	}
 	
-	protected void doSelecct(ImageData selection) {
+	public void doSelect(ImageData selection) {
+		if(selection==null){
+			mainImage.setVisible(false);
+			mainImage.setUrl("");
+		}else{
 		mainImage.setUrl(selection.getDataUrl());
 		mainImage.setWidth(selection.getWidth()+"px");
-		//mainImage.setVisible(true);
+		mainImage.setVisible(true);
+		}
 		//LogUtils.log("set-visible");
 	}
 
+	/*
 	public void updateList(){
 		imageDataCellList.setData(datas);
 		//imageDataCellList.getCellTable().setFocus(true);
@@ -254,6 +288,7 @@ public class SimpleResize implements EntryPoint {
 		//imageDataCellList.getCellTable().flush();
 		//LogUtils.log("layout");
 	}
+	*/
 	public abstract class HtmlColumn<T> extends Column<T,SafeHtml>{
 
 		public HtmlColumn(Cell<SafeHtml> cell) {
@@ -299,11 +334,26 @@ public class SimpleResize implements EntryPoint {
 		private String dataUrl;
 	}
 
-	private void resizeCanvas(){
-		canvas.getContext2d().setFillStyle("#080");
-		canvas.getContext2d().fillRect(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
-		canvas.getContext2d().setFillStyle("#000");
-		canvas.getContext2d().fillRect(0, 0, 50,50);
+
+
+	@Override
+	public String getAppName() {
+		return "SimpleResize";
+	}
+
+	@Override
+	public String getAppVersion() {
+		return "1.0";
+	}
+	
+	@Override
+	public Panel getLinkContainer() {
+		return topPanel;
+	}
+
+	@Override
+	public String getAppUrl() {
+		return "http://android.akjava.com/html5apps/index.html#simpleresize";
 	}
 	
 }

@@ -1,5 +1,5 @@
 .bg1{
-	background: #eee;
+	background: #f0f0f0;
 }
 .title{
 		font-family: 'Audiowide', cursive;
@@ -11,3 +11,14 @@
 	margin: 2px;
 	border: 1px solid #000000;  
 }
+
+th.GALD-WOOC { 
+        padding-left: 2px; 
+        padding-right: 2px; 
+} 
+
+td.GALD-WOHC { 
+        padding-left: 2px; 
+        padding-right: 2px; 
+} 
+.html5_drag_border {border-style: dashed;border-color: 0x888}

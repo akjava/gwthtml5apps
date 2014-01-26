@@ -1,8 +1,5 @@
 package com.akjava.gwt.androidhtml5.client;
 
-import java.io.IOException;
-import java.util.List;
-
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
@@ -12,36 +9,24 @@ import com.akjava.gwt.lib.client.GWTHTMLUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
-import com.akjava.gwt.lib.client.LogUtils;
-import com.akjava.gwt.lib.client.io.GWTLineReader;
-import com.akjava.lib.common.csv.CSVProcessor;
-import com.akjava.lib.common.utils.CSVUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
-import com.google.common.base.Joiner;
 import com.google.gwt.canvas.client.Canvas;
-import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
-import com.google.gwt.http.client.Request;
-import com.google.gwt.http.client.RequestBuilder;
-import com.google.gwt.http.client.RequestCallback;
-import com.google.gwt.http.client.RequestException;
-import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
-import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
-public class ImageMix implements EntryPoint {
+public class ImageMix extends Html5DemoEntryPoint {
 
 	private Canvas mixedCanvas;
 	private HorizontalPanel linkFolder;
@@ -50,36 +35,38 @@ public class ImageMix implements EntryPoint {
 	//private Canvas image1Canvas;
 	//private Canvas image2Canvas;
 
-	private String appName="ImageMix";
-	private String version="1.0";
+	
 	private Image img1;
 	private Image img2;
 	@Override
-	public void onModuleLoad() {
-		LogUtils.log("imageMix:version "+version);
-		DockLayoutPanel root=new DockLayoutPanel(Unit.PX);
+	public void initializeWidget() {
+		DropDockRootPanel root=new DropDockRootPanel(Unit.PX,true){
+			@Override
+			public void callback(File file, String parent) {
+				//do nothing
+			}
+		};
 		
-		RootLayoutPanel.get().add(root);
 		
 		
 		
 		
-		topControler = new HorizontalPanel();
-		topControler.setWidth("100%");
-		topControler.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		topControler.setSpacing(4);
+		topPanel = new HorizontalPanel();
+		topPanel.setWidth("100%");
+		topPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		topPanel.setSpacing(4);
 		
 		//HorizontalPanel bottomControler=new HorizontalPanel();
 		
-		topControler.setStylePrimaryName("bg1");
+		topPanel.setStylePrimaryName("bg1");
 		
-		Label label=new Label("akjava.com "+appName+" "+version);
-		label.setStylePrimaryName("title");
-		topControler.add(label);
-		root.addNorth(topControler, 40);
 		
-		Anchor help=new Anchor("How to Use","http://android.akjava.com/");
-		topControler.add(help);
+		topPanel.add(createTitleWidget());
+		
+		root.addNorth(topPanel, 30);
+		
+		Anchor help=new Anchor("Help","imagemix_help.html");
+		topPanel.add(help);
 		
 		mixedPanel = new TopBarPanel();
 		
@@ -247,76 +234,19 @@ public class ImageMix implements EntryPoint {
 		mixedImage.setSize(canvasWidth+"px", canvasWidth+"px");
 		mixedImage.setVisible(false);
 		
-		parseCsv();
 	}
 	
-	private void parseCsv(){
-		try {
-			new RequestBuilder(RequestBuilder.GET, "/apps.csv").sendRequest(null, new RequestCallback() {
-				
-				@Override
-				public void onResponseReceived(Request request, Response response) {
-					
-					List<List<String>> csvs;
-					try {
-						
-						int size=CSVUtils.splitLinesWithGuava(response.getText()).size();
-						
-						
-						csvs = GWTLineReader.wrap(response.getText()).readLines(new CSVProcessor(','));
-						HorizontalPanel p1=new HorizontalPanel();
-						
-						p1.setSpacing(2);
-						//p1.add(new Label("Apps:"));
-						for(int i=0;i<csvs.size();i++){
-							
-							
-							
-							List<String> csv=csvs.get(i);
-							LogUtils.log(Joiner.on(",").join(csv));
-							LogUtils.log("csv-size:"+csv.size());
-							Anchor a=null;
-							if(csv.size()>1){
-								a=new Anchor(""+csv.get(0)+"",csv.get(1));
-								a.setStylePrimaryName("title");
-								p1.add(a);
-							}
-							if(csv.size()>2){
-								a.setTitle(csv.get(2));
-							}
-							
-							if(i<csvs.size()-1){
-								p1.add(new Label("|"));
-							}
-						}
-						
-						topControler.add(p1);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					
-					
-					
-				}
-				
-				@Override
-				public void onError(Request request, Throwable exception) {
-					LogUtils.log("csv not found");
-				}
-			});
-		} catch (RequestException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
 	
 	private void createDownloadLink(){
 		linkFolder.clear();
 		if(GWTUtils.isIOS()){
-		//iOS not support download	
-			linkFolder.add(new Label("long press to below to download"));
+			//iOS not support download
+			linkFolder.add(new Label("long press to below image to download"));
+		}else if(GWTUtils.isIE()){
+			//IE is horrible to support it
+			linkFolder.add(new Label("right-click context menu and select save as"));
 		}else{
+		
 		Anchor anchor=CanvasUtils.generateDownloadImageLink(mixedCanvas, true, "mixed.png", "Push here to download image", true);
 		anchor.setStylePrimaryName("bt");
 		linkFolder.add(anchor);
@@ -330,7 +260,7 @@ public class ImageMix implements EntryPoint {
 	private TopBarPanel mixedPanel;
 	private FileUploadForm image1Uploader;
 	private ListBox transparentBox;
-	private HorizontalPanel topControler;
+	private HorizontalPanel topPanel;
 	
 	private void updateMixedImage() {
 		int transparent=ValuesUtils.toInt(transparentBox.getItemText(transparentBox.getSelectedIndex()), 50);
@@ -355,6 +285,30 @@ public class ImageMix implements EntryPoint {
 		mixedPanel.setVisible(true);
 		
 		createDownloadLink();
+	}
+
+	@Override
+	public String getAppName() {
+
+		return "ImageMix";
+	}
+
+	@Override
+	public String getAppVersion() {
+		return "1.0";
+	}
+
+	@Override
+	public String getAppUrl() {
+		return "http://android.akjava.com/html5apps/index.html#"+getAppName().toLowerCase();
+	}
+
+	
+
+	@Override
+	public Panel getLinkContainer() {
+
+		return topPanel;
 	}
 
 }
