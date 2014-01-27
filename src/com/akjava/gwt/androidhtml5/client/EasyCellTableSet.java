@@ -87,4 +87,23 @@ public abstract class EasyCellTableSet<T> {
 	public void update(boolean flush){
 		simpleCellTable.setData(datas,flush);
 	}
+
+	public void downItem(T object) {
+		if(datas.size()>1){
+		int index=datas.indexOf(object);
+		datas.remove(object);
+		datas.add(Math.min(index+1, datas.size()),object);
+		update(true);
+		}
+		
+	}
+	
+	public void upItem(T object) {
+		if(datas.size()>1){
+		int index=datas.indexOf(object);
+		datas.remove(object);
+		datas.add(Math.max(0, index-1),object);
+		update(true);
+		}
+	}
 }
