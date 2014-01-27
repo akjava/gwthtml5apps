@@ -137,12 +137,24 @@ public class ColorBox extends Widget implements HasName, TakesValue<String>, IsE
 
   /**
    * Gets the value of the color field.
-   * 
+   * must start # & not empty
    * @return the value
    */
   public String getValue() {
-    return getInputElement().getValue();
+	String value=getInputElement().getValue();
+	if(value.isEmpty()||!value.startsWith("#")){
+		return "#000000";
+	}
+    return value;
   }
+  
+  /**
+   * get raw value
+   * @return
+   */
+  public String getInputValue() {
+	    return getInputElement().getValue();
+	  }
 
   /**
    * Sets the default value of the color field.

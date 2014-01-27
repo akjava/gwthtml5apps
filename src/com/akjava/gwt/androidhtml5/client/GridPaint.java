@@ -78,14 +78,8 @@ public class GridPaint extends Html5DemoEntryPoint {
 			}
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
-		
 		canvas = Canvas.createIfSupported();
-		//canvas.setSize("100%", "100%");
-		
-		
-		
 		dock = new DockLayoutPanel(Unit.PX);
-		//dock.setSize("100%", "100%");
 		root.add(dock);
 		
 		topPanel = new HorizontalPanel();
@@ -95,10 +89,10 @@ public class GridPaint extends Html5DemoEntryPoint {
 		topPanel.setSpacing(1);
 		dock.addNorth(topPanel,30);
 		
-		
+		//title
 		topPanel.add(createTitleWidget());
 		
-	
+		topPanel.add(new Anchor("Help", "gridpaint_help.html"));
 		
 		
 		VerticalPanel controler=new VerticalPanel();
@@ -164,7 +158,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		
 		bh.add(downloadArea);
 		
-		topPanel.add(new Anchor("Help", "gridpaint_help.html"));
+		
 		
 		//dock.add(canvas);
 		//canvas.removeFromParent();

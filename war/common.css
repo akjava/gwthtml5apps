@@ -22,3 +22,26 @@ td.GALD-WOHC {
         padding-right: 2px; 
 } 
 .html5_drag_border {border-style: dashed;border-color: 0x888}
+
+
+
+.nomargin {
+margin: 0px;
+padding: 0px;
+}
+.transparent_bg{
+margin: 0px;
+padding: 0px;	
+background-image: url("imgs/transparent_bg.png");
+background-repeat: repeat;
+}
+
+.marginbotton{
+	margin: 0px 0px 8px 0px;
+	padding:0px 0px 8px 0px;
+}
+
+.gwt-TabPanelBottom{
+	margin:0px;
+	padding:0px;
+}

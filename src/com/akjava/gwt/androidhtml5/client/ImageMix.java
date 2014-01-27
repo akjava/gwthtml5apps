@@ -9,6 +9,7 @@ import com.akjava.gwt.lib.client.GWTHTMLUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
+import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.dom.client.ImageElement;
@@ -18,6 +19,7 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
@@ -38,6 +40,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 	
 	private Image img1;
 	private Image img2;
+	private CheckBox expand2Check;
 	@Override
 	public void initializeWidget() {
 		DropDockRootPanel root=new DropDockRootPanel(Unit.PX,true){
@@ -80,7 +83,11 @@ public class ImageMix extends Html5DemoEntryPoint {
 					@Override
 					public void onLoad(ImageElement element) {
 						CanvasUtils.clear(mixedCanvas);
+						if(expand1Check.getValue()){
+							CanvasUtils.drawExpandCenter(mixedCanvas, element);	
+						}else{
 						CanvasUtils.drawFitCenter(mixedCanvas, element);
+						}
 						//image1Canvas.getContext2d().drawImage(element, 0, 0);//TODO resize
 						img1.setUrl(mixedCanvas.toDataUrl());
 						img1.setVisible(true);
@@ -97,8 +104,13 @@ public class ImageMix extends Html5DemoEntryPoint {
 			}
 		}, false);
 		image1Panel.getTopPanel().add(new Label("Background"));
+		
+		expand1Check = new CheckBox("Expand");
+		image1Panel.getTopPanel().add(expand1Check);
+		
 		image1Panel.getTopPanel().add(image1Uploader);
-		//image1Uploader.setVisible(false);
+		
+		
 		
 		TopBarPanel image2Panel=new TopBarPanel();
 		FileUploadForm image2Uploader=FileUtils.createSingleFileUploadForm(new DataURLListener() {
@@ -113,7 +125,11 @@ public class ImageMix extends Html5DemoEntryPoint {
 						
 						//LogUtils.log("uploaded:");
 						//image2Canvas.getContext2d().drawImage(element, 0, 0);//TODO resize
-						CanvasUtils.drawFitImage(mixedCanvas, element,CanvasUtils.ALIGN_CENTER,CanvasUtils.VALIGN_MIDDLE);
+						if(expand2Check.getValue()){
+							CanvasUtils.drawExpandCenter(mixedCanvas, element);	
+						}else{
+						CanvasUtils.drawFitCenter(mixedCanvas, element);
+						}
 						img2.setUrl(mixedCanvas.toDataUrl());
 						img2.setVisible(true);
 						updateMixedImage();
@@ -130,7 +146,10 @@ public class ImageMix extends Html5DemoEntryPoint {
 			}
 		}, false);
 		image2Panel.getTopPanel().add(new Label("Layer"));
+		expand2Check = new CheckBox("Expand");
+		image2Panel.getTopPanel().add(expand2Check);
 		image2Panel.getTopPanel().add(image2Uploader);
+		
 		
 		
 		/*
@@ -192,6 +211,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 		
 		
 		img1 = new Image();
+		img1.setStylePrimaryName("transparent_bg");//or bg
 		img1.setSize(canvasWidth+"px",canvasHeight+"px");
 		img1.setVisible(false);
 		image1Panel.add(img1);
@@ -200,7 +220,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 		img2.setSize(canvasWidth+"px",canvasHeight+"px");
 		img2.setVisible(false);
 		image2Panel.add(img2);
-		
+		img2.setStylePrimaryName("transparent_bg");//or bg
 		/*
 		image1Canvas = CanvasUtils.createCanvas(canvasWidth, canvasHeight);
 		image1Panel.add(image1Canvas);
@@ -212,6 +232,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 
 		
 		mixedImage = new Image();
+		mixedImage.setStylePrimaryName("transparent_bg");//or bg
 		mixedPanel.add(mixedImage);
 		mixedPanel.setSize(canvasWidth+"px", (canvasHeight+40)+"px");
 		GWTHTMLUtils.addFloatLeftStyle(mixedPanel);
@@ -261,6 +282,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 	private FileUploadForm image1Uploader;
 	private ListBox transparentBox;
 	private HorizontalPanel topPanel;
+	private CheckBox expand1Check;
 	
 	private void updateMixedImage() {
 		int transparent=ValuesUtils.toInt(transparentBox.getItemText(transparentBox.getSelectedIndex()), 50);
