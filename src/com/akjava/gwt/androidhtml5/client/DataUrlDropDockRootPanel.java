@@ -34,7 +34,7 @@ public abstract class DataUrlDropDockRootPanel extends DropDockRootPanel{
 			return;
 		}
 		
-		LogUtils.log(file+","+parent);
+		//LogUtils.log(file+","+parent);
 		
 		final FileReader reader = FileReader.createFileReader();
 		reader.setOnLoad(new FileHandler() {

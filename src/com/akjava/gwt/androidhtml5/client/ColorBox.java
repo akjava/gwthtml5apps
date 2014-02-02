@@ -23,6 +23,10 @@ import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.editor.client.IsEditor;
 import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.editor.client.adapters.TakesValueEditor;
+import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.TakesValue;
 import com.google.gwt.user.client.ui.HasName;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -31,7 +35,7 @@ import com.google.gwt.user.client.ui.Widget;
 /**
  * Represents a color field in an HTML form.
  */
-public class ColorBox extends Widget implements HasName, TakesValue<String>, IsEditor<LeafValueEditor<String>> {
+public class ColorBox extends Widget implements HasName, TakesValue<String>, IsEditor<LeafValueEditor<String>>/*,HasValueChangeHandlers<String>*/ {
 
   /**
    * Creates a color widget that wraps an existing &lt;input type='color'&gt;
@@ -201,5 +205,15 @@ public class ColorBox extends Widget implements HasName, TakesValue<String>, IsE
   private InputElement getInputElement() {
     return getElement().cast();
   }
+
+/*
+ don't wrok
+  public HandlerRegistration addValueChangeHandler(
+	      ValueChangeHandler<String> handler) {
+	    return addHandler(handler, ValueChangeEvent.getType());
+	  }
+	  */
+  
+
 }
 
