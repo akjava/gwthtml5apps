@@ -37,8 +37,14 @@ padding: 0px;
 .transparent_bg{
 margin: 0px;
 padding: 0px;	
-background-image: url("imgs/transparent_bg.png");
+background-image: url("/img/transparent_bg.png");
 background-repeat: repeat;
+}
+
+.black_bg{
+margin: 0px;
+padding: 0px;	
+background: #000;
 }
 
 .marginbotton{

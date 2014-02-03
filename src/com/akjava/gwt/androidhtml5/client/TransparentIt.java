@@ -3,7 +3,6 @@ package com.akjava.gwt.androidhtml5.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.akjava.gwt.html5.client.ColorPickWidget;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
@@ -11,7 +10,6 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
-import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -50,6 +48,7 @@ import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -152,8 +151,21 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		fileUps.add(upload);
 
 		
-		
 
+		final CheckBox trasparentCheck=new CheckBox("transparent bg");
+		controler.add(trasparentCheck);
+		trasparentCheck.setValue(true);
+		trasparentCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(trasparentCheck.getValue()){
+					canvas.setStylePrimaryName("transparent_bg");
+				}else{
+					canvas.setStylePrimaryName("black_bg");
+				}
+			}
+		});
 		
 		
 		

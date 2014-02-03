@@ -35,6 +35,9 @@ import com.google.gwt.user.client.ui.Widget;
 /**
  * Represents a color field in an HTML form.
  */
+/*
+ * @deprecated use html5gwt
+ */
 public class ColorBox extends Widget implements HasName, TakesValue<String>, IsEditor<LeafValueEditor<String>>/*,HasValueChangeHandlers<String>*/ {
 
   /**
