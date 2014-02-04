@@ -3,7 +3,7 @@
 <module rename-to="gridpaint">
 <inherits name="com.akjava.gwt.common.Common" />
 	<inherits name="com.google.gwt.user.User" />
-	
+	  <inherits name='com.akjava.gwt.jsgif.GWTJSGif'/>
 	<entry-point class="com.akjava.gwt.androidhtml5.client.GridPaint" />
 	
 	<!-- 

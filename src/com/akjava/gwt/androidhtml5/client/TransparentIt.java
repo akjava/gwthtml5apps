@@ -3,6 +3,7 @@ package com.akjava.gwt.androidhtml5.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
@@ -151,9 +152,11 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		fileUps.add(upload);
 
 		
-
+		final CheckBox blackCheck=new CheckBox("black");
 		final CheckBox trasparentCheck=new CheckBox("transparent bg");
-		controler.add(trasparentCheck);
+		HorizontalPanel bgPanel=new HorizontalPanel();
+		controler.add(bgPanel);
+		bgPanel.add(trasparentCheck);
 		trasparentCheck.setValue(true);
 		trasparentCheck.addClickHandler(new ClickHandler() {
 			
@@ -162,11 +165,31 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				if(trasparentCheck.getValue()){
 					canvas.setStylePrimaryName("transparent_bg");
 				}else{
-					canvas.setStylePrimaryName("black_bg");
+					if(blackCheck.getValue()){
+						canvas.setStylePrimaryName("black_bg");
+					}else{
+						canvas.setStylePrimaryName("white_bg");
+					}
+					
 				}
 			}
 		});
 		
+		blackCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(trasparentCheck.getValue()){
+					return;
+				}
+				if(blackCheck.getValue()){
+					canvas.setStylePrimaryName("black_bg");
+				}else{
+					canvas.setStylePrimaryName("white_bg");
+				}
+			}
+		});
+		bgPanel.add(blackCheck);
 		
 		
 		int cbase=18;
@@ -540,7 +563,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 		fileUps.add(downloadArea);
 		
-		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<TransparentIt.ImageElementData>(999) {
+		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<ImageElementData>(999) {
 			@Override
 			public void addColumns(CellTable<ImageElementData> table) {
 				 ButtonColumn<ImageElementData> removeBtColumn=new ButtonColumn<ImageElementData>() {
@@ -613,7 +636,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<TransparentIt.ImageElementData>(cellTable,false) {
+		easyCellTableSet=new EasyCellTableSet<ImageElementData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageElementData selection) {
 				doSelect(selection);
@@ -633,6 +656,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		ScrollPanel scroll2=new ScrollPanel();
+		
 		scroll2.setWidth("100%");
 		scroll2.setHeight("100%");
 		dock.add(scroll2);
@@ -1180,41 +1204,6 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 	}
 	
-	public class ImageElementData{
-
-		private ImageElement imageElement;
-		public ImageElement getImageElement() {
-			return imageElement;
-		}
-		public void setImageElement(ImageElement imageElement) {
-			this.imageElement = imageElement;
-		}
-
-		private String dataUrl;
-
-		public ImageElementData(String fileName,ImageElement imageElement ,String dataUrl) {
-			super();
-			this.fileName = fileName;
-			this.imageElement=imageElement;
-			this.dataUrl = dataUrl;
-		}
-		
-		private String fileName;
-		public String getFileName() {
-			return fileName;
-		}
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
-		public String getDataUrl() {
-			return dataUrl;
-		}
-		public void setDataUrl(String dataUrl) {
-			this.dataUrl = dataUrl;
-		}
-		
-	}
-
 
 
 	@Override

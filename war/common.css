@@ -29,22 +29,31 @@ td.GALD-WOHC {
 .html5_drag_border {border-style: dashed;border-color: 0x888}
 
 
+.pickcolor{
+	cursor:crosshair;
+}
 
 .nomargin {
 margin: 0px;
 padding: 0px;
 }
 .transparent_bg{
-margin: 0px;
+margin-left: 8px;
 padding: 0px;	
 background-image: url("/img/transparent_bg.png");
 background-repeat: repeat;
 }
 
 .black_bg{
-margin: 0px;
+margin-left: 8px;
 padding: 0px;	
 background: #000;
+}
+
+.white_bg{
+margin-left: 8px;
+padding: 0px;	
+background: #fff;
 }
 
 .marginbotton{

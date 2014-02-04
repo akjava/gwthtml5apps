@@ -3,6 +3,7 @@ package com.akjava.gwt.androidhtml5.client;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
@@ -11,6 +12,7 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.jsgif.client.GifAnimeBuilder;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -18,11 +20,14 @@ import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.akjava.lib.common.utils.ColorUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
 import com.google.common.collect.ArrayTable;
+import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Table;
 import com.google.gwt.canvas.client.Canvas;
+import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -58,6 +63,12 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * app link is directly apps,no annoying description page
  */
 public class GridPaint extends Html5DemoEntryPoint {
+
+	protected static final int PICK_COLOR = 1;
+	protected static final int SELECT_GRID = 0;
+	private int mode;
+
+
 
 	private Canvas canvas;
 	
@@ -136,6 +147,29 @@ public class GridPaint extends Html5DemoEntryPoint {
 		colorBox = new ColorBox();
 		colorBox.setWidth("50px");//for IE
 		bh.add(colorBox);
+		
+		pickBt = new Button("Pick",new ClickHandler() {
+			
+			
+
+			@Override
+			public void onClick(ClickEvent event) {
+				if(mode==SELECT_GRID){
+					mode=PICK_COLOR;
+					pickBt.setText("Grid");
+					canvas.addStyleName("pickcolor");
+					pickBt.setTitle("grid it");
+				}else{
+					mode=SELECT_GRID;
+					pickBt.setText("Pick");
+					canvas.removeStyleName("pickcolor");
+					pickBt.setTitle("pick Color");
+				}
+			}
+		});
+		bh.add(pickBt);
+		pickBt.setTitle("pick Color");
+		
 		Button fillBt=new Button("Fill",new ClickHandler() {
 			
 			@Override
@@ -243,6 +277,33 @@ Button saveBt=new Button("Save",new ClickHandler() {
 					table.addColumn(regridBtColumn);
 					table.setColumnWidth(regridBtColumn, "50px");
 					*/
+					
+				    ButtonColumn<GridImageData> upBtColumn=new ButtonColumn<GridImageData>() {
+						@Override
+						public void update(int index, GridImageData object,
+								String value) {
+								
+								easyCellTableSet.upItem(object);
+						}
+						@Override
+						public String getValue(GridImageData object) {
+							 return "Up";
+						}
+					};
+					table.addColumn(upBtColumn);
+					
+					 ButtonColumn<GridImageData> downBtColumn=new ButtonColumn<GridImageData>() {
+							@Override
+							public void update(int index, GridImageData object,
+									String value) {
+									easyCellTableSet.downItem(object);
+							}
+							@Override
+							public String getValue(GridImageData object) {
+								 return "Down";
+							}
+						};
+						table.addColumn(downBtColumn);
 				
 					
 					
@@ -265,8 +326,35 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			}
 		};
 		
+		
+		HorizontalPanel gifPanel=new HorizontalPanel();
+		controler.add(gifPanel);
+		Button  makeBt = new Button("Make Gif",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				
+				
+				List<ImageElement> elements=FluentIterable.from(easyCellTableSet.getDatas()).transform(new DataToImageElement()).toList();
+				
+				final String url=GifAnimeBuilder.from(elements).lowQuolity().loop().delay(300).toDataUrl();
+				
+				//create buttons
+				downloadArea.clear();
+				Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "gridanime.gif", "Download Gif", false);
+				a.setStylePrimaryName("bt");
+				downloadArea.add(a);
+				
+				
+				
+			}
+		});
+		controler.add(makeBt);
+		//makeBt.setEnabled(false);
+		
+		
+		
 		DockLayoutPanel eastPanel=new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 65);
+		eastPanel.addNorth(controler, 100);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
@@ -313,18 +401,18 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	private String getColor(){
 		String color=colorBox.getValue();
 		if(color.isEmpty()){
-			return "#000";
+			return "#000000";
 		}else{
 			return color;
 		}
 	}
 	
-	private void fillColor(){
+	public  void fillColor(){
 		for(int y=0;y<selection.getRow();y++){
 			for(int x=0;x<selection.getCol();x++){
 				String color=selection.getColor(y, x);
 				if(color!=null){
-					if(isPointValue(color)){
+					if(GridImageData.isPointValue(color)){
 						//ignore
 					}else{
 						selection.setColor(y,x,getColor());
@@ -334,6 +422,8 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		}
 		updateCanvas();
 	}
+	
+
 	
 	private void regrid(){
 		if(this.selection!=null){
@@ -484,6 +574,11 @@ Button saveBt=new Button("Save",new ClickHandler() {
 
 
 	private CheckBox stampCheck;
+
+
+
+
+	private Button pickBt;
 	private static class Point{
 		public Point(int x, int y) {
 			super();
@@ -520,6 +615,27 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		}
 	}
 	private void doClick(int cx, int cy) {
+		if(mode==SELECT_GRID){
+			doGrid(cx,cy);
+		}else{
+			doPick(cx,cy);
+		}
+	}
+	
+	
+	private void doPick(int cx, int cy) {
+		LogUtils.log(cx+","+cy);
+		ImageData data=canvas.getContext2d().getImageData(cx, cy, 1, 1);
+		int r=data.getRedAt(0, 0);
+		int g=data.getGreenAt(0, 0);
+		int b=data.getBlueAt(0, 0);
+		LogUtils.log(r+","+g+","+b);
+		String hex=ColorUtils.toCssColor(r,g,b);
+		LogUtils.log(hex);
+		colorBox.setValue(hex);
+	}
+
+	public void doGrid(int cx, int cy)	{
 		LogUtils.log(getColor());
 		LogUtils.log("click:"+cx+","+cy);
 		if(selection==null){
@@ -572,7 +688,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		int dx=gridSize*x;
 		int dy=gridSize*y;
 		if(color!=null){
-			if(isPointValue(color)){
+			if(GridImageData.isPointValue(color)){
 				Point target=Point.from(color);
 				int sx=gridSize*target.getX();
 				int sy=gridSize*target.getY();
@@ -595,40 +711,15 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		}
 		
 	}
-	private boolean isPointValue(String line){
-		return line.indexOf("x")!=-1;
-	}
+
 	public void updateCanvas(){
 		
-		//draw all
-		ImageElement element=ImageElementUtils.create(selection.getDataUrl());
-		ImageElementUtils.copytoCanvas(element, canvas);
-		
-		//draw lines
-		//TODO
-		
-		int gridSize=selection.getGridSize();
-		//TODO optimize
-		for(int y=0;y<selection.getRow();y++){
-			for(int x=0;x<selection.getCol();x++){
-				String color=selection.getColor(y, x);
-				if(color!=null){
-					
-					int dx=gridSize*x;
-					int dy=gridSize*y;
-					if(isPointValue(color)){
-						Point target=Point.from(color);
-						int sx=gridSize*target.getX();
-						int sy=gridSize*target.getY();
-						canvas.getContext2d().drawImage(element, sx, sy, gridSize, gridSize, dx, dy, gridSize, gridSize);
-					}else{
-						canvas.getContext2d().setFillStyle(color);
-						canvas.getContext2d().fillRect(dx, dy, gridSize,gridSize);
-					}
-				}
-			}
-		}
+		GridImageData.drawGridImage(canvas,selection);
 	}
+	
+
+	
+	
 
 	/*
 	public void updateList(){
@@ -658,7 +749,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		
 	}
 	
-	public class GridImageData{
+	public static class GridImageData implements HasImageUrl{
 		private int row;
 		private int col;
 		private int imageWidth;
@@ -694,7 +785,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			this.col = col;
 		}
 
-		public GridImageData(String fileName, String dataUrl,int gridSize,int row,int col,int imageWidth,int imageHeight) {
+		public  GridImageData(String fileName, String dataUrl,int gridSize,int row,int col,int imageWidth,int imageHeight) {
 			super();
 			this.fileName = fileName;
 			this.dataUrl = dataUrl;
@@ -755,10 +846,57 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		public String getDataUrl() {
 			return dataUrl;
 		}
+		
+		private static Canvas sharedCanvas;
+		public String getImageUrl() {
+			if(sharedCanvas==null){
+				sharedCanvas=Canvas.createIfSupported();
+			}
+			
+			drawGridImage(sharedCanvas, this);
+			
+			return sharedCanvas.toDataUrl();
+		}
+		
 		public void setDataUrl(String dataUrl) {
 			this.dataUrl = dataUrl;
 		}
 		private String dataUrl;
+		
+		public static boolean isPointValue(String line){
+			return line.indexOf("x")!=-1;
+		}
+		
+		public static void drawGridImage(Canvas targetCanvas,GridImageData gridData){
+			//draw all
+					ImageElement element=ImageElementUtils.create(gridData.getDataUrl());
+					ImageElementUtils.copytoCanvas(element, targetCanvas);
+					
+					//draw lines
+					//TODO
+					
+					int gridSize=gridData.getGridSize();
+					//TODO optimize
+					for(int y=0;y<gridData.getRow();y++){
+						for(int x=0;x<gridData.getCol();x++){
+							String color=gridData.getColor(y, x);
+							if(color!=null){
+								
+								int dx=gridSize*x;
+								int dy=gridSize*y;
+								if(isPointValue(color)){
+									Point target=Point.from(color);
+									int sx=gridSize*target.getX();
+									int sy=gridSize*target.getY();
+									targetCanvas.getContext2d().drawImage(element, sx, sy, gridSize, gridSize, dx, dy, gridSize, gridSize);
+								}else{
+									targetCanvas.getContext2d().setFillStyle(color);
+									targetCanvas.getContext2d().fillRect(dx, dy, gridSize,gridSize);
+								}
+							}
+						}
+					}
+		}
 	}
 
 

@@ -1,37 +1,24 @@
 package com.akjava.gwt.androidhtml5.client;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.akjava.gwt.html5.client.download.HTML5Download;
-import com.akjava.gwt.html5.client.file.Blob;
+import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
-import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
-import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
-import com.google.gwt.canvas.dom.client.Context2d.Composite;
-import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
-import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
-import com.google.gwt.safehtml.shared.SafeHtml;
-import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellTable;
-import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
@@ -40,7 +27,6 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
@@ -126,7 +112,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		
 		
-		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<GifPlayer.ImageElementData>(999) {
+		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<ImageElementData>(999) {
 			@Override
 			public void addColumns(CellTable<ImageElementData> table) {
 				 ButtonColumn<ImageElementData> removeBtColumn=new ButtonColumn<ImageElementData>() {
@@ -199,7 +185,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<GifPlayer.ImageElementData>(cellTable,false) {
+		easyCellTableSet=new EasyCellTableSet<ImageElementData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageElementData selection) {
 				doSelect(selection);
@@ -363,40 +349,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 
 
-	public class ImageElementData{
-
-		private ImageElement imageElement;
-		public ImageElement getImageElement() {
-			return imageElement;
-		}
-		public void setImageElement(ImageElement imageElement) {
-			this.imageElement = imageElement;
-		}
-
-		private String dataUrl;
-
-		public ImageElementData(String fileName,ImageElement imageElement ,String dataUrl) {
-			super();
-			this.fileName = fileName;
-			this.imageElement=imageElement;
-			this.dataUrl = dataUrl;
-		}
-		
-		private String fileName;
-		public String getFileName() {
-			return fileName;
-		}
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
-		public String getDataUrl() {
-			return dataUrl;
-		}
-		public void setDataUrl(String dataUrl) {
-			this.dataUrl = dataUrl;
-		}
-		
-	}
+	
 
 
 

@@ -1,5 +1,7 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
+import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
 import com.akjava.gwt.html5.client.HTML5InputRange;
 import com.akjava.gwt.html5.client.InputRangeListener;
 import com.akjava.gwt.html5.client.InputRangeWidget;
@@ -38,13 +40,12 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.logical.shared.ValueChangeEvent;
-import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -69,9 +70,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<ImageUrlData> easyCellTableSet;
+	private EasyCellTableSet<ImageElementData> easyCellTableSet;
 	private Button makeBt;
 	private ColorBox bgColorBox;
+	private CheckBox keepTransparent;
 
 
 	@Override
@@ -122,9 +124,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		fileUps.add(upload);
 
 		downloadArea = new HorizontalPanel();
-		controler.add(downloadArea);
+		fileUps.add(downloadArea);
 		
 	
+		HorizontalPanel makeBtPanel=new HorizontalPanel();
+		controler.add(makeBtPanel);
 		makeBt = new Button("Make",new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -132,8 +136,41 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				generateImage();
 			}
 		});
-		controler.add(makeBt);
+		makeBtPanel.add(makeBt);
 		makeBt.setEnabled(false);
+		
+		showOutSideCheck = new CheckBox("show out");
+		showOutSideCheck.setValue(true);
+		showOutSideCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(showOutSideCheck.getValue()){
+					canvas.setStyleName("transparent_bg");
+				}else{
+					canvas.setStyleName("white_bg");
+				}
+				updateImage();
+			}
+		});
+		makeBtPanel.add(showOutSideCheck);
+		
+		keepTransparent = new CheckBox("transparent");
+		
+		keepTransparent.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(showOutSideCheck.getValue()){
+					bgColorBox.setVisible(false);//need enabled
+				}else{
+					bgColorBox.setVisible(true);
+				}
+				updateImage();
+			}
+		});
+		makeBtPanel.add(keepTransparent);
+		
 	
 		HorizontalPanel h1=new HorizontalPanel();
 		controler.add(h1);
@@ -176,7 +213,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		rotateRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
-				turnLabel.setText("angle:"+((double)resizeRange.getValue()));
+				turnLabel.setText("angle:"+(rotateRange.getValue()));
 				updateImage();
 			}
 		});
@@ -188,7 +225,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			public void onEnterKeyDown() {
 				updateImage();
 			}};
-		titleBox.setText("Hello");
+		titleBox.setText("TODO");
 		h3.add(titleBox);
 		colorBox = new ColorBox();
 		colorBox.setValue("#ffffff");
@@ -218,17 +255,17 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h3.add(updateBt);
 		
 		
-		SimpleCellTable<ImageUrlData> cellTable = new SimpleCellTable<SimpleLogo.ImageUrlData>(999) {
+		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<ImageElementData>(999) {
 			@Override
-			public void addColumns(CellTable<ImageUrlData> table) {
-				 ButtonColumn<ImageUrlData> removeBtColumn=new ButtonColumn<ImageUrlData>() {
+			public void addColumns(CellTable<ImageElementData> table) {
+				 ButtonColumn<ImageElementData> removeBtColumn=new ButtonColumn<ImageElementData>() {
 						@Override
-						public void update(int index, ImageUrlData object,
+						public void update(int index, ImageElementData object,
 								String value) {
 								easyCellTableSet.removeItem(object);
 						}
 						@Override
-						public String getValue(ImageUrlData object) {
+						public String getValue(ImageElementData object) {
 							 return "X";
 						}
 					};
@@ -270,8 +307,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				
 					
 					
-				    TextColumn<ImageUrlData> fileInfoColumn = new TextColumn<ImageUrlData>() {
-					      public String getValue(ImageUrlData value) {
+				    TextColumn<ImageElementData> fileInfoColumn = new TextColumn<ImageElementData>() {
+					      public String getValue(ImageElementData value) {
 					    	  
 					    	  return value.getFileName();
 					      }
@@ -292,9 +329,9 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<SimpleLogo.ImageUrlData>(cellTable,false) {
+		easyCellTableSet=new EasyCellTableSet<ImageElementData>(cellTable,false) {
 			@Override
-			public void onSelect(ImageUrlData selection) {
+			public void onSelect(ImageElementData selection) {
 				doSelect(selection);
 			}
 		};
@@ -377,6 +414,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		CanvasUtils.createCanvas(drawCanvas, data);
 		String dataUrl=drawCanvas.toDataUrl();
 		Anchor anchor=HTML5Download.get().generateBase64DownloadLink(dataUrl, "image/png", "logo.png", "Download", true);
+		anchor.setStylePrimaryName("bt");
 		downloadArea.clear();
 		downloadArea.add(anchor);
 	}
@@ -477,11 +515,12 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	 * @author aki
 	 *
 	 */
+	
 	public class DataToImageElement implements Function<ImageUrlData,ImageElement>{
 
 		@Override
 		public ImageElement apply(ImageUrlData input) {
-			return ImageElementUtils.create(input.getUrl());
+			return ImageElementUtils.create(input.getDataUrl());
 		}
 		
 	}
@@ -496,11 +535,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		new ImageElementLoader().load(asStringText, new ImageElementListener() {
 			@Override
-			public void onLoad(ImageElement element) {
-				LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
+			public void onLoad(final ImageElement element) {
+				//LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
 				
 				
-				final ImageUrlData data=new ImageUrlData(file.getFileName(),asStringText);
+				final ImageElementData data=new ImageElementData(file.getFileName(),element,asStringText);
 				
 				easyCellTableSet.addItem(data);
 				//updateList();
@@ -535,7 +574,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	}
 
 	
-	ImageUrlData selection;
+	ImageElementData selection;
 
 
 
@@ -557,7 +596,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 
 	
-	public void doSelect(ImageUrlData selection) {
+	public void doSelect(ImageElementData selection) {
 		this.selection=selection;
 		if(selection==null){
 			CanvasUtils.clear(canvas);
@@ -579,7 +618,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private TextBox titleBox;
 	private ColorBox colorBox;
 	
-	private double lastScale;
+	private double lastScale=1;
+	private CheckBox showOutSideCheck;
 	private void updateImage(){
 		
 		
@@ -590,7 +630,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		CanvasUtils.clear(drawCanvas);
 		CanvasUtils.clear(canvas);
 		canvas.getContext2d().save();
-		ImageElement element=ImageElementUtils.create(selection.getUrl());
+		ImageElement element=selection.getImageElement();
 		
 		double scale=(double)resizeRange.getValue()/10;
 		
@@ -614,8 +654,13 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		
 		//canvas.getContext2d().setFillStyle("rgba(255, 255, 255, 0.5)");
+		if(showOutSideCheck.getValue()){
 		canvas.getContext2d().setGlobalAlpha(0.5);
 		canvas.getContext2d().drawImage(drawCanvas.getCanvasElement(), 0,0);
+		}else{
+		//CanvasUtils.clear(drawCanvas);	
+		}
+		
 		canvas.getContext2d().restore();
 		
 		
@@ -629,8 +674,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().clip();
 		canvas.getContext2d().setGlobalAlpha(1);
 		
-		canvas.getContext2d().setFillStyle(bgColorBox.getValue());
-		canvas.getContext2d().fillRect(clipSX, clipSY, clipEX-clipSX, clipEY-clipSY);
+		if(!keepTransparent.getValue()){
+			canvas.getContext2d().setFillStyle(bgColorBox.getValue());
+			canvas.getContext2d().fillRect(clipSX, clipSY, clipEX-clipSX, clipEY-clipSY);
+		}
+		
 		
 		//CanvasUtils.drawCenter(canvas, element,ox,oy,scale,scale,angle,1);
 		canvas.getContext2d().drawImage(drawCanvas.getCanvasElement(), 0,0);
@@ -711,33 +759,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 
 
-	public class ImageUrlData{
 
-		
-
-		private String url;
-
-		public String getUrl() {
-			return url;
-		}
-		public void setUrl(String url) {
-			this.url = url;
-		}
-		public ImageUrlData(String fileName,String url) {
-			super();
-			this.fileName = fileName;
-			this.url = url;
-		}
-		
-		private String fileName;
-		public String getFileName() {
-			return fileName;
-		}
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
-	
-	}
 
 
 

@@ -1,8 +1,8 @@
 package com.akjava.gwt.androidhtml5.client;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
@@ -142,7 +142,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		
 		
 		
-		SimpleCellTable<ImageUrlData> cellTable = new SimpleCellTable<GifMaker.ImageUrlData>(999) {
+		SimpleCellTable<ImageUrlData> cellTable = new SimpleCellTable<ImageUrlData>(999) {
 			@Override
 			public void addColumns(CellTable<ImageUrlData> table) {
 				 ButtonColumn<ImageUrlData> removeBtColumn=new ButtonColumn<ImageUrlData>() {
@@ -242,7 +242,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<GifMaker.ImageUrlData>(cellTable,false) {
+		easyCellTableSet=new EasyCellTableSet<ImageUrlData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageUrlData selection) {
 				doSelect(selection);
@@ -293,14 +293,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 	 * @author aki
 	 *
 	 */
-	public class DataToImageElement implements Function<ImageUrlData,ImageElement>{
 
-		@Override
-		public ImageElement apply(ImageUrlData input) {
-			return ImageElementUtils.create(input.getUrl());
-		}
-		
-	}
 	
 	
 	
@@ -380,7 +373,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 			
 			//LogUtils.log(selection.getImageElement());
 			
-			image.setUrl(selection.getUrl());
+			image.setUrl(selection.getDataUrl());
 			
 			
 			
@@ -399,33 +392,6 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 
 
-	public class ImageUrlData{
-
-		
-
-		private String url;
-
-		public String getUrl() {
-			return url;
-		}
-		public void setUrl(String url) {
-			this.url = url;
-		}
-		public ImageUrlData(String fileName,String url) {
-			super();
-			this.fileName = fileName;
-			this.url = url;
-		}
-		
-		private String fileName;
-		public String getFileName() {
-			return fileName;
-		}
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
-	
-	}
 
 
 
