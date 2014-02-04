@@ -22,17 +22,31 @@ import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
 import com.google.gwt.cell.client.Cell;
+import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.Touch;
+import com.google.gwt.event.dom.client.BlurEvent;
+import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
 import com.google.gwt.event.dom.client.ContextMenuHandler;
+import com.google.gwt.event.dom.client.DragStartEvent;
+import com.google.gwt.event.dom.client.DragStartHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.dom.client.FocusEvent;
+import com.google.gwt.event.dom.client.FocusHandler;
+import com.google.gwt.event.dom.client.GestureChangeEvent;
+import com.google.gwt.event.dom.client.GestureChangeHandler;
+import com.google.gwt.event.dom.client.GestureEndEvent;
+import com.google.gwt.event.dom.client.GestureEndHandler;
+import com.google.gwt.event.dom.client.GestureStartEvent;
+import com.google.gwt.event.dom.client.GestureStartHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
@@ -41,6 +55,16 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.event.dom.client.TouchCancelEvent;
+import com.google.gwt.event.dom.client.TouchCancelHandler;
+import com.google.gwt.event.dom.client.TouchEndEvent;
+import com.google.gwt.event.dom.client.TouchEndHandler;
+import com.google.gwt.event.dom.client.TouchMoveEvent;
+import com.google.gwt.event.dom.client.TouchMoveHandler;
+import com.google.gwt.event.dom.client.TouchStartEvent;
+import com.google.gwt.event.dom.client.TouchStartHandler;
+import com.google.gwt.event.logical.shared.AttachEvent;
+import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellTable;
@@ -150,6 +174,20 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		HorizontalPanel fileUps=new HorizontalPanel();
 		controler.add(fileUps);
 		fileUps.add(upload);
+		
+		final CheckBox lockCheck=new CheckBox("Lock");
+		fileUps.add(lockCheck);
+		
+		lockCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				boolean enabled=canvasScroll.setTouchScrollingDisabled(lockCheck.getValue());
+				
+				//LogUtils.log("result:"+enabled);
+			}
+		});
+		
 
 		
 		final CheckBox blackCheck=new CheckBox("black");
@@ -333,66 +371,93 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		overlayCanvas=Canvas.createIfSupported();
 		
+		canvas.addTouchCancelHandler(new TouchCancelHandler() {
+			
+			@Override
+			public void onTouchCancel(TouchCancelEvent event) {
+				if(lockCheck.getValue()){
+					//event.preventDefault();
+					//event.stopPropagation();
+				}
+				LogUtils.log("touch-cancel");
+			}
+		});
+		
+		canvas.addTouchMoveHandler(new TouchMoveHandler() {
+			
+			@Override
+			public void onTouchMove(TouchMoveEvent event) {
+				if(lockCheck.getValue()){
+					
+					int[] pt=touchToPoint(event.getTouches());
+					event.preventDefault();
+					//event.stopPropagation();
+				
+					perfomeMoveEvent(pt[0], pt[1]);
+					LogUtils.log("move:"+pt[0]+","+pt[1]);
+					
+					event.preventDefault();
+					//event.stopPropagation();
+					
+				}
+				
+				LogUtils.log("touch-move:");
+			}
+		});
+		
+		canvas.addTouchStartHandler(new TouchStartHandler() {
+			
+			@Override
+			public void onTouchStart(TouchStartEvent event) {
+				if(lockCheck.getValue()){
+					
+					int[] pt=touchToPoint(event.getTouches());
+					
+					LogUtils.log("start:"+pt[0]+","+pt[1]);
+					perfomeDownEvent(pt[0], pt[1]);
+					
+					event.preventDefault();
+					//event.stopPropagation();
+					
+				}
+				
+				LogUtils.log("touch-start");
+			}
+		});
+		canvas.addTouchEndHandler(new TouchEndHandler() {
+			
+			@Override
+			public void onTouchEnd(TouchEndEvent event) {
+				if(lockCheck.getValue()){
+					
+					int[] pt=touchToPoint(event.getTouches());
+					event.preventDefault();
+					//event.stopPropagation();
+					perfomeUpEvent(pt[0], pt[1]);
+					LogUtils.log("end:"+pt[0]+","+pt[1]);
+					
+					
+					
+				}
+				LogUtils.log("touch-end");
+			}
+		});
 		canvas.addMouseMoveHandler(new MouseMoveHandler() {
 			
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
-				if(editBt.isVisible()){
-					return;
-				}
 				
-				if(mouseDown){
-				mouseMoved=true;
-				int x=event.getX()*zoomSize;
-				int y=event.getY()*zoomSize;
-				XYPoint newPoint=new XYPoint(x,y);
-				
-				switch(penMode){
-				case MODE_ERASE:
-					erase(lastPoint,newPoint);
-					break;
-				case MODE_UNERASE:
-					unerase(lastPoint,newPoint);
-					break;
-				case MODE_BLACK:
-					drawLine(lastPoint,newPoint,"#000");
-					break;
-				case MODE_WHITE:
-					drawLine(lastPoint,newPoint,"#fff");
-					break;
-				case MODE_COLOR:
-					drawLine(lastPoint,newPoint,colorPicker.getValue());
-					break;
-				}
-				
-				
-				
-				lastPoint=newPoint;
-				
-				long c=System.currentTimeMillis();
-				
-				if(lastAvatorUpdate+200<c){
-					lastAvatorUpdate=c;
-					
-					}
-				}
+				LogUtils.log("mouse-move");
+				perfomeMoveEvent(event.getX(),event.getY());
 			}
 		});
 		canvas.addMouseDownHandler(new MouseDownHandler() {
 			
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
-				if(editBt.isVisible()){
-					return;
-				}
-				
+				LogUtils.log("mouse-down");
 				mouseRight=event.getNativeButton()==NativeEvent.BUTTON_RIGHT;
-				mouseDown=true;
-				lastPoint=mouseToXYPoint(event.getX(),event.getY());
-				
-				
-				currentCommand=new DataUriCommand();
-				currentCommand.setBeforeUri(canvas.toDataUrl("image/png"));
+				perfomeDownEvent(event.getX(),event.getY());
 				
 			}
 		});
@@ -400,7 +465,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onMouseOut(MouseOutEvent event) {
-				doMouseUp();
+				LogUtils.log("mouse-out");
+				perfomeUpEvent(event.getX(),event.getY());
 			}
 		});
 		
@@ -408,7 +474,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
-				doMouseUp();
+				LogUtils.log("mouse-up");
+				perfomeUpEvent(event.getX(),event.getY());
 			}
 		});
 		
@@ -441,19 +508,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 	
 		
-		editBt = new Button("Edit");
-		editBt.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-
-					
-					overlayBt.setVisible(true);
-					editBt.setVisible(false);
-					reset.setEnabled(true);
-				}
-			});
-		editBt.setVisible(false);
-		buttons.add(editBt);
+		
 		
 		
 		undoBt = new Button("Undo");
@@ -655,24 +710,135 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		
-		ScrollPanel scroll2=new ScrollPanel();
+		canvasScroll = new ScrollPanel();
 		
-		scroll2.setWidth("100%");
-		scroll2.setHeight("100%");
-		dock.add(scroll2);
-		scroll2.add(canvas);
+		
+		canvasScroll.setWidth("100%");
+		canvasScroll.setHeight("100%");
+		dock.add(canvasScroll);
+		canvasScroll.add(canvas);
 		
 		canvas.setVisible(false);
 		
+		canvas.addAttachHandler(new Handler() {
+			@Override
+			public void onAttachOrDetach(AttachEvent event) {
+				LogUtils.log("debug:attachordetach");
+			}
+		});
+		
+		canvas.addGestureChangeHandler(new GestureChangeHandler() {
+			
+			@Override
+			public void onGestureChange(GestureChangeEvent event) {
+				LogUtils.log("debug:onGestureChange");
+			}
+		});
+		canvas.addGestureStartHandler(new GestureStartHandler() {
+			
+			@Override
+			public void onGestureStart(GestureStartEvent event) {
+				LogUtils.log("debug:onGestureStart");
+			}
+		});
+		canvas.addGestureEndHandler(new GestureEndHandler() {
+			
+			@Override
+			public void onGestureEnd(GestureEndEvent event) {
+				LogUtils.log("debug:onGestureEnd");
+			}
+		});
+		canvas.addBlurHandler(new BlurHandler() {
+			
+			@Override
+			public void onBlur(BlurEvent event) {
+				LogUtils.log("debug:onBlur");
+			}
+		});
+		canvas.addFocusHandler(new FocusHandler() {
+			
+			@Override
+			public void onFocus(FocusEvent event) {
+				LogUtils.log("debug:onFocus");
+			}
+		});
+		canvas.addDragStartHandler(new DragStartHandler() {
+			
+			@Override
+			public void onDragStart(DragStartEvent event) {
+				LogUtils.log("debug:onDragStart");
+			}
+		});
+	}
+	
+	private int[] touchToPoint(JsArray<Touch> touchs){
+		//JsArray<Touch> touchs=event.getTouches();
+		if(touchs.length()>0){
+			Touch touch=touchs.get(0);
+			int x=touch.getRelativeX(canvas.getElement());
+			int y=touch.getRelativeY(canvas.getElement());
+			return new int[]{x,y};
+		}
+		
+		return null;
+	}
+	
+	private void perfomeMoveEvent(int mx,int my){
+
+	
+		if(mouseDown){
+		mouseMoved=true;
+		int x=mx*zoomSize;
+		int y=my*zoomSize;
+		XYPoint newPoint=new XYPoint(x,y);
+		
+		
+		switch(penMode){
+		case MODE_ERASE:
+			erase(lastPoint,newPoint);
+			break;
+		case MODE_UNERASE:
+			unerase(lastPoint,newPoint);
+			break;
+		case MODE_BLACK:
+			drawLine(lastPoint,newPoint,"#000");
+			break;
+		case MODE_WHITE:
+			drawLine(lastPoint,newPoint,"#fff");
+			break;
+		case MODE_COLOR:
+			drawLine(lastPoint,newPoint,colorPicker.getValue());
+			break;
+		}
+		
+		
+		
+		lastPoint=newPoint;
+		
+		long c=System.currentTimeMillis();
+		
+		if(lastAvatorUpdate+200<c){
+			lastAvatorUpdate=c;
+			
+			}
+		}
+	}
+	
+	private void perfomeDownEvent(int x,int y){
+
+		
+		mouseDown=true;
+		lastPoint=mouseToXYPoint(x,y);
+		
+		
+		currentCommand=new DataUriCommand();
+		//currentCommand.setBeforeUri(canvas.toDataUrl("image/png"));
 	}
 	
 
 
-	private void doMouseUp(){
+	private void perfomeUpEvent(int x,int y){
 
-		if(editBt.isVisible()){
-			return;
-		}
 		
 		if(!mouseMoved){
 			if(lastPoint!=null){
@@ -762,7 +928,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				
 				
 				
-				editBt.setVisible(false);
+			
 				reset.setEnabled(true);
 			}
 			@Override
@@ -930,7 +1096,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	boolean mouseDown;
 	boolean mouseRight;
 	private int zoomSize;
-	private Button editBt;
+
 	private Button overlayBt;
 	private Button undoBt;
 	private Button redoBt;
@@ -1155,6 +1321,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 
 
+	private ScrollPanel canvasScroll;
+
+
+
 
 	
 
@@ -1213,7 +1383,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.006";
 	}
 	
 	@Override
