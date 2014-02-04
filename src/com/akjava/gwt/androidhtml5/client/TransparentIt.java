@@ -30,23 +30,11 @@ import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.Touch;
-import com.google.gwt.event.dom.client.BlurEvent;
-import com.google.gwt.event.dom.client.BlurHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
 import com.google.gwt.event.dom.client.ContextMenuHandler;
-import com.google.gwt.event.dom.client.DragStartEvent;
-import com.google.gwt.event.dom.client.DragStartHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
-import com.google.gwt.event.dom.client.FocusEvent;
-import com.google.gwt.event.dom.client.FocusHandler;
-import com.google.gwt.event.dom.client.GestureChangeEvent;
-import com.google.gwt.event.dom.client.GestureChangeHandler;
-import com.google.gwt.event.dom.client.GestureEndEvent;
-import com.google.gwt.event.dom.client.GestureEndHandler;
-import com.google.gwt.event.dom.client.GestureStartEvent;
-import com.google.gwt.event.dom.client.GestureStartHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
@@ -63,13 +51,12 @@ import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
-import com.google.gwt.event.logical.shared.AttachEvent;
-import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
@@ -371,6 +358,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		overlayCanvas=Canvas.createIfSupported();
 		
+		/*
 		canvas.addTouchCancelHandler(new TouchCancelHandler() {
 			
 			@Override
@@ -382,11 +370,21 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				LogUtils.log("touch-cancel");
 			}
 		});
+		*/
+		
 		
 		canvas.addTouchMoveHandler(new TouchMoveHandler() {
 			
 			@Override
 			public void onTouchMove(TouchMoveEvent event) {
+				
+				int[] pt=touchToPoint(event.getTouches());
+				event.preventDefault();
+				//event.stopPropagation();
+			
+				perfomeMoveEvent(pt[0], pt[1]);
+				
+				/*
 				if(lockCheck.getValue()){
 					
 					int[] pt=touchToPoint(event.getTouches());
@@ -399,62 +397,75 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					event.preventDefault();
 					//event.stopPropagation();
 					
-				}
+				}*/
 				
 				LogUtils.log("touch-move:");
 			}
 		});
 		
+		
+		
 		canvas.addTouchStartHandler(new TouchStartHandler() {
-			
 			@Override
 			public void onTouchStart(TouchStartEvent event) {
-				if(lockCheck.getValue()){
-					
-					int[] pt=touchToPoint(event.getTouches());
-					
-					LogUtils.log("start:"+pt[0]+","+pt[1]);
-					perfomeDownEvent(pt[0], pt[1]);
-					
+				
+				if(lockCheck.getValue()){//on lock mode stop it
 					event.preventDefault();
-					//event.stopPropagation();
-					
 				}
 				
+				int[] pt=touchToPoint(event.getTouches());
+				LogUtils.log("start:"+pt[0]+","+pt[1]);
+				perfomeDownEvent(pt[0], pt[1]);
 				LogUtils.log("touch-start");
+				
 			}
 		});
+		/*
+		*/
+		
+		
 		canvas.addTouchEndHandler(new TouchEndHandler() {
 			
 			@Override
 			public void onTouchEnd(TouchEndEvent event) {
-				if(lockCheck.getValue()){
-					
-					int[] pt=touchToPoint(event.getTouches());
-					event.preventDefault();
-					//event.stopPropagation();
-					perfomeUpEvent(pt[0], pt[1]);
-					LogUtils.log("end:"+pt[0]+","+pt[1]);
-					
-					
+				/*if(lockCheck.getValue()){
 					
 				}
+				*/
+				
+				//touch end return empty touchs.usually
+				//LogUtils.log(event.getTouches());
+				
+				int[] pt=touchToPoint(event.getTouches());
+				event.preventDefault();
+				//event.stopPropagation();
+				perfomeUpEvent();
+				//LogUtils.log("end:"+pt[0]+","+pt[1]);
 				LogUtils.log("touch-end");
 			}
 		});
+		
+		
 		canvas.addMouseMoveHandler(new MouseMoveHandler() {
-			
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
-				
+				if(lockCheck.getValue()){
+					event.preventDefault();
+					event.stopPropagation();
+				}
 				LogUtils.log("mouse-move");
 				perfomeMoveEvent(event.getX(),event.getY());
 			}
 		});
+		
 		canvas.addMouseDownHandler(new MouseDownHandler() {
 			
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
+				if(lockCheck.getValue()){
+					event.preventDefault();
+					event.stopPropagation();
+				}
 				LogUtils.log("mouse-down");
 				mouseRight=event.getNativeButton()==NativeEvent.BUTTON_RIGHT;
 				perfomeDownEvent(event.getX(),event.getY());
@@ -465,8 +476,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onMouseOut(MouseOutEvent event) {
+				
 				LogUtils.log("mouse-out");
-				perfomeUpEvent(event.getX(),event.getY());
+				perfomeUpEvent();
 			}
 		});
 		
@@ -475,7 +487,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
 				LogUtils.log("mouse-up");
-				perfomeUpEvent(event.getX(),event.getY());
+				LogUtils.log(event.getNativeEvent());
+				perfomeUpEvent();
 			}
 		});
 		
@@ -719,59 +732,13 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		canvasScroll.add(canvas);
 		
 		canvas.setVisible(false);
+		/*
 		
-		canvas.addAttachHandler(new Handler() {
-			@Override
-			public void onAttachOrDetach(AttachEvent event) {
-				LogUtils.log("debug:attachordetach");
-			}
-		});
-		
-		canvas.addGestureChangeHandler(new GestureChangeHandler() {
-			
-			@Override
-			public void onGestureChange(GestureChangeEvent event) {
-				LogUtils.log("debug:onGestureChange");
-			}
-		});
-		canvas.addGestureStartHandler(new GestureStartHandler() {
-			
-			@Override
-			public void onGestureStart(GestureStartEvent event) {
-				LogUtils.log("debug:onGestureStart");
-			}
-		});
-		canvas.addGestureEndHandler(new GestureEndHandler() {
-			
-			@Override
-			public void onGestureEnd(GestureEndEvent event) {
-				LogUtils.log("debug:onGestureEnd");
-			}
-		});
-		canvas.addBlurHandler(new BlurHandler() {
-			
-			@Override
-			public void onBlur(BlurEvent event) {
-				LogUtils.log("debug:onBlur");
-			}
-		});
-		canvas.addFocusHandler(new FocusHandler() {
-			
-			@Override
-			public void onFocus(FocusEvent event) {
-				LogUtils.log("debug:onFocus");
-			}
-		});
-		canvas.addDragStartHandler(new DragStartHandler() {
-			
-			@Override
-			public void onDragStart(DragStartEvent event) {
-				LogUtils.log("debug:onDragStart");
-			}
-		});
+		*/
 	}
 	
 	private int[] touchToPoint(JsArray<Touch> touchs){
+		
 		//JsArray<Touch> touchs=event.getTouches();
 		if(touchs.length()>0){
 			Touch touch=touchs.get(0);
@@ -831,13 +798,29 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		lastPoint=mouseToXYPoint(x,y);
 		
 		
-		currentCommand=new DataUriCommand();
-		//currentCommand.setBeforeUri(canvas.toDataUrl("image/png"));
+		
+		
+		
+		//canvas.getContext2d().getImageData(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
+		
+		//don't do heavy things in onStart
+		Timer timer=new Timer(){//TODO fix it
+			@Override
+			public void run() {
+				currentCommand=new DataUriCommand();
+				currentCommand.setBeforeUri(canvas.toDataUrl("image/png"));
+			}
+		};
+		timer.schedule(50);
+		//
 	}
 	
 
 
-	private void perfomeUpEvent(int x,int y){
+	/**
+	 * can't get up position
+	 */
+	private void perfomeUpEvent(){
 
 		
 		if(!mouseMoved){
