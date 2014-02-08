@@ -351,7 +351,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				
 				List<ImageElement> elements=FluentIterable.from(easyCellTableSet.getDatas()).transform(new DataToImageElement()).toList();
 				
-				final String url=GifAnimeBuilder.from(elements).lowQuolity().loop().delay(300).toDataUrl();
+				final String url=GifAnimeBuilder.from(elements).lowQuality().loop().delay(300).toDataUrl();
 				
 				//create buttons
 				downloadArea.clear();

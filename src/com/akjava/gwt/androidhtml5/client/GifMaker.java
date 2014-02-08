@@ -1,5 +1,6 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
@@ -9,15 +10,16 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.jsgif.client.GifAnimeBuilder;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
-import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
-import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Lists;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
@@ -25,6 +27,7 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
@@ -33,8 +36,10 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
@@ -55,17 +60,26 @@ public class GifMaker extends Html5DemoEntryPoint {
 	private HorizontalPanel topPanel;
 	private EasyCellTableSet<ImageUrlData> easyCellTableSet;
 	private Button makeBt;
+	private ValueListBox<Integer> speedBox;
 
 
 	@Override
 	public void initializeWidget() {
-		root = new DataUrlDropDockRootPanel(Unit.PX,true){
+		
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				GifMaker.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					
+					GifMaker.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
+		
 		
 		
 		
@@ -95,7 +109,9 @@ public class GifMaker extends Html5DemoEntryPoint {
 		FileUploadForm upload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			@Override
 			public void uploaded(File file, String value) {
-				loadFile(file, value);
+				if(file!=null){
+					loadFile(file, value);
+				}
 			}
 		}, true,false);//base component catch everything
 		
@@ -108,6 +124,9 @@ public class GifMaker extends Html5DemoEntryPoint {
 		controler.add(downloadArea);
 		
 	
+		HorizontalPanel h1=new HorizontalPanel();
+		h1.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		controler.add(h1);
 		makeBt = new Button("Make",new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -115,7 +134,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 				
 				List<ImageElement> elements=FluentIterable.from(easyCellTableSet.getDatas()).transform(new DataToImageElement()).toList();
 				
-				final String url=GifAnimeBuilder.from(elements).lowQuolity().loop().delay(300).toDataUrl();
+				final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(300).toDataUrl();
 				image.setVisible(true);
 				image.setUrl(url);
 				
@@ -135,10 +154,73 @@ public class GifMaker extends Html5DemoEntryPoint {
 				
 			}
 		});
-		controler.add(makeBt);
+		h1.add(makeBt);
 		makeBt.setEnabled(false);
-	
+		h1.add(new Label("quality"));
+		qualityBox = new ValueListBox<Integer>(new Renderer<Integer>() {
+
+			@Override
+			public String render(Integer value) {
+				if(value==10){
+					return "medium(10)";
+				}
+				
+				if(value==1){
+					return "High(1)";
+				}
+				
+				if(value==20){
+					return "low(20)";
+				}
+				
+				return ""+value;
+			}
+
+			@Override
+			public void render(Integer object, Appendable appendable) throws IOException {
+				
+			}
+		});
+		List<Integer> acceptableValues=Lists.newArrayList();
+		for(int i=20;i>0;i--){
+			acceptableValues.add(i);
+		}
+		qualityBox.setValue(20);//low 
+		qualityBox.setAcceptableValues(acceptableValues);
+		h1.add(qualityBox);
 		
+		h1.add(new Label("speed"));
+		speedBox = new ValueListBox<Integer>(new Renderer<Integer>() {
+
+			@Override
+			public String render(Integer value) {
+				if(value==1000){
+					return "slow(1000ms)";
+				}
+				
+				if(value==50){
+					return "first(50ms)";
+				}
+				
+				if(value==500){
+					return "medium(500ms)";
+				}
+				
+				return ""+value;
+			}
+
+			@Override
+			public void render(Integer object, Appendable appendable) throws IOException {
+				
+			}
+		});
+		List<Integer> acceptableValues2=Lists.newArrayList();
+		for(int i=1;i<=20;i++){
+			acceptableValues2.add(i*50);
+		}
+		speedBox.setValue(300);//low 
+		speedBox.setAcceptableValues(acceptableValues2);
+		h1.add(speedBox);
 		
 		
 		
@@ -355,6 +437,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 	private DockLayoutPanel eastPanel;
 	private DataUrlDropDockRootPanel root;
 	private HorizontalPanel downloadArea;
+	private ValueListBox<Integer> qualityBox;
 
 
 	
@@ -402,7 +485,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.01";
 	}
 	
 	@Override

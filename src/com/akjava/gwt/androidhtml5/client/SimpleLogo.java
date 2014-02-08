@@ -51,6 +51,7 @@ import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
@@ -149,8 +150,19 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		makeBt = new Button("Make",new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				makeBt.setEnabled(false);
+				Timer timer=new Timer(){
+
+					@Override
+					public void run() {
+						generateImage();
+						makeBt.setEnabled(true);
+					}
+					
+				};
+				timer.schedule(50);
 				
-				generateImage();
+				
 			}
 		});
 		makeBtPanel.add(makeBt);
