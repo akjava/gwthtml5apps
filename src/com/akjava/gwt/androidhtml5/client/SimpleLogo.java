@@ -1,5 +1,9 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
 import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
 import com.akjava.gwt.html5.client.HTML5InputRange;
@@ -11,6 +15,7 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -23,6 +28,7 @@ import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.google.common.base.Function;
+import com.google.common.base.Optional;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.core.client.Scheduler;
@@ -40,6 +46,9 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
+import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
@@ -52,6 +61,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
+import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
@@ -78,11 +88,17 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	@Override
 	public void initializeWidget() {
-		root = new DataUrlDropDockRootPanel(Unit.PX,true){
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				SimpleLogo.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					
+					SimpleLogo.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
@@ -140,37 +156,9 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		makeBtPanel.add(makeBt);
 		makeBt.setEnabled(false);
 		
-		showOutSideCheck = new CheckBox("show out");
-		showOutSideCheck.setValue(true);
-		showOutSideCheck.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				if(showOutSideCheck.getValue()){
-					canvas.setStyleName("transparent_bg");
-				}else{
-					canvas.setStyleName("white_bg");
-				}
-				updateImage();
-			}
-		});
-		makeBtPanel.add(showOutSideCheck);
 		
-		keepTransparent = new CheckBox("transparent");
 		
-		keepTransparent.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				if(showOutSideCheck.getValue()){
-					//bgColorBox.setVisible(false);//need enabled
-				}else{
-					//bgColorBox.setVisible(true);//never show again...
-				}
-				updateImage();
-			}
-		});
-		makeBtPanel.add(keepTransparent);
+		
 		
 	
 		HorizontalPanel h1=new HorizontalPanel();
@@ -179,23 +167,27 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h1.add(scaleLabel);//TODO ondemand scale
 		scaleLabel.setWidth("70px");
 		
-		scaleRange = HTML5InputRange.createInputRange(1, 40, 10);
-		scaleRange.setWidth("200px");
+		scaleRange = HTML5InputRange.createInputRange(-99, 90, 0);
+		scaleRange.setWidth("250px");
 		h1.add(scaleRange);
 		scaleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
 				updateImage();
-				int scale=scaleRange.getValue();
+				
 				if(selection!=null){
-					selection.setScale(0.1*scale);
+					selection.setScale(getScale());
 				}
 			}
 		});
 		scaleRange.addInputRangeListener(new InputRangeListener() {
+			public String toLabel(double value){
+				String v=""+value;
+				return v.substring(0,Math.min(v.length(), 4));
+			}
 			@Override
 			public void changed(int newValue) {
-				scaleLabel.setText("Scale:"+((double)scaleRange.getValue()/10));
+				scaleLabel.setText("Scale:"+toLabel(getScale()));
 				
 			}
 		});
@@ -243,18 +235,38 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h3.add(colorBox);
 		
 		
-		h3.add(new Label("BG"));
-		
-		bgColorBox = new ColorBox();/*
-		bgColorBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+		transparentTextBox = new ValueListBox<Integer>(new Renderer<Integer>() {
+
+			@Override
+			public String render(Integer value) {
+				// TODO Auto-generated method stub
+				return value+"%";
+			}
+
+			@Override
+			public void render(Integer object, Appendable appendable) throws IOException {
+				
+			}
+			
+		});
+		transparentTextBox.setValue(100);
+		transparentTextBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
 			
 			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				LogUtils.log(bgColorBox.getValue());
+			public void onValueChange(ValueChangeEvent<Integer> event) {
+				updateImage();
 			}
-		});*/
-		bgColorBox.setValue("#000000");
-		h3.add(bgColorBox);
+		});
+		
+		
+		
+		List<Integer> values=new ArrayList<Integer>();
+		for(int i=20;i>0;i--){
+			values.add(i*5);
+		}
+		transparentTextBox.setAcceptableValues(values);
+		h3.add(transparentTextBox);
+		
 		
 		Button updateBt=new Button("Update",new ClickHandler() {
 			
@@ -264,6 +276,46 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		h3.add(updateBt);
+		
+		HorizontalPanel h4=new HorizontalPanel();
+		controler.add(h4);
+		h4.add(new Label("BG"));
+		bgColorBox = new ColorBox();
+		bgColorBox.setValue("#000000");
+		h4.add(bgColorBox);
+		
+		keepTransparent = new CheckBox("transparent");
+		
+		keepTransparent.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(showOutSideCheck.getValue()){
+					//bgColorBox.setVisible(false);//need enabled
+				}else{
+					//bgColorBox.setVisible(true);//never show again...
+				}
+				updateImage();
+			}
+		});
+		h4.add(keepTransparent);
+		
+		showOutSideCheck = new CheckBox("show outside");
+		showOutSideCheck.setValue(true);
+		showOutSideCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(showOutSideCheck.getValue()){
+					canvas.setStyleName("transparent_bg");
+				}else{
+					canvas.setStyleName("white_bg");
+				}
+				updateImage();
+			}
+		});
+		h4.add(showOutSideCheck);
+		
 		
 		
 		SimpleCellTable<LayerData> cellTable = new SimpleCellTable<LayerData>(999) {
@@ -332,7 +384,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		};
 		
 		eastPanel = new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 150);
+		eastPanel.addNorth(controler, 180);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
@@ -412,8 +464,12 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			
 			@Override
 			public void moved(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
+				double scale=getScale();
 				offsetX+=vectorX;
 				offsetY+=vectorY;
+				
+				//offsetX+=(vectorX*(1.0/scale));
+				//offsetY+=(vectorY*(1.0/scale));
 				updateImage();
 				if(selection!=null){
 					selection.setOffsetX(offsetX);
@@ -434,6 +490,35 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
+	}
+	
+	public void setScale(double scale){
+		int v=0;
+		if(scale==1){
+			v=0;
+		}else if(scale>1){
+			v=(int) (scale/0.1);
+			
+		}else if(scale<1){
+			v=(int) (scale/0.01);
+			v*=-1;
+		}
+		scaleRange.setValue(v);
+	}
+	
+	private double getScale(){
+		int v=scaleRange.getValue();
+		
+		if(v==0){
+			return 1;
+		}
+		if(v>0){
+			return 1.0+v*0.1;
+		}else if(v<0){
+			
+			return 1.0+v*0.01;
+		}
+		return 1;
 	}
 	
 	protected void generateImage() {
@@ -535,7 +620,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	
 	private ScrollPanel mainScrollPanel;
 	private DockLayoutPanel eastPanel;
-	private DataUrlDropDockRootPanel root;
+
 	private HorizontalPanel downloadArea;
 	private Canvas canvas;
 	private InputRangeWidget scaleRange;
@@ -556,7 +641,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			CanvasUtils.clear(canvas);
 			
 		}else{
-			scaleRange.setValue((int) (selection.getScale()*10));
+			setScale(selection.getScale());
 			rotateRange.setValue((int) selection.getAngle());
 			offsetX=selection.getOffsetX();
 			offsetY=selection.getOffsetY();
@@ -578,6 +663,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	
 	private double lastScale=1;
 	private CheckBox showOutSideCheck;
+	private ValueListBox<Integer> transparentTextBox;
 	private void updateImage(){
 		
 		
@@ -590,19 +676,23 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().save();
 		ImageElement element=selection.getImageElement();
 		
-		double scale=(double)scaleRange.getValue()/10;
+		double scale=getScale();
+		//LogUtils.log(scale);
 		
 		int angle=rotateRange.getValue();
 		
-		int ox=(int) (offsetX*scale);
-		int oy=(int) (offsetY*scale);
-		
+		//int ox=(int) (offsetX*scale);
+		//int oy=(int) (offsetY*scale);
+		int ox=offsetX;
+		int oy=offsetY;
+		/*
 		if(scale!=lastScale){
-			int ox2=(int) (element.getWidth()*(lastScale-scale));
-			int oy2=(int) (element.getWidth()*(lastScale-scale));
-			ox=ox-(ox-ox2);
-			oy=oy-(oy-oy2);
+			int ox2=Math.abs((int) (element.getWidth()*(lastScale-scale)));
+			int oy2=Math.abs((int) (element.getHeight()*(lastScale-scale)));
+			ox=ox-(ox2);
+			oy=oy-(oy2);
 		}
+		*/
 		
 		CanvasUtils.drawCenter(drawCanvas, element,ox,oy,scale,scale,angle,1);
 				
@@ -649,11 +739,16 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		Rect rect;
 		
 		
+		
 		rect=CanvasTextUtils.getAlignRect(canvas,canvas.getCoordinateSpaceWidth()-50,canvas.getCoordinateSpaceHeight()-50,title,CanvasUtils.ALIGN_RIGHT,CanvasUtils.VALIGN_TOP);
 		rect.setX(rect.getX()+25);
 		rect.setY(clipSY+25);
-		CanvasTextUtils.drawCenterInRect(canvas, title, rect);
 		
+		canvas.getContext2d().save();
+		double transp=(double)transparentTextBox.getValue()/100;
+		canvas.getContext2d().setGlobalAlpha(transp);
+		CanvasTextUtils.drawCenterInRect(canvas, title, rect);
+		canvas.getContext2d().restore();
 		
 		rect=RectBuilder.from(500, 200).slice(4, 2).topRight().horizontalExpand(-1).toRect();//.horizontalExpand(-1)
 		
