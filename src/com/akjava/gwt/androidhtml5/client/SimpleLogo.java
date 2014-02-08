@@ -70,7 +70,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<ImageElementData> easyCellTableSet;
+	private EasyCellTableSet<LayerData> easyCellTableSet;
 	private Button makeBt;
 	private ColorBox bgColorBox;
 	private CheckBox keepTransparent;
@@ -120,6 +120,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		
 		HorizontalPanel fileUps=new HorizontalPanel();
+		fileUps.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		controler.add(fileUps);
 		fileUps.add(upload);
 
@@ -162,9 +163,9 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				if(showOutSideCheck.getValue()){
-					bgColorBox.setVisible(false);//need enabled
+					//bgColorBox.setVisible(false);//need enabled
 				}else{
-					bgColorBox.setVisible(true);
+					//bgColorBox.setVisible(true);//never show again...
 				}
 				updateImage();
 			}
@@ -178,20 +179,24 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h1.add(scaleLabel);//TODO ondemand scale
 		scaleLabel.setWidth("70px");
 		
-		resizeRange = HTML5InputRange.createInputRange(1, 40, 10);
-		resizeRange.setWidth("200px");
-		h1.add(resizeRange);
-		resizeRange.addInputRangeListener(new InputRangeListener() {
+		scaleRange = HTML5InputRange.createInputRange(1, 40, 10);
+		scaleRange.setWidth("200px");
+		h1.add(scaleRange);
+		scaleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
 				updateImage();
+				int scale=scaleRange.getValue();
+				if(selection!=null){
+					selection.setScale(0.1*scale);
+				}
 			}
 		});
-		resizeRange.addInputRangeListener(new InputRangeListener() {
+		scaleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
-				scaleLabel.setText("Scale:"+((double)resizeRange.getValue()/10));
-				updateImage();
+				scaleLabel.setText("Scale:"+((double)scaleRange.getValue()/10));
+				
 			}
 		});
 		
@@ -208,13 +213,19 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			@Override
 			public void changed(int newValue) {
 				updateImage();
+				int angle=rotateRange.getValue();
+				if(selection!=null){
+					selection.setAngle(angle);
+				}
 			}
 		});
 		rotateRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
+				
 				turnLabel.setText("angle:"+(rotateRange.getValue()));
-				updateImage();
+				
+				
 			}
 		});
 	
@@ -255,17 +266,17 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h3.add(updateBt);
 		
 		
-		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<ImageElementData>(999) {
+		SimpleCellTable<LayerData> cellTable = new SimpleCellTable<LayerData>(999) {
 			@Override
-			public void addColumns(CellTable<ImageElementData> table) {
-				 ButtonColumn<ImageElementData> removeBtColumn=new ButtonColumn<ImageElementData>() {
+			public void addColumns(CellTable<LayerData> table) {
+				 ButtonColumn<LayerData> removeBtColumn=new ButtonColumn<LayerData>() {
 						@Override
-						public void update(int index, ImageElementData object,
+						public void update(int index, LayerData object,
 								String value) {
 								easyCellTableSet.removeItem(object);
 						}
 						@Override
-						public String getValue(ImageElementData object) {
+						public String getValue(LayerData object) {
 							 return "X";
 						}
 					};
@@ -307,8 +318,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				
 					
 					
-				    TextColumn<ImageElementData> fileInfoColumn = new TextColumn<ImageElementData>() {
-					      public String getValue(ImageElementData value) {
+				    TextColumn<LayerData> fileInfoColumn = new TextColumn<LayerData>() {
+					      public String getValue(LayerData value) {
 					    	  
 					    	  return value.getFileName();
 					      }
@@ -329,9 +340,9 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<ImageElementData>(cellTable,false) {
+		easyCellTableSet=new EasyCellTableSet<LayerData>(cellTable,false) {
 			@Override
-			public void onSelect(ImageElementData selection) {
+			public void onSelect(LayerData selection) {
 				doSelect(selection);
 			}
 		};
@@ -404,6 +415,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				offsetX+=vectorX;
 				offsetY+=vectorY;
 				updateImage();
+				if(selection!=null){
+					selection.setOffsetX(offsetX);
+					selection.setOffsetY(offsetY);
+				}
 			}
 		});
 		
@@ -539,7 +554,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				//LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
 				
 				
-				final ImageElementData data=new ImageElementData(file.getFileName(),element,asStringText);
+				final LayerData data=new LayerData(file.getFileName(),element,asStringText);
 				
 				easyCellTableSet.addItem(data);
 				//updateList();
@@ -574,7 +589,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	}
 
 	
-	ImageElementData selection;
+	LayerData selection;
 
 
 
@@ -586,7 +601,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private DataUrlDropDockRootPanel root;
 	private HorizontalPanel downloadArea;
 	private Canvas canvas;
-	private InputRangeWidget resizeRange;
+	private InputRangeWidget scaleRange;
 	private InputRangeWidget rotateRange;
 
 
@@ -596,12 +611,18 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 
 	
-	public void doSelect(ImageElementData selection) {
+	public void doSelect(LayerData selection) {
 		this.selection=selection;
+		
+		
 		if(selection==null){
 			CanvasUtils.clear(canvas);
 			
 		}else{
+			scaleRange.setValue((int) (selection.getScale()*10));
+			rotateRange.setValue((int) selection.getAngle());
+			offsetX=selection.getOffsetX();
+			offsetY=selection.getOffsetY();
 			
 			updateImage();
 		}
@@ -632,9 +653,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().save();
 		ImageElement element=selection.getImageElement();
 		
-		double scale=(double)resizeRange.getValue()/10;
-		
-		
+		double scale=(double)scaleRange.getValue()/10;
 		
 		int angle=rotateRange.getValue();
 		
@@ -753,7 +772,40 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	
 
 	
-	
+	public class LayerData extends ImageElementData{
+		public LayerData(String fileName, ImageElement imageElement, String dataUrl) {
+			super(fileName, imageElement, dataUrl);
+			// TODO Auto-generated constructor stub
+		}
+		private double scale=1;
+		public double getScale() {
+			return scale;
+		}
+		public void setScale(double scale) {
+			this.scale = scale;
+		}
+		public int getOffsetX() {
+			return offsetX;
+		}
+		public void setOffsetX(int offsetX) {
+			this.offsetX = offsetX;
+		}
+		public int getOffsetY() {
+			return offsetY;
+		}
+		public void setOffsetY(int offsetY) {
+			this.offsetY = offsetY;
+		}
+		public double getAngle() {
+			return angle;
+		}
+		public void setAngle(double angle) {
+			this.angle = angle;
+		}
+		private int offsetX;
+		private int offsetY;
+		private double angle;
+	}
 
 
 

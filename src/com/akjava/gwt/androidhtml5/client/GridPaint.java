@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.http.client.CircularRedirectException;
+
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
@@ -13,6 +15,8 @@ import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.jsgif.client.GifAnimeBuilder;
+import com.akjava.gwt.lib.client.CanvasPaintUtils;
+import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -33,6 +37,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -49,6 +55,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.ValueListBox;
@@ -64,6 +71,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  */
 public class GridPaint extends Html5DemoEntryPoint {
 
+	protected static final int PICK_AND_GRID = 2;
 	protected static final int PICK_COLOR = 1;
 	protected static final int SELECT_GRID = 0;
 	private int mode;
@@ -148,27 +156,27 @@ public class GridPaint extends Html5DemoEntryPoint {
 		colorBox.setWidth("50px");//for IE
 		bh.add(colorBox);
 		
-		pickBt = new Button("Pick",new ClickHandler() {
+		
+		modeBox = new ListBox();
+		modeBox.addChangeHandler(new ChangeHandler() {
 			
-			
-
 			@Override
-			public void onClick(ClickEvent event) {
-				if(mode==SELECT_GRID){
-					mode=PICK_COLOR;
-					pickBt.setText("Grid");
-					canvas.addStyleName("pickcolor");
-					pickBt.setTitle("grid it");
-				}else{
-					mode=SELECT_GRID;
-					pickBt.setText("Pick");
+			public void onChange(ChangeEvent event) {
+				mode=modeBox.getSelectedIndex();
+				if(mode==0){
 					canvas.removeStyleName("pickcolor");
-					pickBt.setTitle("pick Color");
+				}else{
+					canvas.addStyleName("pickcolor");
 				}
+				
 			}
 		});
-		bh.add(pickBt);
-		pickBt.setTitle("pick Color");
+		modeBox.addItem("Grid");
+		modeBox.addItem("Pick");
+		modeBox.addItem("P&Gr");
+		modeBox.setSelectedIndex(0);
+		bh.add(modeBox);
+		
 		
 		Button fillBt=new Button("Fill",new ClickHandler() {
 			
@@ -348,7 +356,19 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				
 			}
 		});
-		controler.add(makeBt);
+		gifPanel.add(makeBt);
+		
+		circleCheck = new CheckBox("Circle");
+		circleCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				updateCanvas();
+			}
+		});
+		gifPanel.add(circleCheck);
+		
+		
 		//makeBt.setEnabled(false);
 		
 		
@@ -410,12 +430,18 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	public  void fillColor(){
 		for(int y=0;y<selection.getRow();y++){
 			for(int x=0;x<selection.getCol();x++){
-				String color=selection.getColor(y, x);
-				if(color!=null){
-					if(GridImageData.isPointValue(color)){
+				String value=selection.getValue(y, x);
+				if(value!=null){
+					if(GridImageData.isPointValue(value)){
 						//ignore
 					}else{
-						selection.setColor(y,x,getColor());
+						if(GridImageData.isCircle(value)){
+							selection.setColor(y,x,"circle"+getColor());
+						}else{
+							selection.setColor(y,x,getColor());
+						}
+						
+						
 					}
 				}
 			}
@@ -554,6 +580,8 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	private ColorBox colorBox;
 	public void doSelect(GridImageData selection) {
 		this.selection=selection;
+		target=null;
+		
 		if(selection==null){
 			canvas.setVisible(false);
 		}else{
@@ -578,7 +606,9 @@ Button saveBt=new Button("Save",new ClickHandler() {
 
 
 
-	private Button pickBt;
+	
+	private CheckBox circleCheck;
+	private ListBox modeBox;
 	private static class Point{
 		public Point(int x, int y) {
 			super();
@@ -617,8 +647,11 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	private void doClick(int cx, int cy) {
 		if(mode==SELECT_GRID){
 			doGrid(cx,cy);
+		}else if(mode==PICK_COLOR){
+			doPick(cx,cy);
 		}else{
 			doPick(cx,cy);
+			doGrid(cx,cy);
 		}
 	}
 	
@@ -648,15 +681,12 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		if(isStampMode()){
 			if(target==null){
 				target=new Point(atX,atY);
-				canvas.getContext2d().setStrokeStyle("#888");
-				int dx=selection.getGridSize()*atX;
-				int dy=selection.getGridSize()*atY;
-				canvas.getContext2d().strokeRect(dx+1, dy+1, selection.getGridSize()-2,selection.getGridSize()-2);
-				return;
+				
+				//return;
 			}else{
 				if(target.equals(atX,atY)){
 					selection.pushAt(atY, atX, null);
-					updateCanvasAt(target.getX(),target.getY(),element);	
+					//updateCanvasAt(target.getX(),target.getY(),element);	
 				}else{
 				int size=selection.getGridSize();
 				int dx=selection.getGridSize()*atX;
@@ -667,24 +697,35 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				LogUtils.log(sx+","+sy+","+dx+","+dy);
 				canvas.getContext2d().drawImage(element, sx, sy, size, size, dx, dy, size, size);
 				
-				updateCanvasAt(target.getX(),target.getY(),element);//reupdate
+				//updateCanvasAt(target.getX(),target.getY(),element);//reupdate
 				selection.pushAt(atY, atX, target.toString());
 				
 				}
 				target=null;
-				return;
+				//return;
 			}
 		}else{
-		selection.pushAt(atY, atX, getColor());
+		selection.pushAt(atY, atX, circleCheck.getValue()?"circle"+getColor():getColor());
 		}
 		
-		updateCanvasAt(atX,atY,element);
+		canvas.getContext2d().save();
+		
+		int gridSize=selection.getGridSize();
+		
+		int dx=gridSize*atX-1;
+		int dy=gridSize*atY-1;
+		//clip
+		CanvasUtils.clip(canvas,atX,atY,gridSize*3,gridSize*3);
+		updateCanvas();
+		canvas.getContext2d().restore();
+		//updateCanvasAt(atX,atY,element);
 		//updateCanvas();
 	}
 	
+	/*
 	public void updateCanvasAt(int x,int y,ImageElement element){
 		int gridSize=selection.getGridSize();
-		String color=selection.getColor(y, x);
+		String color=selection.getValue(y, x);
 		int dx=gridSize*x;
 		int dy=gridSize*y;
 		if(color!=null){
@@ -695,8 +736,14 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				
 				canvas.getContext2d().drawImage(element, sx, sy, gridSize, gridSize, dx, dy, gridSize, gridSize);
 			}else{
+				if(GridImageData.isCircle(color)){
+					String hex=GridImageData.parseColor(color);
+					canvas.getContext2d().setFillStyle(hex);
+					CanvasPaintUtils.drawCircleInRect(canvas,dx,dy,gridSize,gridSize,false,true);
+				}else{
 				canvas.getContext2d().setFillStyle(color);
 				canvas.getContext2d().fillRect(dx, dy, selection.getGridSize(),selection.getGridSize());
+				}
 			}
 			
 		}else{
@@ -710,11 +757,21 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			canvas.getContext2d().restore();
 		}
 		
-	}
+	}*/
 
 	public void updateCanvas(){
 		
 		GridImageData.drawGridImage(canvas,selection);
+		if(target!=null){
+			int atX=target.getX();
+			int atY=target.getY();
+			canvas.getContext2d().setStrokeStyle("#888");
+			int dx=selection.getGridSize()*atX;
+			int dy=selection.getGridSize()*atY;
+			canvas.getContext2d().strokeRect(dx+1, dy+1, selection.getGridSize()-2,selection.getGridSize()-2);
+		}
+		
+		
 	}
 	
 
@@ -795,6 +852,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			this.imageHeight=imageHeight;
 			this.imageWidth=imageWidth;
 			
+			
 			Collection<Integer> rowValues=new ArrayList<Integer>();
 			Collection<Integer> colValues=new ArrayList<Integer>();
 			for(int i=0;i<row;i++){
@@ -819,7 +877,8 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			gridTable.put(rowKey, columnKey, value);
 		}
 		public void pushAt(int rowKey,int columnKey,String value){
-			if(value!=null && !value.startsWith("#")){
+			LogUtils.log(value);
+			if(value!=null && !value.startsWith("#")&&!value.startsWith("circle")){
 				gridTable.put(rowKey, columnKey, value);//position at
 				return;
 			}
@@ -831,7 +890,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			
 		}
 		
-		public String getColor(int rowKey,int columnKey){
+		public String getValue(int rowKey,int columnKey){
 			return gridTable.get(rowKey, columnKey);
 		}
 		private Table<Integer, Integer, String> gridTable;
@@ -866,8 +925,20 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		public static boolean isPointValue(String line){
 			return line.indexOf("x")!=-1;
 		}
+		public static boolean isCircle(String line){
+			return line.startsWith("circle");
+		}
+		public static String parseColor(String line){
+			int index=line.indexOf("#");
+			if(index!=-1){
+				return line.substring(index);
+			}else{
+				return null;
+			}
+		}
 		
 		public static void drawGridImage(Canvas targetCanvas,GridImageData gridData){
+			LogUtils.log("drawGrid");
 			//draw all
 					ImageElement element=ImageElementUtils.create(gridData.getDataUrl());
 					ImageElementUtils.copytoCanvas(element, targetCanvas);
@@ -879,25 +950,39 @@ Button saveBt=new Button("Save",new ClickHandler() {
 					//TODO optimize
 					for(int y=0;y<gridData.getRow();y++){
 						for(int x=0;x<gridData.getCol();x++){
-							String color=gridData.getColor(y, x);
-							if(color!=null){
+							String value=gridData.getValue(y, x);
+							if(value!=null){
 								
 								int dx=gridSize*x;
 								int dy=gridSize*y;
-								if(isPointValue(color)){
-									Point target=Point.from(color);
+								if(isPointValue(value)){
+									Point target=Point.from(value);
 									int sx=gridSize*target.getX();
 									int sy=gridSize*target.getY();
 									targetCanvas.getContext2d().drawImage(element, sx, sy, gridSize, gridSize, dx, dy, gridSize, gridSize);
 								}else{
-									targetCanvas.getContext2d().setFillStyle(color);
-									targetCanvas.getContext2d().fillRect(dx, dy, gridSize,gridSize);
+									if(isCircle(value)){
+										String hex=parseColor(value);
+										targetCanvas.getContext2d().setFillStyle(hex);
+										
+										CanvasPaintUtils.drawCircleInRect(targetCanvas,dx,dy,gridSize,gridSize,false,true);
+										targetCanvas.getContext2d().setStrokeStyle(hex);
+										CanvasPaintUtils.drawCircleInRect(targetCanvas,dx,dy,gridSize,gridSize,false,false);//some hole
+									}else{
+										String hex=parseColor(value);
+										targetCanvas.getContext2d().setFillStyle(hex);
+										targetCanvas.getContext2d().fillRect(dx, dy, gridSize,gridSize);
+									}
+									
+									//targetCanvas.getContext2d().fi
+									
 								}
 							}
 						}
 					}
 		}
 	}
+	
 
 
 

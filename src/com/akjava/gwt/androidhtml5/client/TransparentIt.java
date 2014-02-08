@@ -1,5 +1,6 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,8 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.lib.client.CanvasUtils;
+import com.akjava.gwt.lib.client.GWTHTMLUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -18,6 +21,7 @@ import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
@@ -28,7 +32,10 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.dom.client.StyleElement;
+import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Touch;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -43,16 +50,17 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
-import com.google.gwt.event.dom.client.TouchCancelEvent;
-import com.google.gwt.event.dom.client.TouchCancelHandler;
 import com.google.gwt.event.dom.client.TouchEndEvent;
 import com.google.gwt.event.dom.client.TouchEndHandler;
 import com.google.gwt.event.dom.client.TouchMoveEvent;
 import com.google.gwt.event.dom.client.TouchMoveHandler;
 import com.google.gwt.event.dom.client.TouchStartEvent;
 import com.google.gwt.event.dom.client.TouchStartHandler;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
+import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
@@ -67,6 +75,7 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.ValueListBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
@@ -114,6 +123,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	private Button saveBt;
 
+
+
+	private Button saveWithBgBt;
+
 	
 	@Override
 	public void initializeWidget() {
@@ -148,7 +161,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		VerticalPanel controler=new VerticalPanel();
-		controler.setSpacing(1);
+		controler.setSpacing(4);
 		
 		FileUploadForm upload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			@Override
@@ -162,18 +175,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		controler.add(fileUps);
 		fileUps.add(upload);
 		
-		final CheckBox lockCheck=new CheckBox("Lock");
-		fileUps.add(lockCheck);
 		
-		lockCheck.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				boolean enabled=canvasScroll.setTouchScrollingDisabled(lockCheck.getValue());
-				
-				//LogUtils.log("result:"+enabled);
-			}
-		});
 		
 
 		
@@ -216,6 +218,29 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		bgPanel.add(blackCheck);
 		
+		//
+		ValueListBox<Integer> scaleBox=new ValueListBox<Integer>(new Renderer<Integer>() {
+
+			@Override
+			public String render(Integer object) {
+	
+				return ""+object;
+			}
+
+			@Override
+			public void render(Integer object, Appendable appendable) throws IOException {
+				
+			}
+		});
+		scaleBox.setValue(1);
+		scaleBox.setAcceptableValues(Lists.newArrayList(1,2,4,8));
+		bgPanel.add(scaleBox);
+		scaleBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Integer> event) {
+				updateScale(event.getValue());
+			}
+		});
 		
 		int cbase=18;
 		canvasWidth = cbase*16;
@@ -231,6 +256,17 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		//size choose
 		HorizontalPanel sizes=new HorizontalPanel();
 		controler.add(sizes);
+		
+		RadioButton exs2=new RadioButton("sizes");
+		exs2.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				penSize=2;
+			}
+		});
+		sizes.add(exs2);
+		sizes.add(new Label("xexSmall"));
 		
 		RadioButton exs=new RadioButton("sizes");
 		exs.addClickHandler(new ClickHandler() {
@@ -354,7 +390,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		canvas = Canvas.createIfSupported();
-		canvas.setStylePrimaryName("transparent_bg");//or bg
+		
+		canvas.setStylePrimaryName("transparent_bg");
+		
+		GWTHTMLUtils.disableSelectionStart(canvas.getElement());
 		
 		overlayCanvas=Canvas.createIfSupported();
 		
@@ -378,6 +417,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onTouchMove(TouchMoveEvent event) {
 				
+				if(!scrollLockCheck.getValue()){//for mobile
+					return;
+				}
+				
 				int[] pt=touchToPoint(event.getTouches());
 				event.preventDefault();
 				//event.stopPropagation();
@@ -399,7 +442,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					
 				}*/
 				
-				LogUtils.log("touch-move:");
+				//LogUtils.log("touch-move:");
 			}
 		});
 		
@@ -409,14 +452,16 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onTouchStart(TouchStartEvent event) {
 				
-				if(lockCheck.getValue()){//on lock mode stop it
+				if(scrollLockCheck.getValue()){//on lock mode stop it
 					event.preventDefault();
+				}else{
+					return;
 				}
 				
 				int[] pt=touchToPoint(event.getTouches());
-				LogUtils.log("start:"+pt[0]+","+pt[1]);
+				//LogUtils.log("start:"+pt[0]+","+pt[1]);
 				perfomeDownEvent(pt[0], pt[1]);
-				LogUtils.log("touch-start");
+				//LogUtils.log("touch-start");
 				
 			}
 		});
@@ -428,6 +473,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onTouchEnd(TouchEndEvent event) {
+				if(!scrollLockCheck.getValue()){//for mobile
+					return;
+				}
 				/*if(lockCheck.getValue()){
 					
 				}
@@ -441,7 +489,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				//event.stopPropagation();
 				perfomeUpEvent();
 				//LogUtils.log("end:"+pt[0]+","+pt[1]);
-				LogUtils.log("touch-end");
+				//LogUtils.log("touch-end");
 			}
 		});
 		
@@ -449,11 +497,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		canvas.addMouseMoveHandler(new MouseMoveHandler() {
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
-				if(lockCheck.getValue()){
-					event.preventDefault();
-					event.stopPropagation();
-				}
-				LogUtils.log("mouse-move");
+				
+				//LogUtils.log("mouse-move");
 				perfomeMoveEvent(event.getX(),event.getY());
 			}
 		});
@@ -462,11 +507,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
-				if(lockCheck.getValue()){
-					event.preventDefault();
-					event.stopPropagation();
-				}
-				LogUtils.log("mouse-down");
+			
+				//LogUtils.log("mouse-down");
 				mouseRight=event.getNativeButton()==NativeEvent.BUTTON_RIGHT;
 				perfomeDownEvent(event.getX(),event.getY());
 				
@@ -477,7 +519,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onMouseOut(MouseOutEvent event) {
 				
-				LogUtils.log("mouse-out");
+				//LogUtils.log("mouse-out");
 				perfomeUpEvent();
 			}
 		});
@@ -486,8 +528,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
-				LogUtils.log("mouse-up");
-				LogUtils.log(event.getNativeEvent());
+				//LogUtils.log("mouse-up");
+				//LogUtils.log(event.getNativeEvent());
 				perfomeUpEvent();
 			}
 		});
@@ -507,12 +549,12 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	
 		
 		
-		HorizontalPanel exbuttons=new HorizontalPanel();
+		
 		
 		HorizontalPanel buttons=new HorizontalPanel();
 		controler.add(buttons);
 		
-		controler.add(exbuttons);
+	
 		
 
 		
@@ -520,6 +562,23 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 	
+		
+		scrollLockCheck = new CheckBox("ScrollLock");
+		scrollLockCheck.setTitle("stop scroll on mobile");
+		/*//some how not work
+		lockCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				boolean enabled=canvasScroll.setTouchScrollingDisabled(lockCheck.getValue());
+				
+				//LogUtils.log("result:"+enabled);
+			}
+		});
+		*/
+		scrollLockCheck.setValue(true);
+		buttons.add(scrollLockCheck);
+		
 		
 		
 		
@@ -571,11 +630,57 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		saveBt.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				createDownloadImage();
+				createDownloadImage(false);
 			}
 		});
 		buttons.add(saveBt);
 		
+		saveWithBgBt = new Button("SaveWithBg");
+		saveWithBgBt.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				createDownloadImage(true);
+			}
+		});
+		buttons.add(saveWithBgBt);
+		
+		
+		HorizontalPanel exbuttons=new HorizontalPanel();
+		controler.add(exbuttons);
+		
+		exbuttons.add(new Label("bgimage"));
+		final FileUploadForm bgupload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			
+			
+
+			@Override
+			public void uploaded(File file, String asStringText) {
+				bgImage=ImageElementUtils.create(asStringText);
+				
+				String css=".newbg{"+"background-image: url(\""+asStringText+"\");"+"}";
+				injectedBgCss = StyleInjector.injectStylesheet(css);
+				
+				canvas.addStyleName("newbg");
+				
+				updateCanvas(false);
+			}
+		}, false);
+		
+		exbuttons.add(bgupload);
+		Button reset=new Button("reset bg",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				canvas.removeStyleName("newbg");
+				
+				injectedBgCss.removeFromParent();//can't remove this is just style-text
+				LogUtils.log(injectedBgCss.getParentElement());
+				LogUtils.log(injectedBgCss);
+				bgupload.reset();
+				updateCanvas(false);
+			}
+		});
+		exbuttons.add(reset);
 		
 		
 		//controler,fist,pre,next,auto-play + time,clear
@@ -737,6 +842,18 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		*/
 	}
 	
+	private double currentScale=1;
+	protected void updateScale(Integer value) {
+		currentScale=value;
+		//zoomSize=value;
+		if(selection!=null){
+			
+			updateCanvas(false);
+		}
+	}
+	private StyleElement injectedBgCss;
+
+	
 	private int[] touchToPoint(JsArray<Touch> touchs){
 		
 		//JsArray<Touch> touchs=event.getTouches();
@@ -752,6 +869,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	
 	private void perfomeMoveEvent(int mx,int my){
 
+		mx/=currentScale;
+		my/=currentScale;
 	
 		if(mouseDown){
 		mouseMoved=true;
@@ -794,6 +913,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	private void perfomeDownEvent(int x,int y){
 
 		
+		x/=currentScale;
+		y/=currentScale;
+		
 		mouseDown=true;
 		lastPoint=mouseToXYPoint(x,y);
 		
@@ -801,18 +923,21 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		
-		//canvas.getContext2d().getImageData(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
 		
 		//don't do heavy things in onStart
 		Timer timer=new Timer(){//TODO fix it
 			@Override
 			public void run() {
-				currentCommand=new DataUriCommand();
-				currentCommand.setBeforeUri(canvas.toDataUrl("image/png"));
+				DataUriCommand newCommand=new DataUriCommand();
+				if(currentCommand!=null){
+					newCommand.setBeforeUri(currentCommand.getAfterUri());
+				}else{
+					newCommand.setBeforeUri(selection.getDataUrl());
+				}
+				currentCommand=newCommand;
 			}
 		};
 		timer.schedule(50);
-		//
 	}
 	
 
@@ -854,7 +979,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		lastPoint=null;
 	
 		String dataUrl=canvas.toDataUrl("image/png");
-		currentCommand.setAfterUri(dataUrl);
+		if(currentCommand!=null){
+			currentCommand.setAfterUri(dataUrl);
+			}
 		if(selection!=null){
 			selection.setDataUrl(dataUrl);
 		}
@@ -1223,11 +1350,15 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 
 	Blob blob;
-	private void createDownloadImage() {
+	private void createDownloadImage(boolean withBg) {
 		if(selection==null){
 			return;
 		}
 		downloadArea.clear();
+		
+		if(withBg){
+			updateCanvas(true);
+		}
 		
 		blob=Blob.createBase64Blob(canvas.toDataUrl(),"image/png");//for IE keep blob
 		
@@ -1308,6 +1439,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 
 
+	private CheckBox scrollLockCheck;
+
+
+
 
 	
 
@@ -1325,7 +1460,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			//ImageElementUtils.copytoCanvas(element, canvas);
 			undoBt.setEnabled(false);
 			redoBt.setEnabled(false);
-			updateCanvas();
+			updateCanvas(false);
 		}
 	}
 
@@ -1334,10 +1469,33 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 	}
 	
+	private ImageElement bgImage;
 
-	public void updateCanvas(){
-		ImageElementUtils.copytoCanvas(ImageElementUtils.create(selection.getDataUrl()), canvas);
-		ImageElementUtils.copytoCanvas(ImageElementUtils.create(selection.getDataUrl()), overlayCanvas,false);
+	/**
+	 * only need when export,usually css draw backgorund
+	 * @param withBg
+	 */
+	public void updateCanvas(boolean withBg){
+		if(selection==null){
+			return;
+		}
+		ImageElement selectionImage=ImageElementUtils.create(selection.getDataUrl());
+		ImageElementUtils.copytoCanvas(selectionImage, canvas,false);//just same size
+		
+		//change scale
+		if(currentScale!=1){
+			canvas.setWidth((canvas.getCoordinateSpaceWidth()*currentScale)+"px");
+			canvas.setHeight((canvas.getCoordinateSpaceHeight()*currentScale)+"px");
+		}
+		
+		if(bgImage!=null){
+			//bugs,not effect on bgcolor with bgimage,bgimage not repeated like css
+		CanvasUtils.drawImage(canvas, bgImage);
+		}
+		
+		CanvasUtils.drawImage(canvas, selectionImage);
+		
+		ImageElementUtils.copytoCanvas(selectionImage, overlayCanvas,false);
 	}
 
 	public abstract class HtmlColumn<T> extends Column<T,SafeHtml>{

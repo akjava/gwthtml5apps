@@ -8,7 +8,14 @@ import com.google.common.base.Predicate;
 import com.google.gwt.dom.client.Style.Unit;
 
 /*
+ * 
  * this is usefull when do nothing drop rootPanel
+ */
+
+/**
+ * @deprecated use common
+ * @author aki
+ *
  */
 public abstract class DataUrlDropDockRootPanel extends DropDockRootPanel{
 	public DataUrlDropDockRootPanel(Unit unit,boolean addRootLayoutPanel) {
