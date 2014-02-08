@@ -408,10 +408,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
-		moveControler=new MoveControler(new MoveListener() {
+		moveControler=new DragMoveControler(new MoveListener() {
 			
 			@Override
-			public void moved(int sx, int sy, int vectorX, int vectorY) {
+			public void moved(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
 				offsetX+=vectorX;
 				offsetY+=vectorY;
 				updateImage();
@@ -419,6 +419,18 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 					selection.setOffsetX(offsetX);
 					selection.setOffsetY(offsetY);
 				}
+			}
+
+			@Override
+			public void start(int sx, int sy) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void end(int sx, int sy) {
+				// TODO Auto-generated method stub
+				
 			}
 		});
 		
@@ -436,85 +448,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private int offsetX,offsetY;
 	
-	private MoveControler moveControler;
+	private DragMoveControler moveControler;
 	
-	public static class MoveControler{
-		
-		
-		public MoveControler(MoveListener moveListener) {
-			super();
-			this.moveListener = moveListener;
-		}
-		private int startX;
-		private boolean started;
-		public boolean isStarted() {
-			return started;
-		}
 
-		public void setStarted(boolean started) {
-			this.started = started;
-		}
 
-		public void start(int x,int y){
-			startX=x;
-			startY=y;
-			started=true;
-		}
-		
-		public void move(int x,int y){
-			if(!started){
-				return;
-			}
-			int dx=x-startX;
-			int dy=y-startY;
-			if(moveListener!=null){
-				moveListener.moved(startX, startY, dx, dy);
-			}
-			startX=x;
-			startY=y;
-		}
-		public void end(int x,int y){
-			move(x,y);
-			started=false;
-		}
-		public int getStartX() {
-			return startX;
-		}
-		public void setStartX(int startX) {
-			this.startX = startX;
-		}
-		public int getStartY() {
-			return startY;
-		}
-		public void setStartY(int startY) {
-			this.startY = startY;
-		}
-		public int getMovedX() {
-			return movedX;
-		}
-		public void setMovedX(int movedX) {
-			this.movedX = movedX;
-		}
-		public int getMovedY() {
-			return movedY;
-		}
-		public void setMovedY(int movedY) {
-			this.movedY = movedY;
-		}
-		private int startY;
-		
-		
-		
-		private int movedX;
-		private int movedY;
-		
-		private MoveListener moveListener;
-		
-	}
-
-	public static interface MoveListener{
-		public void moved(int sx,int sy,int vectorX,int vectorY);
-	}
 	
 	
 

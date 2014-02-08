@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.http.client.CircularRedirectException;
-
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
@@ -14,6 +12,7 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.jsgif.client.GifAnimeBuilder;
 import com.akjava.gwt.lib.client.CanvasPaintUtils;
 import com.akjava.gwt.lib.client.CanvasUtils;
@@ -26,6 +25,7 @@ import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.ColorUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
+import com.google.common.base.Optional;
 import com.google.common.collect.ArrayTable;
 import com.google.common.collect.FluentIterable;
 import com.google.common.collect.Lists;
@@ -86,15 +86,22 @@ public class GridPaint extends Html5DemoEntryPoint {
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
 	private EasyCellTableSet<GridImageData> easyCellTableSet;
+	private DragMoveControler moveControler;
 
 	
 	@Override
 	public void initializeWidget() {
-		DataUrlDropDockRootPanel root=new DataUrlDropDockRootPanel(Unit.PX,true){
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				GridPaint.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					
+					GridPaint.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		canvas = Canvas.createIfSupported();
@@ -399,14 +406,37 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		
 		canvas.setVisible(false);
 		
-		canvas.addClickHandler(new ClickHandler() {
+
+		moveControler=new DragMoveControler(canvas,new MoveListener() {
 			@Override
-			public void onClick(ClickEvent event) {
+			public void moved(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
+				LogUtils.log(sx+","+sy+" moved: vec="+vectorX+","+vectorY);
 				
-				doClick(event.getX(),event.getY());
+				if(mode==SELECT_GRID){
+					
+					String value=getValueMouseAt(ex,ey);
+					
+					String setValue=makeGridValue();
+					
+					if(value==null || !value.equals(setValue)){
+						int atX=ex/selection.getGridSize();
+						int atY=ey/selection.getGridSize();
+						//doGrid(sx, sy);
+						selection.setColor(atY,atX, setValue);
+						updateAround(atX, atY);
+					}
+				}
 			}
 
-			
+			@Override
+			public void start(int sx, int sy) {
+				doClick(sx,sy);
+			}
+
+			@Override
+			public void end(int sx, int sy) {
+				//do nothing
+			}
 		});
 		
 		
@@ -522,7 +552,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		new ImageElementLoader().load(asStringText, new ImageElementListener() {
 			@Override
 			public void onLoad(ImageElement element) {
-				LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
+				//LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
 				int baseSplit=baseSizeListBox.getValue();
 				
 				int[] result=calcurateGrid(element.getWidth(),element.getHeight(),baseSplit);
@@ -657,26 +687,38 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	
 	
 	private void doPick(int cx, int cy) {
-		LogUtils.log(cx+","+cy);
+		//LogUtils.log(cx+","+cy);
 		ImageData data=canvas.getContext2d().getImageData(cx, cy, 1, 1);
 		int r=data.getRedAt(0, 0);
 		int g=data.getGreenAt(0, 0);
 		int b=data.getBlueAt(0, 0);
-		LogUtils.log(r+","+g+","+b);
+		//LogUtils.log(r+","+g+","+b);
 		String hex=ColorUtils.toCssColor(r,g,b);
-		LogUtils.log(hex);
+		//LogUtils.log(hex);
 		colorBox.setValue(hex);
 	}
 
+	public String getValueMouseAt(int cx,int cy){
+		if(selection==null){
+			return null;
+		}
+		int atX=cx/selection.getGridSize();
+		int atY=cy/selection.getGridSize();
+		
+		return selection.getValue(atY, atX);
+	}
+	public String makeGridValue(){
+		return circleCheck.getValue()?"circle"+getColor():getColor();
+	}
 	public void doGrid(int cx, int cy)	{
-		LogUtils.log(getColor());
-		LogUtils.log("click:"+cx+","+cy);
+		//LogUtils.log(getColor());
+		//LogUtils.log("click:"+cx+","+cy);
 		if(selection==null){
 			return;
 		}
 		int atX=cx/selection.getGridSize();
 		int atY=cy/selection.getGridSize();
-		LogUtils.log("at:"+atX+","+atY);
+		//LogUtils.log("at:"+atX+","+atY);
 		ImageElement element=ImageElementUtils.create(selection.getDataUrl());
 		if(isStampMode()){
 			if(target==null){
@@ -694,7 +736,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				int sx=selection.getGridSize()*target.getX();
 				int sy=selection.getGridSize()*target.getY();
 				
-				LogUtils.log(sx+","+sy+","+dx+","+dy);
+				//LogUtils.log(sx+","+sy+","+dx+","+dy);
 				canvas.getContext2d().drawImage(element, sx, sy, size, size, dx, dy, size, size);
 				
 				//updateCanvasAt(target.getX(),target.getY(),element);//reupdate
@@ -705,9 +747,15 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				//return;
 			}
 		}else{
-		selection.pushAt(atY, atX, circleCheck.getValue()?"circle"+getColor():getColor());
+		selection.pushAt(atY, atX, makeGridValue());
 		}
 		
+		updateAround(atX,atY);
+		//updateCanvasAt(atX,atY,element);
+		//updateCanvas();
+	}
+	
+	public void updateAround(int atX,int atY){
 		canvas.getContext2d().save();
 		
 		int gridSize=selection.getGridSize();
@@ -715,11 +763,9 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		int dx=gridSize*atX-1;
 		int dy=gridSize*atY-1;
 		//clip
-		CanvasUtils.clip(canvas,atX,atY,gridSize*3,gridSize*3);
+		CanvasUtils.clip(canvas,dx,dy,gridSize*3,gridSize*3);
 		updateCanvas();
 		canvas.getContext2d().restore();
-		//updateCanvasAt(atX,atY,element);
-		//updateCanvas();
 	}
 	
 	/*
@@ -873,11 +919,17 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			this.gridSize = gridSize;
 		}
 
+		public void setColorAtMouse(int x,int y,String value){
+			int rowKey=y/gridSize;
+			int columnKey=x/gridSize;
+			gridTable.put(rowKey, columnKey, value);
+		}
+		
 		public void setColor(int rowKey,int columnKey,String value){
 			gridTable.put(rowKey, columnKey, value);
 		}
 		public void pushAt(int rowKey,int columnKey,String value){
-			LogUtils.log(value);
+			//LogUtils.log(value);
 			if(value!=null && !value.startsWith("#")&&!value.startsWith("circle")){
 				gridTable.put(rowKey, columnKey, value);//position at
 				return;
@@ -938,7 +990,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		}
 		
 		public static void drawGridImage(Canvas targetCanvas,GridImageData gridData){
-			LogUtils.log("drawGrid");
+			//LogUtils.log("drawGrid");
 			//draw all
 					ImageElement element=ImageElementUtils.create(gridData.getDataUrl());
 					ImageElementUtils.copytoCanvas(element, targetCanvas);
