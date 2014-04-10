@@ -179,8 +179,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 
 		
-		final CheckBox blackCheck=new CheckBox("black");
-		final CheckBox trasparentCheck=new CheckBox("transparent bg");
+		blackCheck = new CheckBox("black");
+		trasparentCheck = new CheckBox("transparent bg");
 		HorizontalPanel bgPanel=new HorizontalPanel();
 		controler.add(bgPanel);
 		bgPanel.add(trasparentCheck);
@@ -189,16 +189,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				if(trasparentCheck.getValue()){
-					canvas.setStylePrimaryName("transparent_bg");
-				}else{
-					if(blackCheck.getValue()){
-						canvas.setStylePrimaryName("black_bg");
-					}else{
-						canvas.setStylePrimaryName("white_bg");
-					}
-					
-				}
+				updateBgStyle();
 			}
 		});
 		
@@ -657,12 +648,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			public void uploaded(File file, String asStringText) {
 				bgImage=ImageElementUtils.create(asStringText);
 				
-				String css=".newbg{"+"background-image: url(\""+asStringText+"\");"+"}";
-				injectedBgCss = StyleInjector.injectStylesheet(css);
-				
-				canvas.addStyleName("newbg");
-				
-				updateCanvas(false);
+				updateBgImage(bgImage);
 			}
 		}, false);
 		
@@ -672,11 +658,13 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				canvas.removeStyleName("newbg");
-				
+				bgImage=null;
 				injectedBgCss.removeFromParent();//can't remove this is just style-text
-				LogUtils.log(injectedBgCss.getParentElement());
-				LogUtils.log(injectedBgCss);
+				//LogUtils.log(injectedBgCss.getParentElement());
+				//LogUtils.log(injectedBgCss);
 				bgupload.reset();
+				
+				//updateBgStyle();
 				updateCanvas(false);
 			}
 		});
@@ -842,12 +830,43 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		*/
 	}
 	
+	private void updateBgImage(ImageElement bgImage){
+		canvas.removeStyleName("newbg");
+		if(injectedBgCss!=null){
+			injectedBgCss.removeFromParent();
+		}
+		
+		if(bgImage!=null){
+			int w=(int) (bgImage.getWidth()*currentScale);
+			int h=(int) (bgImage.getHeight()*currentScale);
+			String css=".newbg{"+"background-image: url(\""+bgImage.getSrc()+"\");background-size:"+w+"px "+h+"px;"+"}";
+			injectedBgCss = StyleInjector.injectStylesheet(css);
+			
+			canvas.addStyleName("newbg");
+			
+			updateCanvas(false);
+		}
+	}
+	
+	private void updateBgStyle(){
+		if(trasparentCheck.getValue()){
+			canvas.setStylePrimaryName("transparent_bg");
+		}else{
+			if(blackCheck.getValue()){
+				canvas.setStylePrimaryName("black_bg");
+			}else{
+				canvas.setStylePrimaryName("white_bg");
+			}
+			
+		}
+	}
+	
 	private double currentScale=1;
 	protected void updateScale(Integer value) {
 		currentScale=value;
 		//zoomSize=value;
 		if(selection!=null){
-			
+			updateBgImage(bgImage);
 			updateCanvas(false);
 		}
 	}
@@ -1356,9 +1375,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}
 		downloadArea.clear();
 		
-		if(withBg){
-			updateCanvas(true);
-		}
+		
+		updateCanvas(withBg);//anway bg
 		
 		blob=Blob.createBase64Blob(canvas.toDataUrl(),"image/png");//for IE keep blob
 		
@@ -1471,6 +1489,14 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	
 	private ImageElement bgImage;
 
+
+
+	private CheckBox trasparentCheck;
+
+
+
+	private CheckBox blackCheck;
+
 	/**
 	 * only need when export,usually css draw backgorund
 	 * @param withBg
@@ -1488,10 +1514,26 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			canvas.setHeight((canvas.getCoordinateSpaceHeight()*currentScale)+"px");
 		}
 		
+		CanvasUtils.clear(canvas);
+		CanvasUtils.clear(overlayCanvas);//should clear for old bg
+		
+		if(withBg){
 		if(bgImage!=null){
 			//bugs,not effect on bgcolor with bgimage,bgimage not repeated like css
-		CanvasUtils.drawImage(canvas, bgImage);
+			CanvasUtils.drawImage(canvas, bgImage);
+		}else{
+			if(!trasparentCheck.getValue()){
+				if(blackCheck.getValue()){
+					canvas.getContext2d().setFillStyle("#000000");
+				}else{
+					canvas.getContext2d().setFillStyle("#ffffff");
+				}
+				canvas.getContext2d().fillRect(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
+			}
 		}
+		}
+		
+		
 		
 		CanvasUtils.drawImage(canvas, selectionImage);
 		

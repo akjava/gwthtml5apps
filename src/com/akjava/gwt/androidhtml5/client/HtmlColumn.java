@@ -5,6 +5,12 @@ import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.user.cellview.client.Column;
 
+/**
+ * @deprecated moved to common
+ * @author aki
+ *
+ * @param <T>
+ */
 public abstract class HtmlColumn<T> extends Column<T,SafeHtml>{
 
 	public HtmlColumn(Cell<SafeHtml> cell) {

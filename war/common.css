@@ -5,10 +5,6 @@
 		font-family: 'Audiowide', cursive;
 }
 
-.artifika{
-		font-family: 'Artifika', serif;
-}
-
 .bt{
 
 	background: orange;
@@ -16,6 +12,12 @@
 	margin: 2px;
 	border: 1px solid #000000;  
 }
+
+.artifika{
+		font-family: 'Artifika', serif;
+}
+
+
 
 th.GALD-WOOC { 
         padding-left: 2px; 
