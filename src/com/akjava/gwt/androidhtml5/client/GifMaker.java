@@ -578,7 +578,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.01";
+		return "1.1";
 	}
 	
 	@Override

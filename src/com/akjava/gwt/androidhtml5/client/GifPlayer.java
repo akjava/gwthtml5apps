@@ -21,6 +21,8 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.dom.client.MouseWheelEvent;
+import com.google.gwt.event.dom.client.MouseWheelHandler;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
@@ -64,7 +66,17 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
 		
-		
+		root.addMouseWheelHandler(new MouseWheelHandler() {
+			
+			@Override
+			public void onMouseWheel(MouseWheelEvent event) {
+				if(event.getDeltaY()>0){
+					doNext();
+				}else{
+					doPrev();
+				}
+			}
+		});
 		
 		
 		dock = new DockLayoutPanel(Unit.PX);
@@ -271,6 +283,64 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	
 	
+	protected void doPrev() {
+		int size=easyCellTableObjects.getDatas().size();
+		if(size>0){
+			if(selection!=null){
+				int index=easyCellTableObjects.getDatas().indexOf(selection);
+				if(index-1<0){
+					index=size-1;
+				}else{
+					index=index-1;
+				}
+				easyCellTableObjects.setSelected(easyCellTableObjects.getDatas().get(index), true);//select next;
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	protected void doNext() {
+		int size=easyCellTableObjects.getDatas().size();
+		if(size>0){
+			if(selection!=null){
+				int index=easyCellTableObjects.getDatas().indexOf(selection);
+				if(index+1>=size){
+					index=0;
+				}else{
+					index=index+1;
+				}
+				easyCellTableObjects.setSelected(easyCellTableObjects.getDatas().get(index), true);//select next;
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	private void updateImageSize(){
 		int selection=sizeBox.getSelectedIndex();
 		if(selection==0){
@@ -411,7 +481,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.1";
 	}
 	
 	@Override

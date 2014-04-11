@@ -79,6 +79,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	public static final int TYPE_SAME=0;
 	public static final int TYPE_PNG=1;
 	public static final int TYPE_JPEG=2;
+	public static final int TYPE_WEBP=3;
 	private int exportType;
 	@Override
 	public void initializeWidget() {
@@ -196,6 +197,18 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			}
 		});
 		
+		final RadioButton typeWebp=new RadioButton("type","webp");
+		panel2.add(typeWebp);
+		typeWebp.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(typeWebp.getValue()){
+					exportType=TYPE_WEBP;
+				}
+			}
+		});
+		
 		topPanel.add(new Anchor("Help", "resize_help.html"));
 		
 		//dock.add(canvas);
@@ -308,7 +321,8 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			//TODO create method
 		ImageElement element=ImageElementUtils.create(asStringText);
 		String dataUrl;
-		boolean isJpeg=false;
+		//boolean isJpeg=false;
+		String exportMime="image/png";
 		int width=0;
 		double scale=0;
 		String widthValue=sizesList.getValue();
@@ -325,10 +339,12 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		if(exportType==TYPE_SAME){
 			String type=FileNames.getImageType(file.getFileName());
 			if(type.equals(FileNames.TYPE_JPEG)){
-				isJpeg=true;
+				exportMime="image/jpeg";
 			}
 		}else if(exportType==TYPE_JPEG){
-			isJpeg=true;
+			exportMime="image/jpeg";
+		}else if(exportType==TYPE_WEBP){
+			exportMime="image/webp";
 		}
 		
 		boolean useHighQualith=highQualityCheck.getValue() && (scale<1 || width<element.getWidth());
@@ -344,16 +360,14 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			LogUtils.log("hq");
 			CanvasUtils.copyTo(imgData, canvas);
 			
-			if(isJpeg){
-				dataUrl=canvas.toDataUrl("image/jpeg");
-			}else{
-				dataUrl=canvas.toDataUrl();
-			}
+			dataUrl=canvas.toDataUrl(exportMime);
 			
 		}else{
 			
-		if(isJpeg){
+		if(exportType==TYPE_JPEG){
 			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toJpegDataUrl();
+		}else if(exportType==TYPE_WEBP){
+			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toWebpDataUrl();
 		}else{
 			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toPngDataUrl();
 		}
@@ -382,10 +396,14 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		
 		String newName;
 		String type;
-		if(isJpeg){
+		if(exportType==TYPE_JPEG){
 			type="jpeg";
 			newName=FileNames.asSlash().getChangedExtensionName(file.getFileName(), "jpg");
-		}else{
+		}else if(exportType==TYPE_WEBP){
+			type="webp";
+			newName=FileNames.asSlash().getChangedExtensionName(file.getFileName(), "webp");
+		}
+		else{
 			type="png";
 			newName=FileNames.asSlash().getChangedExtensionName(file.getFileName(), "png");
 		}
@@ -527,7 +545,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.1";
 	}
 	
 	@Override
