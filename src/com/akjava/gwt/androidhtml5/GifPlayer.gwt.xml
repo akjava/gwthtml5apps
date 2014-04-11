@@ -7,10 +7,10 @@
 	<entry-point class="com.akjava.gwt.androidhtml5.client.GifPlayer" />
 	
 	<!-- 
-	
+	<set-property name="user.agent" value="safari"/>
 	<add-linker name="sso" /> 
 	
 	 -->
-	 <set-property name="user.agent" value="safari"/>
+	 
 	 <source path="client" />
 </module>
