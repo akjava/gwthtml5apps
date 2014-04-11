@@ -81,6 +81,15 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	public static final int TYPE_JPEG=2;
 	public static final int TYPE_WEBP=3;
 	private int exportType;
+
+	private RadioButton widthButton;
+
+	private RadioButton heightButton;
+	
+	private final int SIZE_WIDTH=0;
+	private final int SIZE_HEIGHT=1;
+	private int sizeMode;
+	
 	@Override
 	public void initializeWidget() {
 		DataUrlDropDockRootPanel root=new DataUrlDropDockRootPanel(Unit.PX,true){
@@ -133,7 +142,34 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		panel1.setSpacing(2);
 		//topPanel.add(controler);
 		
-		panel1.add(new Label("Width:"));
+		//panel1.add(new Label("Width:"));
+		
+		widthButton = new RadioButton("size","width");
+		widthButton.setValue(true);
+		widthButton.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(widthButton.getValue()){
+					sizeMode=SIZE_WIDTH;
+				}
+			}
+		});
+		panel1.add(widthButton);
+		
+		heightButton = new RadioButton("size","height");
+		heightButton.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(heightButton.getValue()){
+					sizeMode=SIZE_HEIGHT;
+				}
+			}
+		});
+		panel1.add(heightButton);
+		
+		
 		sizesList.setValue("360");
 		sizesList.setAcceptableValues(Lists.newArrayList("x 0.1","x 0.25","x 0.5","x 1","x 2","x 4","90","180","360","480","640","720","800","920","1280"));
 		panel1.add(sizesList);
@@ -257,14 +293,39 @@ public class SimpleResize extends Html5DemoEntryPoint {
 					      }
 					    };
 					    table.addColumn(fileInfoColumn,"Name");
+					    /*
+					    TextColumn<ImageUrlDataResizeInfo> sizeModeColumn = new TextColumn<ImageUrlDataResizeInfo>() {
+						      public String getValue(ImageUrlDataResizeInfo value) {
+						    	  
+						    	  if(value.getSizeMode()==SIZE_WIDTH){
+						    		  return "W";
+						    	  }else if(value.getSizeMode()==SIZE_HEIGHT){
+						    		  return "H";
+						    	  }else{
+						    		  return "";
+						    	  }
+						      }
+						    };
+						    table.addColumn(sizeModeColumn,"");
+						    */
+						    
 					    
 					    TextColumn<ImageUrlDataResizeInfo> widthColumn = new TextColumn<ImageUrlDataResizeInfo>() {
 						      public String getValue(ImageUrlDataResizeInfo value) {
+						    	  String header="";
+						    	  if(value.getSizeMode()==SIZE_WIDTH){
+						    		  header= "W";
+						    	  }else if(value.getSizeMode()==SIZE_HEIGHT){
+						    		  header= "H";
+						    	  }else{
+						    		  header= "";
+						    	  }
 						    	 
-						    	  return value.getWidthLabel();
+						    	  
+						    	  return header+" "+value.getWidthLabel();
 						      }
 						    };
-						    table.addColumn(widthColumn,"Width");
+						    table.addColumn(widthColumn,"size");
 					    
 			}
 		};
@@ -318,22 +379,32 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	
 	protected void loadFile(File file, String asStringText) {
 		try{
+		boolean hasWidth=sizeMode==SIZE_WIDTH;
 			//TODO create method
 		ImageElement element=ImageElementUtils.create(asStringText);
 		String dataUrl;
 		//boolean isJpeg=false;
 		String exportMime="image/png";
-		int width=0;
+		int size=0;
 		double scale=0;
 		String widthValue=sizesList.getValue();
 		
-		
+		// something like x 2.0
 		if(isScaleSize(widthValue)){
 			scale=getScale(widthValue);
-			width=(int) (scale*element.getWidth());
+			if(sizeMode==SIZE_WIDTH){
+				size=(int) (scale*element.getWidth());
+			}else{
+				size=(int) (scale*element.getHeight());
+			}
 			
-		}else{
-			width=ValuesUtils.toInt(widthValue,element.getWidth());
+			
+		}else{//normal pixel value
+			if(sizeMode==SIZE_WIDTH){
+				size=ValuesUtils.toInt(widthValue,element.getWidth());
+			}else{
+				size=ValuesUtils.toInt(widthValue,element.getHeight());
+			}	
 		}
 		
 		if(exportType==TYPE_SAME){
@@ -347,17 +418,38 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			exportMime="image/webp";
 		}
 		
-		boolean useHighQualith=highQualityCheck.getValue() && (scale<1 || width<element.getWidth());
+		boolean smallScale=false;
+		if(sizeMode==SIZE_WIDTH){
+			smallScale=(scale<1 || size<element.getWidth());
+		}else{
+			smallScale=(scale<1 || size<element.getHeight());
+		}	
+		
+		boolean useHighQualith=highQualityCheck.getValue() && smallScale;
 		
 		
 		if(useHighQualith){
 			ImageElementUtils.copytoCanvas(asStringText, canvas);
 			
-			double convertScale=scale!=0?scale:(double)width/element.getWidth();
+			double convertScale;
+			if(sizeMode==SIZE_WIDTH){
+				convertScale=scale!=0?scale:(double)size/element.getWidth();
+			}else{
+				convertScale=scale!=0?scale:(double)size/element.getHeight();
+			}	
+			
+			
 			
 			ImageData imgData=JSDownScale.downScaleCanvas(canvas.getCanvasElement(), convertScale);//TODO control it
-			width=imgData.getWidth();
-			LogUtils.log("hq");
+			
+			if(sizeMode==SIZE_WIDTH){
+				size=imgData.getWidth();
+			}else{
+				size=imgData.getHeight();
+			}
+			
+			
+			
 			CanvasUtils.copyTo(imgData, canvas);
 			
 			dataUrl=canvas.toDataUrl(exportMime);
@@ -365,12 +457,28 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		}else{
 			
 		if(exportType==TYPE_JPEG){
-			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toJpegDataUrl();
+			if(sizeMode==SIZE_WIDTH){
+				dataUrl=CanvasResizer.on(canvas).image(element).width(size).toJpegDataUrl();
+			}else{
+				dataUrl=CanvasResizer.on(canvas).image(element).height(size).toJpegDataUrl();
+			}
+			
 		}else if(exportType==TYPE_WEBP){
-			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toWebpDataUrl();
+			if(sizeMode==SIZE_WIDTH){
+				dataUrl=CanvasResizer.on(canvas).image(element).width(size).toWebpDataUrl();
+			}else{
+				dataUrl=CanvasResizer.on(canvas).image(element).height(size).toWebpDataUrl();
+			}
+			
 		}else{
-			dataUrl=CanvasResizer.on(canvas).image(element).width(width).toPngDataUrl();
+			if(sizeMode==SIZE_WIDTH){
+				dataUrl=CanvasResizer.on(canvas).image(element).width(size).toPngDataUrl();
+			}else{
+				dataUrl=CanvasResizer.on(canvas).image(element).height(size).toPngDataUrl();
+			}
+			
 		}
+		
 		
 		
 		
@@ -408,7 +516,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			newName=FileNames.asSlash().getChangedExtensionName(file.getFileName(), "png");
 		}
 		
-		final ImageUrlDataResizeInfo data=new ImageUrlDataResizeInfo(newName, dataUrl,width,widthValue,type);
+		final ImageUrlDataResizeInfo data=new ImageUrlDataResizeInfo(newName, dataUrl,sizeMode,size,widthValue,type);
 	
 		EasyCellTableObjects.addItem(data);
 		//updateList();
@@ -439,7 +547,14 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			mainImage.setUrl("");
 		}else{
 		mainImage.setUrl(selection.getDataUrl());
-		mainImage.setWidth(selection.getWidth()+"px");
+		mainImage.getElement().removeAttribute("style");
+		if(selection.getSizeMode()==SIZE_WIDTH){
+			mainImage.setWidth(selection.getWidth()+"px");
+		}else{
+			mainImage.setHeight(selection.getWidth()+"px");
+		}
+		LogUtils.log(mainImage);
+		
 		mainImage.setVisible(true);
 		}
 		//LogUtils.log("set-visible");
@@ -475,7 +590,15 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	public static class ImageUrlDataResizeInfo extends ImageUrlData implements Supplier<Anchor>{
 		private String widthLabel;
 		private String type;
+		private int sizeMode;
 		
+		public int getSizeMode() {
+			return sizeMode;
+		}
+
+		public void setSizeMode(int sizeMode) {
+			this.sizeMode = sizeMode;
+		}
 		private Supplier<Anchor> downloadLink=Suppliers.memoize(this); //if ==null return;
 		public String getWidthLabel() {
 			return widthLabel;
@@ -485,8 +608,9 @@ public class SimpleResize extends Html5DemoEntryPoint {
 			return width;
 		}
 		
-		public ImageUrlDataResizeInfo(String fileName, String url,int width,String widthLabel,String type) {
+		public ImageUrlDataResizeInfo(String fileName, String url,int sizeMode,int width,String widthLabel,String type) {
 			super(fileName, url);
+			this.sizeMode=sizeMode;
 			this.width = width;
 			this.widthLabel = widthLabel;
 			this.type=type;
