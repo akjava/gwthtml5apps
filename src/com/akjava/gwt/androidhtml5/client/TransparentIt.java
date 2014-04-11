@@ -1386,7 +1386,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			a.setTitle("to download right mouse button to show contextmenu and select save as by yourself");
 		}else{
 			//TODO support ios
-			a=HTML5Download.get().generateDownloadLink(blob, "image/png","gridPaint.png", "Download Image",true);
+			a=HTML5Download.get().generateDownloadLink(blob, "image/png","transparent.png", "Download Image",true);
 		}
 				
 		a.setStylePrimaryName("bt");
