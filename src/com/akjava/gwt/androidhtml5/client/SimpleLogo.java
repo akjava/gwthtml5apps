@@ -1172,7 +1172,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.1";
 	}
 	
 	@Override
