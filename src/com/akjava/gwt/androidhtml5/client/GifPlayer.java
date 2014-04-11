@@ -6,12 +6,14 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.google.common.base.Optional;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
@@ -56,13 +58,24 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 
 	@Override
-	public void initializeWidget() {
-		root = new DataUrlDropDockRootPanel(Unit.PX,true){
+	public Panel initializeWidget() {
+		
+	DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				GifPlayer.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					
+					GifPlayer.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
+		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
+		
+		
+	
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
 		
@@ -266,7 +279,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			}
 		});
 		
-		
+		return root;
 	}
 	
 

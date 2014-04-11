@@ -75,7 +75,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	
 	private DropDockDataUrlRootPanel createRootAndTop(){
 
-		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true) {
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false) {
 
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -273,14 +273,14 @@ public class Inpaint extends Html5DemoEntryPoint {
 
 
 	@Override
-	public void initializeWidget() {
-		createRootAndTop();
+	public Panel initializeWidget() {
+		DropDockDataUrlRootPanel root=createRootAndTop();
 		createWestPanel();
 		
 		//create main
 		if(!InPaint.exists()){
 			Window.alert("not found inpaint.js");
-			return;
+			return new VerticalPanel();
 		}
 		
 		
@@ -334,7 +334,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 			}
 		});
 		
-		
+		return root;
 	}
 	
 	

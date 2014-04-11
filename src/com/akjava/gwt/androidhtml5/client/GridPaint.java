@@ -91,8 +91,8 @@ public class GridPaint extends Html5DemoEntryPoint {
 
 	
 	@Override
-	public void initializeWidget() {
-		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+	public Panel initializeWidget() {
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -447,6 +447,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		dock.add(scroll);
 		scroll.add(canvas);
 		
+		return root;
 	}
 	
 	private String getColor(){

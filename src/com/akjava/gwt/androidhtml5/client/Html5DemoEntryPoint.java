@@ -13,6 +13,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.http.client.Request;
 import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
@@ -20,9 +23,15 @@ import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DeckLayoutPanel;
+import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class Html5DemoEntryPoint implements EntryPoint {
@@ -31,10 +40,10 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 	public abstract String getAppVersion();
 	public abstract String getAppUrl();
 	
-	public abstract void initializeWidget();
+	public abstract Panel initializeWidget();
 	public abstract Panel getLinkContainer();
 	
-	
+	protected DeckLayoutPanel rootDeck;
 	protected StorageControler storageControler=new StorageControler();
 	
 	public int getStorageValue(String key,int defaultValue){
@@ -62,7 +71,31 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
 		LogUtils.log(getAppName()+":version "+getAppVersion());
-		initializeWidget();
+		
+		rootDeck = new DeckLayoutPanel();
+		RootLayoutPanel.get().add(rootDeck);
+		
+				rootDeck.add(initializeWidget());
+				
+				rootDeck.showWidget(0);
+				
+				//create setting
+				DockLayoutPanel settingPanel=new DockLayoutPanel(Unit.PX);
+				HorizontalPanel settingButtons=new HorizontalPanel();
+				settingButtons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+				settingButtons.setSpacing(2);
+				settingButtons.add(new Label("Settings"));
+				Button closeBt=new Button("close",new ClickHandler() {
+					@Override
+					public void onClick(ClickEvent event) {
+						onCloseSettingPanel();
+						rootDeck.showWidget(0);
+					}
+				});
+				settingButtons.add(closeBt);
+				settingPanel.addNorth(settingButtons,30);
+				settingPanel.add(createMainSettingPage());
+				rootDeck.add(settingPanel);
 		
 		parseLinkCsv(getLinkContainer());
 	}
@@ -150,5 +183,30 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	 public Panel createMainSettingPage(){
+		VerticalPanel panel=new VerticalPanel();
+		return panel;
+	}
+	public void onOpenSettingPanel(){
+		
+	}
+	public void onCloseSettingPanel(){
+		
+	}
+	//TODO move up
+	public Anchor createSettingAnchor(){
+		Anchor setting=new Anchor("Settings");
+		//topPanel.add(setting);
+		setting.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				onOpenSettingPanel();
+				rootDeck.showWidget(1);//setting
+			}
+		});
+		return setting;
 	}
 }

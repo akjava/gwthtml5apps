@@ -255,24 +255,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	}
 	
 	
-	//TODO move up
-	public Anchor createSettingAnchor(){
-		Anchor setting=new Anchor("Settings");
-		//topPanel.add(setting);
-		setting.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				onOpenSettingPanel();
-				rootDeck.showWidget(1);//setting
-			}
-		});
-		return setting;
-	}
+
 	@Override
-	public void initializeWidget() {
-		rootDeck = new DeckLayoutPanel();
-		RootLayoutPanel.get().add(rootDeck);
+	public Panel initializeWidget() {
+		
 		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
@@ -287,28 +273,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
-		//TODO move up
-		rootDeck.add(root);
 		
-		rootDeck.showWidget(0);
-		
-		//create setting
-		DockLayoutPanel settingPanel=new DockLayoutPanel(Unit.PX);
-		HorizontalPanel settingButtons=new HorizontalPanel();
-		settingButtons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		settingButtons.setSpacing(2);
-		settingButtons.add(new Label("Settings"));
-		Button closeBt=new Button("close",new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				onCloseSettingPanel();
-				rootDeck.showWidget(0);
-			}
-		});
-		settingButtons.add(closeBt);
-		settingPanel.addNorth(settingButtons,30);
-		settingPanel.add(createMainSettingPage());
-		rootDeck.add(settingPanel);
 		//
 		
 		
@@ -735,6 +700,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
+		return root;
 	}
 	
 	public static final String KEY_DRAW_POSITION="simplelogo_draw_position";
@@ -943,7 +909,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private double lastScale=1;
 	private CheckBox showOutSideCheck;
 	private ValueListBox<Integer> transparentTextBox;
-	private DeckLayoutPanel rootDeck;
+	
 	private IntegerBox widthBox;
 	private IntegerBox heightBox;
 	private TextBox fontBox;

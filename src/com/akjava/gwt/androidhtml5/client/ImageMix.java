@@ -42,7 +42,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 	private Image img2;
 	private CheckBox expand2Check;
 	@Override
-	public void initializeWidget() {
+	public Panel initializeWidget() {
 		DropDockRootPanel root=new DropDockRootPanel(Unit.PX,true){
 			@Override
 			public void callback(File file, String parent) {
@@ -255,6 +255,7 @@ public class ImageMix extends Html5DemoEntryPoint {
 		mixedImage.setSize(canvasWidth+"px", canvasWidth+"px");
 		mixedImage.setVisible(false);
 		
+		return root;
 	}
 	
 	

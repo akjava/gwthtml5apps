@@ -12,6 +12,7 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.GWTHTMLUtils;
 import com.akjava.gwt.lib.client.GWTUtils;
@@ -22,6 +23,7 @@ import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
@@ -129,12 +131,17 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	
 	@Override
-	public void initializeWidget() {
-		DataUrlDropDockRootPanel root=new DataUrlDropDockRootPanel(Unit.PX,true){
+	public Panel initializeWidget() {
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				TransparentIt.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					TransparentIt.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
@@ -841,6 +848,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		/*
 		
 		*/
+		
+		return root;
 	}
 	
 	private void updateBgImage(ImageElement bgImage){

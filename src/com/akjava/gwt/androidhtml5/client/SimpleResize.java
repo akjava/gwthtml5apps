@@ -9,6 +9,7 @@ import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.CanvasResizer;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementUtils;
@@ -18,6 +19,7 @@ import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.FileNames;
 import com.akjava.lib.common.utils.ValuesUtils;
+import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.Lists;
@@ -91,15 +93,24 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	private int sizeMode;
 	
 	@Override
-	public void initializeWidget() {
-		DataUrlDropDockRootPanel root=new DataUrlDropDockRootPanel(Unit.PX,true){
+	public Panel initializeWidget() {
+		
+DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
+			
 			@Override
-			public void loadFile(File file, String dataUrl) {
-				
-				SimpleResize.this.loadFile(file, dataUrl);
+			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
+				for(File file:optional.asSet()){
+					
+					SimpleResize.this.loadFile(file, dataUrl);
+				}
 			}
+			
+			
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
+		
+		
+		
 		
 		canvas = Canvas.createIfSupported();
 		//canvas.setSize("100%", "100%");
@@ -364,7 +375,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		scroll.add(mainImage);
 		
 		
-		
+		return root;
 	}
 	
 	

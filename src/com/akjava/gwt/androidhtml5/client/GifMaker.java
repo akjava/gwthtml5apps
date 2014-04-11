@@ -72,9 +72,9 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 
 	@Override
-	public void initializeWidget() {
+	public Panel initializeWidget() {
 		
-		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -411,7 +411,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		image.setVisible(false);
 	
 		
-		
+		return root;
 	}
 	
 
