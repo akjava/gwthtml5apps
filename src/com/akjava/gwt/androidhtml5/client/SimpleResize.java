@@ -14,6 +14,7 @@ import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.FileNames;
 import com.akjava.lib.common.utils.ValuesUtils;
@@ -67,7 +68,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<ImageUrlDataResizeInfo> easyCellTableSet;
+	private EasyCellTableObjects<ImageUrlDataResizeInfo> EasyCellTableObjects;
 
 	private ValueListBox<String> sizesList;
 	
@@ -218,7 +219,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 						@Override
 						public void update(int index, ImageUrlDataResizeInfo object,
 								String value) {
-								easyCellTableSet.removeItem(object);
+								EasyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(ImageUrlDataResizeInfo object) {
@@ -264,7 +265,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<ImageUrlDataResizeInfo>(cellTable,false) {
+		EasyCellTableObjects=new EasyCellTableObjects<ImageUrlDataResizeInfo>(cellTable,false) {
 			@Override
 			public void onSelect(ImageUrlDataResizeInfo selection) {
 				doSelect(selection);
@@ -391,7 +392,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		
 		final ImageUrlDataResizeInfo data=new ImageUrlDataResizeInfo(newName, dataUrl,width,widthValue,type);
 	
-		easyCellTableSet.addItem(data);
+		EasyCellTableObjects.addItem(data);
 		//updateList();
 		
 		
@@ -399,7 +400,7 @@ public class SimpleResize extends Html5DemoEntryPoint {
 		Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 			@Override
 			public void execute() {
-				easyCellTableSet.setSelected(data, true);
+				EasyCellTableObjects.setSelected(data, true);
 			}
 		});
 		

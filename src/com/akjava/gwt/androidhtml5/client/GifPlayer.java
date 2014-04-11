@@ -10,6 +10,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
@@ -46,7 +47,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<ImageElementData> easyCellTableSet;
+	private EasyCellTableObjects<ImageElementData> EasyCellTableObjects;
 
 
 	@Override
@@ -119,7 +120,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 						@Override
 						public void update(int index, ImageElementData object,
 								String value) {
-								easyCellTableSet.removeItem(object);
+								EasyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(ImageElementData object) {
@@ -185,7 +186,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<ImageElementData>(cellTable,false) {
+		EasyCellTableObjects=new EasyCellTableObjects<ImageElementData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageElementData selection) {
 				doSelect(selection);
@@ -255,14 +256,14 @@ public class GifPlayer extends Html5DemoEntryPoint {
 				
 				final ImageElementData data=new ImageElementData(file.getFileName(),element,asStringText);
 				
-				easyCellTableSet.addItem(data);
+				EasyCellTableObjects.addItem(data);
 				//updateList();
 				
 				//stack on mobile,maybe because of called async method
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						easyCellTableSet.setSelected(data, true);
+						EasyCellTableObjects.setSelected(data, true);
 					}
 				});
 			}

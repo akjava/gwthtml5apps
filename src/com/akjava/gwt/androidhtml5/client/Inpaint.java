@@ -21,6 +21,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.Benchmark;
 import com.akjava.lib.common.utils.ColorUtils;
@@ -224,7 +225,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 			}
 		};
 		
-		maskDataTableSet = new EasyCellTableSet<MaskData>(table,false) {
+		maskDataTableSet = new EasyCellTableObjects<MaskData>(table,false) {
 			@Override
 			public void onSelect(MaskData selection) {
 				doEdit(selection);
@@ -381,7 +382,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 
 	private MaskDataEditor editor;
 
-	private EasyCellTableSet<MaskData> maskDataTableSet;
+	private EasyCellTableObjects<MaskData> maskDataTableSet;
 
 	
 	

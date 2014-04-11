@@ -16,6 +16,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.google.common.base.Optional;
 import com.google.common.collect.FluentIterable;
@@ -58,7 +59,8 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<ImageUrlData> easyCellTableSet;
+	//EasyCellTableObjects<T>
+	private EasyCellTableObjects<ImageUrlData> EasyCellTableObjects;
 	private Button makeBt;
 	private ValueListBox<Integer> speedBox;
 
@@ -121,6 +123,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		fileUps.add(upload);
 
 		downloadArea = new HorizontalPanel();
+		downloadArea.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(downloadArea);
 		
 	
@@ -132,7 +135,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 			public void onClick(ClickEvent event) {
 				
 				
-				List<ImageElement> elements=FluentIterable.from(easyCellTableSet.getDatas()).transform(new DataToImageElement()).toList();
+				List<ImageElement> elements=FluentIterable.from(EasyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
 				
 				final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(300).toDataUrl();
 				image.setVisible(true);
@@ -148,6 +151,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 					public void onClick(ClickEvent event) {
 						image.setVisible(true);
 						image.setUrl(url);
+						//EasyCellTableObjects.getSelectionModel().u
 					}
 				});
 				downloadArea.add(preview);
@@ -231,7 +235,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 						@Override
 						public void update(int index, ImageUrlData object,
 								String value) {
-								easyCellTableSet.removeItem(object);
+								EasyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(ImageUrlData object) {
@@ -289,7 +293,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 							public void update(int index, ImageUrlData object,
 									String value) {
 									
-									easyCellTableSet.upItem(object);
+									EasyCellTableObjects.upItem(object);
 							}
 							@Override
 							public String getValue(ImageUrlData object) {
@@ -302,7 +306,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 								@Override
 								public void update(int index, ImageUrlData object,
 										String value) {
-										easyCellTableSet.downItem(object);
+										EasyCellTableObjects.downItem(object);
 								}
 								@Override
 								public String getValue(ImageUrlData object) {
@@ -324,7 +328,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<ImageUrlData>(cellTable,false) {
+		EasyCellTableObjects=new EasyCellTableObjects<ImageUrlData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageUrlData selection) {
 				doSelect(selection);
@@ -393,14 +397,14 @@ public class GifMaker extends Html5DemoEntryPoint {
 				
 				final ImageUrlData data=new ImageUrlData(file.getFileName(),asStringText);
 				
-				easyCellTableSet.addItem(data);
+				EasyCellTableObjects.addItem(data);
 				//updateList();
 				
 				//stack on mobile,maybe because of called async method
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						easyCellTableSet.setSelected(data, true);
+						EasyCellTableObjects.setSelected(data, true);
 						makeBt.setEnabled(true);
 					}
 				});

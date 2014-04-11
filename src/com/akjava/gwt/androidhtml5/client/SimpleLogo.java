@@ -26,6 +26,7 @@ import com.akjava.gwt.lib.client.canvas.Rect;
 import com.akjava.gwt.lib.client.canvas.RectBuilder;
 import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
@@ -81,7 +82,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<LayerData> easyCellTableSet;
+	private EasyCellTableObjects<LayerData> EasyCellTableObjects;
 	private Button makeBt;
 	private ColorBox bgColorBox;
 	private CheckBox keepTransparent;
@@ -337,7 +338,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 						@Override
 						public void update(int index, LayerData object,
 								String value) {
-								easyCellTableSet.removeItem(object);
+								EasyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(LayerData object) {
@@ -404,7 +405,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<LayerData>(cellTable,false) {
+		EasyCellTableObjects=new EasyCellTableObjects<LayerData>(cellTable,false) {
 			@Override
 			public void onSelect(LayerData selection) {
 				doSelect(selection);
@@ -590,14 +591,14 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				
 				final LayerData data=new LayerData(file.getFileName(),element,asStringText);
 				
-				easyCellTableSet.addItem(data);
+				EasyCellTableObjects.addItem(data);
 				//updateList();
 				
 				//stack on mobile,maybe because of called async method
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						easyCellTableSet.setSelected(data, true);
+						EasyCellTableObjects.setSelected(data, true);
 						makeBt.setEnabled(true);
 					}
 				});

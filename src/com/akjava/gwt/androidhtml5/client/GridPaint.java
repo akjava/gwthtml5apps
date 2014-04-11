@@ -22,6 +22,7 @@ import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
+import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.ColorUtils;
 import com.akjava.lib.common.utils.ValuesUtils;
@@ -85,7 +86,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableSet<GridImageData> easyCellTableSet;
+	private EasyCellTableObjects<GridImageData> EasyCellTableObjects;
 	private DragMoveControler moveControler;
 
 	
@@ -250,7 +251,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 						@Override
 						public void update(int index, GridImageData object,
 								String value) {
-								easyCellTableSet.removeItem(object);
+								EasyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(GridImageData object) {
@@ -298,7 +299,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 						public void update(int index, GridImageData object,
 								String value) {
 								
-								easyCellTableSet.upItem(object);
+								EasyCellTableObjects.upItem(object);
 						}
 						@Override
 						public String getValue(GridImageData object) {
@@ -311,7 +312,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 							@Override
 							public void update(int index, GridImageData object,
 									String value) {
-									easyCellTableSet.downItem(object);
+									EasyCellTableObjects.downItem(object);
 							}
 							@Override
 							public String getValue(GridImageData object) {
@@ -349,7 +350,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			public void onClick(ClickEvent event) {
 				
 				
-				List<ImageElement> elements=FluentIterable.from(easyCellTableSet.getDatas()).transform(new DataToImageElement()).toList();
+				List<ImageElement> elements=FluentIterable.from(EasyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
 				
 				final String url=GifAnimeBuilder.from(elements).lowQuality().loop().delay(300).toDataUrl();
 				
@@ -389,7 +390,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		easyCellTableSet=new EasyCellTableSet<GridPaint.GridImageData>(cellTable,false) {
+		EasyCellTableObjects=new EasyCellTableObjects<GridPaint.GridImageData>(cellTable,false) {
 			@Override
 			public void onSelect(GridImageData selection) {
 				doSelect(selection);
@@ -488,8 +489,8 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			int height=selection.getImageHeight();
 			int[] result=calcurateGrid(width,height,baseSplit);
 			GridImageData newData=new GridImageData(selection.getFileName(), selection.getDataUrl(), result[0], result[1], result[2],width,height);
-			easyCellTableSet.addItem(newData);
-			easyCellTableSet.setSelected(newData, true);
+			EasyCellTableObjects.addItem(newData);
+			EasyCellTableObjects.setSelected(newData, true);
 		}
 	}
 
@@ -560,7 +561,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				
 				final GridImageData data=new GridImageData(file.getFileName(), asStringText,result[0],result[1],result[2],element.getWidth(),element.getHeight());
 				
-				easyCellTableSet.addItem(data);
+				EasyCellTableObjects.addItem(data);
 				//updateList();
 				
 				
@@ -568,7 +569,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						easyCellTableSet.setSelected(data, true);
+						EasyCellTableObjects.setSelected(data, true);
 					}
 				});
 			}
