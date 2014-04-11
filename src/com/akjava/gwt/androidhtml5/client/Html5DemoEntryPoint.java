@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.StorageControler;
+import com.akjava.gwt.lib.client.StorageException;
 import com.akjava.gwt.lib.client.io.GWTLineReader;
 import com.akjava.lib.common.csv.CSVProcessor;
 import com.google.common.base.Function;
@@ -16,6 +18,7 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.http.client.RequestCallback;
 import com.google.gwt.http.client.RequestException;
 import com.google.gwt.http.client.Response;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -30,6 +33,32 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 	
 	public abstract void initializeWidget();
 	public abstract Panel getLinkContainer();
+	
+	
+	protected StorageControler storageControler=new StorageControler();
+	
+	public int getStorageValue(String key,int defaultValue){
+		return storageControler.getValue(key, defaultValue);
+	}
+	
+	public String getStorageValue(String key,String defaultValue){
+		return storageControler.getValue(key, defaultValue);
+	}
+	public void setStorageValue(String key,int value){
+		 try {
+			storageControler.setValue(key, value);
+		} catch (StorageException e) {
+			Window.alert(e.getMessage());
+		}
+	}
+	public void setStorageValue(String key,String value){
+		 try {
+			storageControler.setValue(key, value);
+		} catch (StorageException e) {
+			Window.alert(e.getMessage());
+		}
+	}
+	
 	@Override
 	public void onModuleLoad() {
 		LogUtils.log(getAppName()+":version "+getAppVersion());

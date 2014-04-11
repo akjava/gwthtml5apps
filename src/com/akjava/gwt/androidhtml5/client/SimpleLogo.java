@@ -28,8 +28,10 @@ import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
+import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.core.client.Scheduler;
@@ -57,10 +59,13 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
+import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ValueListBox;
@@ -86,11 +91,189 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private Button makeBt;
 	private ColorBox bgColorBox;
 	private CheckBox keepTransparent;
+	private IntegerBox marginBox;
 
+	/* raw
+	 public Panel createMainSettingPage(){
+		VerticalPanel panel=new VerticalPanel();
+		return panel;
+	}
+	public void onOpenSettingPanel(){
+		
+	}
+	public void onCloseSettingPanel(){
+		
+	}
+	 */
 
+	public Panel createMainSettingPage(){
+		VerticalPanel panel=new VerticalPanel();
+		panel.setSpacing(4);
+		Label size=new Label("ImageSize");
+		size.setStylePrimaryName("title");
+		panel.add(size);
+		int width=getStorageValue(KEY_IMAGE_WIDTH, 500);
+		int height=getStorageValue(KEY_IMAGE_HEIGHT, 200);
+		widthBox = makeIntegerBox(panel,"width",width);
+		heightBox = makeIntegerBox(panel,"height",height);
+		
+		Button resetSize=new Button("reset",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				widthBox.setValue(500);
+				heightBox.setValue(200);
+			}
+		});
+		panel.add(resetSize);
+		
+		Label text=new Label("Text");
+		text.setStylePrimaryName("title");
+		panel.add(text);
+		
+		fontBox = makeTextBox(panel, "Font", getStorageValue(KEY_DRAW_FONT, "64px Audiowide"));
+		panel.add(fontBox);
+		
+		
+		
+		//position
+		HorizontalPanel h=new HorizontalPanel();
+		panel.add(h);
+		
+		Label label=new Label("position");
+		label.setWidth("100px");
+		h.add(label);
+		
+		positionBox = new ValueListBox<String>(new Renderer<String>() {
+			@Override
+			public String render(String object) {
+				return object;
+			}
+			@Override
+			public void render(String object, Appendable appendable) throws IOException {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		positionBox.setValue(getStorageValue(KEY_DRAW_POSITION, "RightTop"));
+		
+		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center"));
+		
+		positionBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				setStorageValue(KEY_DRAW_POSITION, event.getValue());
+				//updateImage(); this is in setting right now
+			}
+		});
+		h.add(positionBox);
+		
+		marginBox=makeIntegerBox(panel, "margin", getStorageValue(KEY_DRAW_MARGIN, 25));
+		
+		Button resetFont=new Button("reset",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				fontBox.setText("64px Audiowide");
+				positionBox.setValue("RightTop");
+				marginBox.setValue(25);
+			}
+		});
+		panel.add(resetFont);
+		
+		return panel;
+	}
+	public void onOpenSettingPanel(){
+		
+	}
+	public void onCloseSettingPanel(){
+		int w=widthBox.getValue();
+		int h=heightBox.getValue();
+		
+		if(w>maxSize){
+			w=maxSize;
+		}
+		if(h>maxSize){
+			h=maxSize;
+		}
+		
+		if(w<minSize){
+			w=minSize;
+		}
+		if(h<minSize){
+			h=minSize;
+		}
+		
+		imageWidth=w;
+		imageHeight=h;
+		
+		widthBox.setValue(w);
+		heightBox.setValue(h);
+		
+		
+		setStorageValue(KEY_IMAGE_WIDTH, w);
+		setStorageValue(KEY_IMAGE_HEIGHT, h);
+		
+		setStorageValue(KEY_DRAW_FONT, fontBox.getValue());
+		
+		int max=w>h?w:h;
+		if(w!=canvasWidth || h!=canvasHeight){
+			canvasWidth=max;
+			canvasHeight=max;
+			CanvasUtils.setSize(canvas,max,max);
+			
+		}
+		updateImage();
+	}
+	
+	
+	private IntegerBox makeIntegerBox(Panel parent,String name,int value){
+		HorizontalPanel h=new HorizontalPanel();
+		parent.add(h);
+		
+		Label label=new Label(name);
+		label.setWidth("100px");
+		h.add(label);
+		
+		IntegerBox box=new IntegerBox();
+		box.setValue(value);
+		h.add(box);
+		return box;
+	}
+	
+	private TextBox makeTextBox(Panel parent,String name,String value){
+		HorizontalPanel h=new HorizontalPanel();
+		parent.add(h);
+		
+		Label label=new Label(name);
+		label.setWidth("100px");
+		h.add(label);
+		
+		TextBox box=new TextBox();
+		box.setValue(value);
+		h.add(box);
+		return box;
+	}
+	
+	
+	//TODO move up
+	public Anchor createSettingAnchor(){
+		Anchor setting=new Anchor("Settings");
+		//topPanel.add(setting);
+		setting.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				onOpenSettingPanel();
+				rootDeck.showWidget(1);//setting
+			}
+		});
+		return setting;
+	}
 	@Override
 	public void initializeWidget() {
-		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,true){
+		rootDeck = new DeckLayoutPanel();
+		RootLayoutPanel.get().add(rootDeck);
+		DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -104,7 +287,28 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		};
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
+		//TODO move up
+		rootDeck.add(root);
 		
+		rootDeck.showWidget(0);
+		
+		//create setting
+		DockLayoutPanel settingPanel=new DockLayoutPanel(Unit.PX);
+		HorizontalPanel settingButtons=new HorizontalPanel();
+		settingButtons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		settingButtons.setSpacing(2);
+		settingButtons.add(new Label("Settings"));
+		Button closeBt=new Button("close",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				onCloseSettingPanel();
+				rootDeck.showWidget(0);
+			}
+		});
+		settingButtons.add(closeBt);
+		settingPanel.addNorth(settingButtons,30);
+		settingPanel.add(createMainSettingPage());
+		rootDeck.add(settingPanel);
 		//
 		
 		
@@ -124,6 +328,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		topPanel.add(new Anchor("Help", "simplelogo_help.html"));
 	
+		topPanel.add(createSettingAnchor());
 		
 		
 		VerticalPanel controler=new VerticalPanel();
@@ -169,8 +374,27 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		makeBtPanel.add(makeBt);
 		makeBt.setEnabled(false);
 		
-		
-		
+		typeBox = new ValueListBox<String>(new Renderer<String>() {
+			@Override
+			public String render(String object) {
+				return object;
+			}
+
+			@Override
+			public void render(String object, Appendable appendable) throws IOException {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		typeBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				setStorageValue(KEY_EXPORT_FORMAT, event.getValue());
+			}
+		});
+		typeBox.setValue(getStorageValue(KEY_EXPORT_FORMAT, "png"));
+		typeBox.setAcceptableValues(Lists.newArrayList("png","jpeg","webp"));
+		makeBtPanel.add(typeBox);
 		
 		
 	
@@ -189,7 +413,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				updateImage();
 				
 				if(selection!=null){
-					selection.setScale(getScale());
+					//selection.setScale(getScale());
+					selection.setScale(newValue);
 				}
 			}
 		});
@@ -235,6 +460,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		});
 	
 		HorizontalPanel h3=new HorizontalPanel();
+		h3.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h3);
 		titleBox = new EnterKeySupportTextBox(){
 			@Override
@@ -291,6 +517,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h3.add(updateBt);
 		
 		HorizontalPanel h4=new HorizontalPanel();
+		h4.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h4);
 		h4.add(new Label("BG"));
 		bgColorBox = new ColorBox();
@@ -430,12 +657,17 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		dock.add(mainScrollPanel);
 		
 		
-		canvasWidth = 500;
-		canvasHeight = 500;
+		imageWidth=getStorageValue(KEY_IMAGE_WIDTH, 500);
+		imageHeight=getStorageValue(KEY_IMAGE_HEIGHT, 200);
+		
+		int max=imageWidth>imageHeight?imageWidth:imageHeight;
+		
+		canvasWidth = max;
+		canvasHeight = max;
 		
 		canvas = CanvasUtils.createCanvas(canvasWidth, canvasHeight);
-		
 		drawCanvas=CanvasUtils.createCanvas(canvasWidth, canvasHeight);
+		
 		mainScrollPanel.add(canvas);
 		canvas.setStylePrimaryName("transparent_bg");
 		
@@ -505,7 +737,16 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 	}
 	
+	public static final String KEY_DRAW_POSITION="simplelogo_draw_position";
+	public static final String KEY_DRAW_FONT="simplelogo_draw_font";
+	public static final String KEY_DRAW_MARGIN="simplelogo_draw_margin";
+	public static final String KEY_EXPORT_FORMAT="simplelogo_export_format";
+	public static final String KEY_IMAGE_WIDTH="simplelogo_export_width";
+	public static final String KEY_IMAGE_HEIGHT="simplelogo_export_height";
 	public void setScale(double scale){
+		
+		/*
+		 * here is bugs and store same as range
 		int v=0;
 		if(scale==1){
 			v=0;
@@ -516,7 +757,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			v=(int) (scale/0.01);
 			v*=-1;
 		}
-		scaleRange.setValue(v);
+		*/
+		
+		scaleRange.setValue((int)scale);
+		
+		//LogUtils.log("setted:"+v+",value="+scaleRange.getValue()+" scale="+scale+",nv="+getScale());
 	}
 	
 	private double getScale(){
@@ -535,10 +780,22 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	}
 	
 	protected void generateImage() {
+		int clipSX=(canvasWidth-imageWidth)/2;
+		int clipSY=(canvasHeight-imageHeight)/2;
+		int clipEX=clipSX+imageWidth;
+		int clipEY=clipSY+imageHeight;
+		
 		ImageData data=canvas.getContext2d().getImageData(clipSX, clipSY, clipEX-clipSX, clipEY-clipSY);
 		CanvasUtils.createCanvas(drawCanvas, data);
-		String dataUrl=drawCanvas.toDataUrl();
-		Anchor anchor=HTML5Download.get().generateBase64DownloadLink(dataUrl, "image/png", "logo.png", "Download", true);
+		
+		String type=typeBox.getValue();
+		String dataUrl=drawCanvas.toDataUrl("image/"+type);
+		
+		String extension=type.equals("jpeg")?"jpg":type;
+		String name=titleBox.getText().isEmpty()?"logo":titleBox.getText();
+		
+		
+		Anchor anchor=HTML5Download.get().generateBase64DownloadLink(dataUrl, "image/"+type, name+"."+extension, "Download", true);
 		anchor.setStylePrimaryName("bt");
 		downloadArea.clear();
 		downloadArea.add(anchor);
@@ -665,10 +922,19 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private Canvas drawCanvas;
 	
+	private int maxSize=1080;
+	private int minSize=16;
+	
+	/*
 	private int clipSX=0;
 	private int clipSY=150;
 	private int clipEX=500;
 	private int clipEY=350;
+	*/
+	
+	private int imageWidth;
+	private int imageHeight;
+	
 	private int canvasWidth;
 	private int canvasHeight;
 	private TextBox titleBox;
@@ -677,8 +943,16 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private double lastScale=1;
 	private CheckBox showOutSideCheck;
 	private ValueListBox<Integer> transparentTextBox;
+	private DeckLayoutPanel rootDeck;
+	private IntegerBox widthBox;
+	private IntegerBox heightBox;
+	private TextBox fontBox;
+	private ValueListBox<String> typeBox;
+	private ValueListBox<String> positionBox;
 	private void updateImage(){
-		
+		if(selection==null){
+			return;
+		}
 		
 		if(drawCanvas.getCoordinateSpaceWidth()!=canvasWidth || drawCanvas.getCoordinateSpaceHeight()!=canvasHeight){
 			drawCanvas.setCoordinateSpaceWidth(canvasWidth);
@@ -687,6 +961,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		CanvasUtils.clear(drawCanvas);
 		CanvasUtils.clear(canvas);
 		canvas.getContext2d().save();
+		
 		ImageElement element=selection.getImageElement();
 		
 		double scale=getScale();
@@ -723,6 +998,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().restore();
 		
 		
+		int clipSX=(canvasWidth-imageWidth)/2;
+		int clipSY=(canvasHeight-imageHeight)/2;
+		int clipEX=clipSX+imageWidth;
+		int clipEY=clipSY+imageHeight;
+		
 		//canvas.getContext2d().restore();
 		canvas.getContext2d().save();
 		canvas.getContext2d().beginPath();
@@ -743,7 +1023,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().drawImage(drawCanvas.getCanvasElement(), 0,0);
 		 
 		
-		canvas.getContext2d().setFont("64px Audiowide");
+		canvas.getContext2d().setFont(fontBox.getText());
 		canvas.getContext2d().setFillStyle(colorBox.getValue());
 		//canvas.getContext2d().fillText("Document", 200, 200);
 		
@@ -752,10 +1032,33 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		Rect rect;
 		
 		
+		int align=CanvasUtils.ALIGN_CENTER;
+		int valign=CanvasUtils.VALIGN_MIDDLE;
 		
-		rect=CanvasTextUtils.getAlignRect(canvas,canvas.getCoordinateSpaceWidth()-50,canvas.getCoordinateSpaceHeight()-50,title,CanvasUtils.ALIGN_RIGHT,CanvasUtils.VALIGN_TOP);
-		rect.setX(rect.getX()+25);
-		rect.setY(clipSY+25);
+		String positionText=positionBox.getValue().toLowerCase();
+		if(positionText.indexOf("left")!=-1){
+			align=CanvasUtils.ALIGN_LEFT;
+		}
+		if(positionText.indexOf("right")!=-1){
+			align=CanvasUtils.ALIGN_RIGHT;
+		}
+		if(positionText.indexOf("top")!=-1){
+			valign=CanvasUtils.VALIGN_TOP;
+		}
+		if(positionText.indexOf("bottom")!=-1){
+			valign=CanvasUtils.VALIGN_BOTTOM;
+		}
+		
+		
+		
+		int margin=marginBox.getValue();
+		
+		rect=CanvasTextUtils.getAlignRect(canvas,imageWidth-margin*2,imageHeight-margin*2,title,align,valign);
+		rect.setX(rect.getX()+margin+clipSX);
+		rect.setY(rect.getY()+margin+clipSY);
+		//rect.setY(clipSY+25);
+		
+		
 		
 		canvas.getContext2d().save();
 		double transp=(double)transparentTextBox.getValue()/100;
@@ -763,7 +1066,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		CanvasTextUtils.drawCenterInRect(canvas, title, rect);
 		canvas.getContext2d().restore();
 		
-		rect=RectBuilder.from(500, 200).slice(4, 2).topRight().horizontalExpand(-1).toRect();//.horizontalExpand(-1)
+		//this is faild
+		//rect=RectBuilder.from(imageWidth, imageHeight).slice(4, 2).parsePostion(positionBox.getValue()).horizontalExpand(-1).toRect();//.horizontalExpand(-1)
 		
 		
 		
@@ -822,7 +1126,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			super(fileName, imageElement, dataUrl);
 			// TODO Auto-generated constructor stub
 		}
-		private double scale=1;
+		//private double scale=1;
+		private double scale=0;//now keep same as range value
 		public double getScale() {
 			return scale;
 		}
