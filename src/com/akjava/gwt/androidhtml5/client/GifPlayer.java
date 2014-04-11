@@ -16,6 +16,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -27,6 +29,7 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -47,7 +50,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableObjects<ImageElementData> EasyCellTableObjects;
+	private EasyCellTableObjects<ImageElementData> easyCellTableObjects;
 
 
 	@Override
@@ -99,18 +102,40 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 		
 	
-		hideBt = new Button("hide",new ClickHandler() {
+		hideBt = new Button("hide control",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
 				hideWidgets();
 			}
 		});
-		controler.add(hideBt);
+		HorizontalPanel hpanel=new HorizontalPanel();
+		controler.add(hpanel);
+		hpanel.add(hideBt);
 		hideBt.setEnabled(false);
 	
+		Button stop=new Button("stop",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				easyCellTableObjects.unselect();
+			}
+		});
+		hpanel.add(stop);
 		
-		
+		sizeBox = new ListBox();
+		sizeBox.addItem("full height");
+		sizeBox.addItem("full width");
+		sizeBox.addItem("normal");
+		sizeBox.setSelectedIndex(0);
+		hpanel.add(sizeBox);
+		sizeBox.addChangeHandler(new ChangeHandler() {
+			
+			@Override
+			public void onChange(ChangeEvent event) {
+				updateImageSize();
+			}
+		});
 		
 		
 		SimpleCellTable<ImageElementData> cellTable = new SimpleCellTable<ImageElementData>(999) {
@@ -120,7 +145,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 						@Override
 						public void update(int index, ImageElementData object,
 								String value) {
-								EasyCellTableObjects.removeItem(object);
+								easyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(ImageElementData object) {
@@ -186,7 +211,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		EasyCellTableObjects=new EasyCellTableObjects<ImageElementData>(cellTable,false) {
+		easyCellTableObjects=new EasyCellTableObjects<ImageElementData>(cellTable,false) {
 			@Override
 			public void onSelect(ImageElementData selection) {
 				doSelect(selection);
@@ -212,8 +237,14 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		image = new Image();
 		
-		image.setHeight("100%");
-		dock.add(image);
+		updateImageSize();
+		
+		mainPanel = new VerticalPanel();
+		mainPanel.setSize("100%", "100%");
+		dock.add(mainPanel);
+		mainPanel.add(image);
+		
+		
 		image.setVisible(false);
 		image.addClickHandler(new ClickHandler() {
 			
@@ -240,7 +271,19 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	
 	
-	
+	private void updateImageSize(){
+		int selection=sizeBox.getSelectedIndex();
+		if(selection==0){
+			image.getElement().removeAttribute("style");//I'm not sure right way to remove width
+			image.setHeight("100%");
+		}else if(selection==1){
+			image.getElement().removeAttribute("style");
+			image.setWidth("100%");
+		}else{
+			image.getElement().removeAttribute("style");
+			
+		}
+	}
 	
 
 	protected void loadFile(final File file,final String asStringText) {
@@ -256,14 +299,14 @@ public class GifPlayer extends Html5DemoEntryPoint {
 				
 				final ImageElementData data=new ImageElementData(file.getFileName(),element,asStringText);
 				
-				EasyCellTableObjects.addItem(data);
+				easyCellTableObjects.addItem(data);
 				//updateList();
 				
 				//stack on mobile,maybe because of called async method
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						EasyCellTableObjects.setSelected(data, true);
+						easyCellTableObjects.setSelected(data, true);
 					}
 				});
 			}
@@ -299,6 +342,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	private DockLayoutPanel eastPanel;
 	private DataUrlDropDockRootPanel root;
 	private Button hideBt;
+	private VerticalPanel mainPanel;
 
 
 
@@ -331,19 +375,25 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	
 
+	private boolean show=true;
+	private ListBox sizeBox;
 	
 	private void showWidgets() {
+		if(!show){
 		image.removeFromParent();
-		dock.add(image);
+		mainPanel.add(image);
 		root.add(dock);
-		image.setHeight("100%");
+		updateImageSize();
+		show=true;
+		}
 	}
 	
 	private void hideWidgets(){
 		image.removeFromParent();
 		dock.removeFromParent();
 		root.add(image);
-		image.setHeight("100%");
+		updateImageSize();
+		show=false;
 	}
 
 

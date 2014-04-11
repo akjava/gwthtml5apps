@@ -180,8 +180,18 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 		
 		blackCheck = new CheckBox("black");
+		blackCheck.setEnabled(false);
+		
 		trasparentCheck = new CheckBox("transparent bg");
+		trasparentCheck.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> event) {
+				blackCheck.setEnabled(!event.getValue());//when transparent black/white no need;
+			}
+			
+		});
 		HorizontalPanel bgPanel=new HorizontalPanel();
+		bgPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(bgPanel);
 		bgPanel.add(trasparentCheck);
 		trasparentCheck.setValue(true);
@@ -223,6 +233,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				
 			}
 		});
+		
 		scaleBox.setValue(1);
 		scaleBox.setAcceptableValues(Lists.newArrayList(1,2,4,8));
 		bgPanel.add(scaleBox);
@@ -232,6 +243,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				updateScale(event.getValue());
 			}
 		});
+		
+		bgPanel.add(new Label("x zoom"));
 		
 		int cbase=18;
 		canvasWidth = cbase*16;
@@ -1391,6 +1404,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				
 		a.setStylePrimaryName("bt");
 		downloadArea.add(a);
+		
+		updateCanvas(false);//clear invalid
 	}
 	
 	
@@ -1566,7 +1581,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppVersion() {
-		return "1.006";
+		return "1.1";
 	}
 	
 	@Override

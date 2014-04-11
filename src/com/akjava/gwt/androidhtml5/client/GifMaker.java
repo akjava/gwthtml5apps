@@ -1,7 +1,6 @@
 package com.akjava.gwt.androidhtml5.client;
 
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.List;
 
 import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
@@ -25,7 +24,6 @@ import com.google.common.collect.Lists;
 import com.google.gwt.cell.client.ActionCell;
 import com.google.gwt.cell.client.ActionCell.Delegate;
 import com.google.gwt.cell.client.Cell;
-import com.google.gwt.cell.client.CompositeCell;
 import com.google.gwt.cell.client.FieldUpdater;
 import com.google.gwt.cell.client.HasCell;
 import com.google.gwt.core.client.Scheduler;
@@ -37,8 +35,8 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
-import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
@@ -141,44 +139,57 @@ public class GifMaker extends Html5DemoEntryPoint {
 		makeBt = new Button("Make",new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
+				makeBt.setEnabled(false);
 				
-				
-				List<ImageElement> elements=FluentIterable.from(easyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
-				
-				final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(300).toDataUrl();
-				
-				setGif(url);
-				
-				//create buttons
-				downloadArea.clear();
-				Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "craeted.gif", "Download Gif", false);
-				a.setStylePrimaryName("bt");
-				downloadArea.add(a);
-				Button preview=new Button("Preview",new ClickHandler() {
+				//need time to disable button
+				Timer timer=new Timer(){
 					@Override
-					public void onClick(ClickEvent event) {
+					public void run() {
+
+						List<ImageElement> elements=FluentIterable.from(easyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
+						
+						final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(300).toDataUrl();
+						
+						makeBt.setEnabled(true);
+						
 						setGif(url);
 						
-					}
+						//create buttons
+						downloadArea.clear();
+						Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "craeted.gif", "Download Gif", false);
+						a.setStylePrimaryName("bt");
+						downloadArea.add(a);
+						Button preview=new Button("Preview",new ClickHandler() {
+							@Override
+							public void onClick(ClickEvent event) {
+								setGif(url);
+								
+							}
 
-					
-				});
-				downloadArea.add(preview);
-				
-				Button stop=new Button("Stop",new ClickHandler() {
-					@Override
-					public void onClick(ClickEvent event) {
-						if(easyCellTableObjects.getDatas().size()>0){
-							//select first and it stop gif
-							easyCellTableObjects.setSelected(easyCellTableObjects.getDatas().get(0), true);
-						}else{
-							image.setVisible(false);//just hide
-						}
+							
+						});
+						downloadArea.add(preview);
 						
-						image.setUrl(url);
+						Button stop=new Button("Stop",new ClickHandler() {
+							@Override
+							public void onClick(ClickEvent event) {
+								if(easyCellTableObjects.getDatas().size()>0){
+									//select first and it stop gif
+									easyCellTableObjects.setSelected(easyCellTableObjects.getDatas().get(0), true);
+								}else{
+									image.setVisible(false);//just hide
+								}
+								
+								image.setUrl(url);
+							}
+						});
+						downloadArea.add(stop);
+						
 					}
-				});
-				downloadArea.add(stop);
+					
+				};
+				timer.schedule(5);
+				
 				
 			}
 		});
