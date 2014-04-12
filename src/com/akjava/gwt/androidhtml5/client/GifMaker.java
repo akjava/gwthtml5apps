@@ -148,7 +148,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 						List<ImageElement> elements=FluentIterable.from(easyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
 						
-						final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(300).toDataUrl();
+						final String url=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(speedBox.getValue()).toDataUrl();
 						
 						makeBt.setEnabled(true);
 						

@@ -43,18 +43,22 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
 import com.google.gwt.safehtml.shared.SafeHtmlBuilder;
 import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
@@ -86,8 +90,10 @@ public class GridPaint extends Html5DemoEntryPoint {
 
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
-	private EasyCellTableObjects<GridImageData> EasyCellTableObjects;
+	private EasyCellTableObjects<GridImageData> easyCellTableObjects;
 	private DragMoveControler moveControler;
+	private ValueListBox<Integer> qualityBox;
+	private ValueListBox<Integer> speedBox;
 
 	
 	@Override
@@ -120,6 +126,8 @@ public class GridPaint extends Html5DemoEntryPoint {
 		topPanel.add(createTitleWidget());
 		
 		topPanel.add(new Anchor("Help", "gridpaint_help.html"));
+		
+		topPanel.add(createSettingAnchor());
 		
 		
 		VerticalPanel controler=new VerticalPanel();
@@ -165,6 +173,17 @@ public class GridPaint extends Html5DemoEntryPoint {
 		bh.add(colorBox);
 		
 		
+		circleCheck = new CheckBox("Circle");
+		circleCheck.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				updateCanvas();
+			}
+		});
+		bh.add(circleCheck);
+		
+		
 		modeBox = new ListBox();
 		modeBox.addChangeHandler(new ChangeHandler() {
 			
@@ -206,7 +225,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		});
 		bh.add(stampCheck);
 		
-		bh.add(downloadArea);
+		
 		
 		
 		
@@ -223,35 +242,41 @@ public class GridPaint extends Html5DemoEntryPoint {
 		}, false);
 		topControler.add(fileUp);
 		
-		Button regrid=new Button("ReGrid",new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				regrid();
-			}
-		});
-		topControler.add(regrid);
 		
-Button saveBt=new Button("Save",new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				createDownloadImage();
-			}
-		});
-		topControler.add(saveBt);
-		saveBt.setWidth("80px");
+		
+
+		
 		
 		
 
 		SimpleCellTable<GridImageData> cellTable = new SimpleCellTable<GridPaint.GridImageData>(999) {
 			@Override
 			public void addColumns(CellTable<GridImageData> table) {
-				 ButtonColumn<GridImageData> removeBtColumn=new ButtonColumn<GridImageData>() {
+				
+				Column<GridImageData,GridImageData> actionColumn=new ActionCellGenerator<GridImageData>(){
+
+					@Override
+					public void executeAt(int index, GridImageData object) {
+						if(index==0){
+							easyCellTableObjects.removeItem(object);
+						}
+						else if(index==1){
+							easyCellTableObjects.upItem(object);
+						}else{
+							easyCellTableObjects.downItem(object);
+						}
+						
+					}}.generateColumn(Lists.newArrayList("X","UP","DOWN"));
+					
+				
+				 
+					
+					/*
+					 ButtonColumn<GridImageData> removeBtColumn=new ButtonColumn<GridImageData>() {
 						@Override
 						public void update(int index, GridImageData object,
 								String value) {
-								EasyCellTableObjects.removeItem(object);
+								easyCellTableObjects.removeItem(object);
 						}
 						@Override
 						public String getValue(GridImageData object) {
@@ -259,8 +284,6 @@ Button saveBt=new Button("Save",new ClickHandler() {
 						}
 					};
 					table.addColumn(removeBtColumn);
-					
-					/*
 					 ButtonColumn<GridImageData> saveBtColumn=new ButtonColumn<GridImageData>() {
 							@Override
 							public void update(int index, GridImageData object,
@@ -293,13 +316,19 @@ Button saveBt=new Button("Save",new ClickHandler() {
 					table.addColumn(regridBtColumn);
 					table.setColumnWidth(regridBtColumn, "50px");
 					*/
+
 					
-				    ButtonColumn<GridImageData> upBtColumn=new ButtonColumn<GridImageData>() {
+					table.addColumn(actionColumn);
+					table.setColumnWidth(actionColumn,"160px" );
+					
+					
+					/*
+					 * ButtonColumn<GridImageData> upBtColumn=new ButtonColumn<GridImageData>() {
 						@Override
 						public void update(int index, GridImageData object,
 								String value) {
 								
-								EasyCellTableObjects.upItem(object);
+								easyCellTableObjects.upItem(object);
 						}
 						@Override
 						public String getValue(GridImageData object) {
@@ -307,12 +336,11 @@ Button saveBt=new Button("Save",new ClickHandler() {
 						}
 					};
 					table.addColumn(upBtColumn);
-					
 					 ButtonColumn<GridImageData> downBtColumn=new ButtonColumn<GridImageData>() {
 							@Override
 							public void update(int index, GridImageData object,
 									String value) {
-									EasyCellTableObjects.downItem(object);
+									easyCellTableObjects.downItem(object);
 							}
 							@Override
 							public String getValue(GridImageData object) {
@@ -320,7 +348,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 							}
 						};
 						table.addColumn(downBtColumn);
-				
+				*/
 					
 					
 				    TextColumn<GridImageData> fileInfoColumn = new TextColumn<GridImageData>() {
@@ -345,20 +373,74 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		
 		HorizontalPanel gifPanel=new HorizontalPanel();
 		controler.add(gifPanel);
-		Button  makeBt = new Button("Make Gif",new ClickHandler() {
+		
+		Button regrid=new Button("ReGrid",new ClickHandler() {
+			
 			@Override
 			public void onClick(ClickEvent event) {
+				regrid();
+			}
+		});
+		gifPanel.add(regrid);
+		
+		Button copyBt=new Button("Copy",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				doCopy();
+			}
+		});
+		gifPanel.add(copyBt);
+		
+		
+		Button saveBt=new Button("Save",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				createDownloadImage();
+			}
+		});
+		gifPanel.add(saveBt);
+		saveBt.setWidth("80px");
+		
+		
+		
+		makeBt = new Button("Make Gif",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				makeBt.setEnabled(false);
+				Timer timer=new Timer(){
+
+					@Override
+					public void run() {
+						List<ImageElement> elements=FluentIterable.from(easyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
+						
+						
+						gifUrl=GifAnimeBuilder.from(elements).setQuality(qualityBox.getValue()).loop().delay(speedBox.getValue()).toDataUrl();
+						
+						
+						
+						//set image
+						showGif();
+						
+						
+						
+						
+						//create buttons
+						downloadArea.clear();
+						Anchor a=HTML5Download.get().generateBase64DownloadLink(gifUrl, "image/gif", "gridanime.gif", "Download Gif", false);
+						a.setStylePrimaryName("bt");
+						downloadArea.add(a);
+						makeBt.setEnabled(true);
+						stopAndPreview.setVisible(true);
+					}
+
+
+					
+				};
+				timer.schedule(5);
 				
 				
-				List<ImageElement> elements=FluentIterable.from(EasyCellTableObjects.getDatas()).transform(new DataToImageElement()).toList();
-				
-				final String url=GifAnimeBuilder.from(elements).lowQuality().loop().delay(300).toDataUrl();
-				
-				//create buttons
-				downloadArea.clear();
-				Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "gridanime.gif", "Download Gif", false);
-				a.setStylePrimaryName("bt");
-				downloadArea.add(a);
 				
 				
 				
@@ -366,16 +448,18 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		});
 		gifPanel.add(makeBt);
 		
-		circleCheck = new CheckBox("Circle");
-		circleCheck.addClickHandler(new ClickHandler() {
+		stopAndPreview = new Button("stop",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				updateCanvas();
+				stopOrPreview();
 			}
 		});
-		gifPanel.add(circleCheck);
+		stopAndPreview.setVisible(false);
+		gifPanel.add(stopAndPreview);
 		
+		
+		topControler.add(downloadArea);//last bottom
 		
 		//makeBt.setEnabled(false);
 		
@@ -390,7 +474,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		
 		cellTable.setWidth("100%");
 		cellScroll.add(cellTable);
-		EasyCellTableObjects=new EasyCellTableObjects<GridPaint.GridImageData>(cellTable,false) {
+		easyCellTableObjects=new EasyCellTableObjects<GridPaint.GridImageData>(cellTable,false) {
 			@Override
 			public void onSelect(GridImageData selection) {
 				doSelect(selection);
@@ -440,16 +524,173 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			}
 		});
 		
+		VerticalPanel scrollMain=new VerticalPanel();
+		scrollMain.add(canvas);
+		gifImage = new Image();
+		gifImage.setVisible(false);
+		scrollMain.add(gifImage);
+		
 		
 		ScrollPanel scroll=new ScrollPanel();
 		scroll.setWidth("100%");
 		scroll.setHeight("100%");
 		dock.add(scroll);
-		scroll.add(canvas);
+		scroll.add(scrollMain);
 		
 		return root;
 	}
 	
+	 public Panel createMainSettingPage(){
+			VerticalPanel panel=new VerticalPanel();
+			Label label0=new Label("Export Image Type");
+			panel.add(label0);
+			
+			List<String> fileType=Lists.newArrayList("PNG","Jpeg","WebP");
+			exportImageType = new ValueListBox<String>(new Renderer<String>() {
+				@Override
+				public String render(String object) {
+					return object;
+				}
+
+				@Override
+				public void render(String object, Appendable appendable) throws IOException {
+					// TODO Auto-generated method stub
+					
+				}
+			});
+			exportImageType.setValue(getStorageValue(KEY_IMAGE_TYPE, "PNG"));
+			exportImageType.setAcceptableValues(fileType);
+			exportImageType.addValueChangeHandler(new ValueChangeHandler<String>() {
+
+				@Override
+				public void onValueChange(ValueChangeEvent<String> event) {
+					setStorageValue(KEY_IMAGE_TYPE, event.getValue());
+				}
+				
+			});
+			panel.add(exportImageType);
+			
+			
+			Label label=new Label("GifAnime");
+			panel.add(label);
+			
+			HorizontalPanel h1=new HorizontalPanel();
+			h1.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+			panel.add(h1);
+			
+			h1.add(new Label("quality"));
+			qualityBox = new ValueListBox<Integer>(new Renderer<Integer>() {
+
+				@Override
+				public String render(Integer value) {
+					if(value==10){
+						return "medium(10)";
+					}
+					
+					if(value==1){
+						return "High(1)";
+					}
+					
+					if(value==20){
+						return "low(20)";
+					}
+					
+					return ""+value;
+				}
+
+				@Override
+				public void render(Integer object, Appendable appendable) throws IOException {
+					
+				}
+			});
+			List<Integer> acceptableValues=Lists.newArrayList();
+			for(int i=20;i>0;i--){
+				acceptableValues.add(i);
+			}
+			qualityBox.setValue(storageControler.getValue(KEY_GIF_QUALITY, 20));//low 
+			qualityBox.setAcceptableValues(acceptableValues);
+			h1.add(qualityBox);
+			qualityBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+				
+				@Override
+				public void onValueChange(ValueChangeEvent<Integer> event) {
+					setStorageValue(KEY_GIF_QUALITY, event.getValue());
+				}
+			});
+
+			h1.add(new Label("speed"));
+			speedBox = new ValueListBox<Integer>(new Renderer<Integer>() {
+
+				@Override
+				public String render(Integer value) {
+					if(value==1000){
+						return "slow(1000ms)";
+					}
+					
+					if(value==50){
+						return "first(50ms)";
+					}
+					
+					if(value==500){
+						return "medium(500ms)";
+					}
+					
+					return ""+value;
+				}
+
+				@Override
+				public void render(Integer object, Appendable appendable) throws IOException {
+					
+				}
+			});
+			List<Integer> acceptableValues2=Lists.newArrayList();
+			for(int i=1;i<=20;i++){
+				acceptableValues2.add(i*50);
+			}
+			speedBox.setValue(storageControler.getValue(KEY_GIF_DELAY, 300));//low 
+			speedBox.setAcceptableValues(acceptableValues2);
+			h1.add(speedBox);
+			speedBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+				
+				@Override
+				public void onValueChange(ValueChangeEvent<Integer> event) {
+					setStorageValue(KEY_GIF_DELAY, event.getValue());
+				}
+			});
+			return panel;
+		}
+	 
+	 private static final String KEY_IMAGE_TYPE="gridpaint_image_type";
+	 private static final String KEY_GIF_QUALITY="gridpaint_gif_quality";
+	 private static final String KEY_GIF_DELAY="gridpaint_gif_delay";
+	
+	private void showGif() {
+		gifImage.setUrl(gifUrl);
+		easyCellTableObjects.unselect();
+	}
+	
+	private String gifUrl;
+	private boolean gifShowing;
+	protected void stopOrPreview() {
+		if(gifShowing){
+			gifImage.setUrl("");
+			if(easyCellTableObjects.getDatas().size()>0){
+				//select first and stop gif
+				easyCellTableObjects.setSelected(easyCellTableObjects.getDatas().get(0), true);
+			}
+		}else{
+			showGif();
+		}
+	}
+
+	protected void doCopy() {
+		if(this.selection!=null){
+			GridImageData newData=this.selection.copy();
+			easyCellTableObjects.addItem(newData);
+			easyCellTableObjects.setSelected(newData, true);
+		}
+	}
+
 	private String getColor(){
 		String color=colorBox.getValue();
 		if(color.isEmpty()){
@@ -490,8 +731,8 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			int height=selection.getImageHeight();
 			int[] result=calcurateGrid(width,height,baseSplit);
 			GridImageData newData=new GridImageData(selection.getFileName(), selection.getDataUrl(), result[0], result[1], result[2],width,height);
-			EasyCellTableObjects.addItem(newData);
-			EasyCellTableObjects.setSelected(newData, true);
+			easyCellTableObjects.addItem(newData);
+			easyCellTableObjects.setSelected(newData, true);
 		}
 	}
 
@@ -502,19 +743,26 @@ Button saveBt=new Button("Save",new ClickHandler() {
 		}
 		downloadArea.clear();
 		
-		blob=Blob.createBase64Blob(canvas.toDataUrl(),"image/png");//for IE keep blob
+		String type=exportImageType.getValue().toLowerCase();
+		String mime="image/"+type;
+		String extension=type.equals("jpeg")?"jpg":type;
+		
+		
+		blob=Blob.createBase64Blob(canvas.toDataUrl(mime),mime);//for IE keep blob
 		
 		Anchor a=null;
 		if(GWTUtils.isIE()){
-			a=HTML5Download.get().generateDownloadLink(blob, "image/png","gridPaint.png", "RightClickAndSaveAs",false);
+			a=HTML5Download.get().generateDownloadLink(blob, mime,"gridPaint."+extension, "RightClickAndSaveAs",false);
 			a.setTitle("to download right mouse button to show contextmenu and select save as by yourself");
 		}else{
 			//TODO support ios
-			a=HTML5Download.get().generateDownloadLink(blob, "image/png","gridPaint.png", "Download Image",true);
+			a=HTML5Download.get().generateDownloadLink(blob, "image/"+mime,"gridPaint."+extension, "Download Image",true);
 		}
 				
 		a.setStylePrimaryName("bt");
 		downloadArea.add(a);
+		
+		gifUrl="";//clear
 	}
 	
 	
@@ -562,7 +810,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				
 				final GridImageData data=new GridImageData(file.getFileName(), asStringText,result[0],result[1],result[2],element.getWidth(),element.getHeight());
 				
-				EasyCellTableObjects.addItem(data);
+				easyCellTableObjects.addItem(data);
 				//updateList();
 				
 				
@@ -570,7 +818,7 @@ Button saveBt=new Button("Save",new ClickHandler() {
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 					@Override
 					public void execute() {
-						EasyCellTableObjects.setSelected(data, true);
+						easyCellTableObjects.setSelected(data, true);
 					}
 				});
 			}
@@ -613,14 +861,32 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	public void doSelect(GridImageData selection) {
 		this.selection=selection;
 		target=null;
-		
 		if(selection==null){
 			canvas.setVisible(false);
+			if(gifImage.getUrl().isEmpty()){
+				gifImage.setVisible(false);
+				gifShowing=false;
+			}else{
+				gifImage.setVisible(true);
+				gifShowing=true;
+			}
+			
 		}else{
+			gifImage.setVisible(false);
 			canvas.setVisible(true);
 			//ImageElement element=ImageElementUtils.create(selection.getDataUrl());
 			//ImageElementUtils.copytoCanvas(element, canvas);
 			updateCanvas();
+			gifShowing=false;
+		}
+		updateStopAndPreviewButton();
+	}
+	
+	private void updateStopAndPreviewButton(){
+		if(gifShowing){
+			stopAndPreview.setText("stop");
+		}else{
+			stopAndPreview.setText("preview");
 		}
 	}
 	
@@ -641,6 +907,10 @@ Button saveBt=new Button("Save",new ClickHandler() {
 	
 	private CheckBox circleCheck;
 	private ListBox modeBox;
+	private Button makeBt;
+	private Button stopAndPreview;
+	private Image gifImage;
+	private ValueListBox<String> exportImageType;
 	private static class Point{
 		public Point(int x, int y) {
 			super();
@@ -989,6 +1259,19 @@ Button saveBt=new Button("Save",new ClickHandler() {
 			}else{
 				return null;
 			}
+		}
+		public GridImageData copy(){
+			GridImageData data=new GridImageData(this.fileName,this.dataUrl,this.gridSize,this.row,this.col,this.imageWidth,this.imageHeight);
+			
+			for(int i=0;i<this.row;i++){
+				for(int j=0;j<this.col;j++){
+					String v=this.gridTable.get(i, j);
+					data.gridTable.put(i, j, v);
+				}
+			}
+			
+			
+			return data;
 		}
 		
 		public static void drawGridImage(Canvas targetCanvas,GridImageData gridData){

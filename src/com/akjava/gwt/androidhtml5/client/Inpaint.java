@@ -8,6 +8,7 @@ import com.akjava.gwt.androidhtml5.client.inpaint.MaskDataEditor.MaskDataEditorD
 import com.akjava.gwt.html5.client.HTML5InputRange;
 import com.akjava.gwt.html5.client.InputRangeListener;
 import com.akjava.gwt.html5.client.InputRangeWidget;
+import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
@@ -401,6 +402,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	
 	private void uploadImage(final ImageElement element){
 		resultPanel.clear();
+		
 		ImageElementUtils.copytoCanvas(element, sharedCanvas);
 		resultPanel.add(sharedCanvas);
 		
@@ -589,6 +591,11 @@ public class Inpaint extends Html5DemoEntryPoint {
 				Benchmark.endAndLog("total");
 				ImageElementUtils.copytoCanvas(element, sharedCanvas);
 				sharedCanvas.setVisible(true);
+				
+				downloadArea.clear();
+				Anchor anchor=HTML5Download.get().generateBase64DownloadLink(lastImage, "image/png", "inpaing.png", "download", true);
+				downloadArea.add(anchor);
+				resultPanel.add(downloadArea);
 			}
 		};
 		timer.schedule(50);
@@ -596,6 +603,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 	}
 	
+	VerticalPanel downloadArea=new VerticalPanel();
 
 
 	@Override
