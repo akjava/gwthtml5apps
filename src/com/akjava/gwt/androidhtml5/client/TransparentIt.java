@@ -657,6 +657,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		HorizontalPanel exbuttons=new HorizontalPanel();
+		exbuttons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(exbuttons);
 		
 		exbuttons.add(new Label("bgimage"));
@@ -803,6 +804,20 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					      }
 					    };
 					    table.addColumn(fileInfoColumn,"Name");
+					    
+					    
+					    ButtonColumn<ImageElementData> copyBtColumn=new ButtonColumn<ImageElementData>() {
+							@Override
+							public void update(int index, ImageElementData object,
+									String value) {
+									EasyCellTableObjects.addItem(object.copy());
+							}
+							@Override
+							public String getValue(ImageElementData object) {
+								 return "Copy";
+							}
+						};
+						table.addColumn(copyBtColumn);
 					    
 					    
 			}

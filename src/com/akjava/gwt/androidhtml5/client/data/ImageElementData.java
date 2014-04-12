@@ -2,6 +2,7 @@ package com.akjava.gwt.androidhtml5.client.data;
 
 import com.akjava.gwt.androidhtml5.client.HasImageUrl;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.user.client.DOM;
 
 public class ImageElementData implements HasImageUrl{
 
@@ -37,6 +38,13 @@ public class ImageElementData implements HasImageUrl{
 		}
 		public String getImageUrl() {
 			return getDataUrl();
+		}
+		
+		public ImageElementData copy(){
+			ImageElement element=ImageElement.as(DOM.createImg());
+			element.setSrc(imageElement.getSrc());
+			ImageElementData newData=new ImageElementData(getFileName(),element,getDataUrl());
+			return newData;
 		}
 		
 	}
