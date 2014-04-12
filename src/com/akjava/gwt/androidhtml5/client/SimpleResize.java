@@ -1,8 +1,15 @@
 package com.akjava.gwt.androidhtml5.client;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.akjava.gwt.androidhtml5.client.ListEditorGenerator.ValueControler;
 import com.akjava.gwt.androidhtml5.client.data.ImageUrlData;
+import com.akjava.gwt.androidhtml5.client.resize.ResizeData;
+import com.akjava.gwt.androidhtml5.client.resize.ResizeDataEditor;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
@@ -14,11 +21,15 @@ import com.akjava.gwt.lib.client.CanvasResizer;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.StorageException;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.akjava.lib.common.utils.CSVUtils;
 import com.akjava.lib.common.utils.FileNames;
 import com.akjava.lib.common.utils.ValuesUtils;
+import com.google.common.base.Converter;
+import com.google.common.base.Joiner;
 import com.google.common.base.Optional;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
@@ -31,6 +42,7 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -41,6 +53,7 @@ import com.google.gwt.text.shared.Renderer;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.TextColumn;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -92,8 +105,11 @@ public class SimpleResize extends Html5DemoEntryPoint {
 	private final int SIZE_HEIGHT=1;
 	private int sizeMode;
 	
+	private List<String> initialSizeValues=Lists.newArrayList("x 0.1","x 0.25","x 0.5","x 1","x 2","x 4","90","180","360","480","640","720","800","920","1280");
 	@Override
 	public Panel initializeWidget() {
+		
+		
 		
 DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
@@ -182,7 +198,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		
 		
 		sizesList.setValue("360");
-		sizesList.setAcceptableValues(Lists.newArrayList("x 0.1","x 0.25","x 0.5","x 1","x 2","x 4","90","180","360","480","640","720","800","920","1280"));
+		sizesList.setAcceptableValues(initialSizeValues);
 		panel1.add(sizesList);
 		sizesList.addValueChangeHandler(new ValueChangeHandler<String>() {
 			
@@ -257,6 +273,8 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		});
 		
 		topPanel.add(new Anchor("Help", "resize_help.html"));
+		
+		topPanel.add(createSettingAnchor());
 		
 		//dock.add(canvas);
 		//canvas.removeFromParent();
@@ -378,7 +396,107 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		return root;
 	}
 	
+	private void updateSizeList(){
+		List<String> newValues=Lists.newArrayList(initialSizeValues);
+		for(ResizeData data:additionalDatas){
+			newValues.add(""+data.getSize());
+		}
+		sizesList.setAcceptableValues(newValues);
+	}
 	
+	public void onCloseSettingPanel(){
+		
+	}
+
+	 private List<ResizeData> additionalDatas;
+	 public Panel createMainSettingPage(){
+		VerticalPanel panel=new VerticalPanel();
+		
+		Label sizes=new Label("additional size");
+		panel.add(sizes);
+		
+		Map<String,String> labelMaps=new HashMap<String, String>();
+		
+		
+		SimpleCellTable<ResizeData> table=new SimpleCellTable<ResizeData>(999) {
+
+			@Override
+			public void addColumns(CellTable<ResizeData> table) {
+				TextColumn<ResizeData> valueColumn=new TextColumn<ResizeData>() {
+					@Override
+					public String getValue(ResizeData object) {
+						return ""+object.getSize();
+					}
+				};
+				table.addColumn(valueColumn,"value");
+			}
+		};
+		
+		
+		ResizeDataEditor editor=new ResizeDataEditor();
+		
+		ListEditorGenerator<ResizeData> generator=new ListEditorGenerator<ResizeData>(){
+			@Override
+			public ResizeData createNewData() {
+				return new ResizeData(100);
+			}
+		};
+		
+		
+		VerticalPanel vlist=generator.generatePanel(table, new ValueConverter(), editor,ResizeDataEditor.driver,labelMaps,new ValueControler(){
+			public void setValue(String value){
+				try {
+					storageControler.setValue(KEY_ADDITIONAL_SIZE, value);
+				} catch (StorageException e) {
+					Window.alert(e.getMessage());
+				}
+			}
+			public String getValue(){
+				return storageControler.getValue(KEY_ADDITIONAL_SIZE, "");
+			}
+		});
+		
+		panel.add(vlist);
+		panel.add(editor);
+		
+		additionalDatas=generator.getEasyCells().getDatas();
+		
+		
+		updateSizeList();//update
+		
+		return panel;
+	}
+	private static final String KEY_ADDITIONAL_SIZE="simpleresize_additional_size";
+	 
+	private class ValueConverter extends Converter<List<ResizeData>,String>{
+
+		@Override
+		protected String doForward(List<ResizeData> a) {
+			List<String> lines=new ArrayList<String>();
+			for(ResizeData data:a){
+				lines.add(""+data.getSize());
+			}
+			return Joiner.on("\n").join(lines);
+		}
+
+		@Override
+		protected List<ResizeData> doBackward(String b) {
+			List<ResizeData> datas=new ArrayList<ResizeData>();
+			String[] lines=CSVUtils.splitLines(b);
+			
+			for(String line:lines){
+				int v=ValuesUtils.toInt(line, 0);
+				if(v!=0){
+					ResizeData data=new ResizeData(v);
+					datas.add(data);
+				}
+			}
+			
+			return datas;
+		}
+		
+	}
+	 
 	
 	public boolean isScaleSize(String size){
 		return size.indexOf("x")!=-1;
