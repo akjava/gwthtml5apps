@@ -30,9 +30,11 @@ import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -60,7 +62,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	@Override
 	public Panel initializeWidget() {
 		
-	DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
+	root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -135,6 +137,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			}
 		});
 		HorizontalPanel hpanel=new HorizontalPanel();
+		hpanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(hpanel);
 		hpanel.add(hideBt);
 		hideBt.setEnabled(false);
@@ -147,7 +150,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			}
 		});
 		hpanel.add(stop);
-		
+		hpanel.add(new Label("size"));
 		sizeBox = new ListBox();
 		sizeBox.addItem("full height");
 		sizeBox.addItem("full width");
@@ -264,10 +267,11 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		updateImageSize();
 		
-		mainPanel = new VerticalPanel();
-		mainPanel.setSize("100%", "100%");
+		mainPanel = new DeckLayoutPanel();
+		//mainPanel.setSize("100%", "100%");
 		dock.add(mainPanel);
 		mainPanel.add(image);
+		mainPanel.showWidget(0);
 		
 		
 		image.setVisible(false);
@@ -366,6 +370,8 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			image.getElement().removeAttribute("style");
 			
 		}
+		
+		LogUtils.log(image);
 	}
 	
 
@@ -423,9 +429,9 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	private Image image;
 	private ScrollPanel mainScrollPanel;
 	private DockLayoutPanel eastPanel;
-	private DataUrlDropDockRootPanel root;
+	private DropDockDataUrlRootPanel root;
 	private Button hideBt;
-	private VerticalPanel mainPanel;
+	private DeckLayoutPanel mainPanel;
 
 
 
@@ -465,6 +471,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		if(!show){
 		image.removeFromParent();
 		mainPanel.add(image);
+		mainPanel.showWidget(0);
 		root.add(dock);
 		updateImageSize();
 		show=true;

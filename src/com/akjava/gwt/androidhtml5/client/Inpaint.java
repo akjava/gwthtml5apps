@@ -39,6 +39,7 @@ import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
+import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -594,8 +595,10 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				downloadArea.clear();
 				Anchor anchor=HTML5Download.get().generateBase64DownloadLink(lastImage, "image/png", "inpaing.png", "download", true);
+				anchor.setName("bottom");
 				downloadArea.add(anchor);
 				resultPanel.add(downloadArea);
+				Location.replace("#bottom");
 			}
 		};
 		timer.schedule(50);
