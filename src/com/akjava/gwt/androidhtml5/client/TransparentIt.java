@@ -714,6 +714,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 						public void update(int index, ImageElementData object,
 								String value) {
 								EasyCellTableObjects.removeItem(object);
+								//when closed need undo
+								undoBt.setEnabled(false);
+								redoBt.setEnabled(false);
 						}
 						@Override
 						public String getValue(ImageElementData object) {
