@@ -266,77 +266,38 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		//size choose
 		HorizontalPanel sizes=new HorizontalPanel();
+		sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(sizes);
 		
-		RadioButton exs2=new RadioButton("sizes");
-		exs2.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				penSize=2;
-			}
-		});
-		sizes.add(exs2);
-		sizes.add(new Label("xexSmall"));
-		
-		RadioButton exs=new RadioButton("sizes");
-		exs.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				penSize=8;
-			}
-		});
-		sizes.add(exs);
-		sizes.add(new Label("exSmall"));
+		Label penSizeLabel=new Label("Pen-Size");
+		sizes.add(penSizeLabel);
+		ValueListBox<Integer> sizeListBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
-		
-		
-		RadioButton smallS=new RadioButton("sizes");
-		smallS.addClickHandler(new ClickHandler() {
-			
 			@Override
-			public void onClick(ClickEvent event) {
-				penSize=16;
+			public String render(Integer object) {
+				// TODO Auto-generated method stub
+				return ""+object;
 			}
-		});
-		sizes.add(smallS);
-		sizes.add(new Label("small"));
 
-		RadioButton middleS=new RadioButton("sizes");
-		middleS.addClickHandler(new ClickHandler() {
-			
 			@Override
-			public void onClick(ClickEvent event) {
-				penSize=32;
+			public void render(Integer object, Appendable appendable) throws IOException {
+				// TODO Auto-generated method stub
+				
 			}
 		});
-		middleS.setValue(true);
-		sizes.add(middleS);
-		sizes.add(new Label("middle"));
-	
-		RadioButton largeS=new RadioButton("sizes");
-		largeS.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				penSize=48;
-			}
-		});
-		sizes.add(largeS);
-		sizes.add(new Label("large"));
 		
-		RadioButton exL=new RadioButton("sizes");
-		exL.addClickHandler(new ClickHandler() {
-			
+		List<Integer> sizeList=Lists.newArrayList(1,2,3,4,5,6,8,12,16,24,32,48,64);
+		sizeListBox.setValue(8);
+		sizeListBox.setAcceptableValues(sizeList);
+		sizeListBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+
 			@Override
-			public void onClick(ClickEvent event) {
-				penSize=96;
+			public void onValueChange(ValueChangeEvent<Integer> event) {
+				penSize=event.getValue();
 			}
+			
 		});
-		sizes.add(exL);
-		sizes.add(new Label("exLarge"));
-		
+		sizes.add(sizeListBox);
 		//pen choose
 		HorizontalPanel pens=new HorizontalPanel();
 		pens.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);

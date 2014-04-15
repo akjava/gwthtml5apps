@@ -355,6 +355,13 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> event) {
 				setStorageValue(KEY_EXPORT_FORMAT, event.getValue());
+				
+				if(!typeBox.getValue().equals("png")){
+					keepTransparent.setEnabled(false);
+				}else{
+					keepTransparent.setEnabled(true);
+				}
+				
 			}
 		});
 		typeBox.setValue(getStorageValue(KEY_EXPORT_FORMAT, "png"));
@@ -432,7 +439,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			public void onEnterKeyDown() {
 				updateImage();
 			}};
-		titleBox.setText("TODO");
+		titleBox.setText(getStorageValue(KEY_LAST_LABEL, "TODO"));
 		h3.add(titleBox);
 		colorBox = new ColorBox();
 		colorBox.setValue("#ffffff");
@@ -461,6 +468,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				updateImage();
 			}
 		});
+		
+		
 		
 		
 		
@@ -504,6 +513,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		h4.add(keepTransparent);
+		
+		//only png has transparent
+		if(!typeBox.getValue().equals("png")){
+			keepTransparent.setEnabled(false);
+		}
 		
 		showOutSideCheck = new CheckBox("show outside");
 		showOutSideCheck.setValue(true);
@@ -709,6 +723,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	public static final String KEY_EXPORT_FORMAT="simplelogo_export_format";
 	public static final String KEY_IMAGE_WIDTH="simplelogo_export_width";
 	public static final String KEY_IMAGE_HEIGHT="simplelogo_export_height";
+	public static final String KEY_LAST_LABEL="simplelogo_last_label";
 	public void setScale(double scale){
 		
 		/*
@@ -1082,6 +1097,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		canvas.getContext2d().restore();
 		lastScale=scale;
+		
+		setStorageValue(KEY_LAST_LABEL, titleBox.getText());
 		
 	}
 	
