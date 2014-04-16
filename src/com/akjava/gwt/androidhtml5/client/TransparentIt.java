@@ -103,7 +103,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	private int currentEditingId=-1;
 
-	private int penSize=32;
+	private int penSize=16;
 	public static final int MODE_ERASE=0;
 	public static final int MODE_BLACK=1;
 	public static final int MODE_WHITE=2;
@@ -287,7 +287,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		
 		List<Integer> sizeList=Lists.newArrayList(1,2,3,4,5,6,8,12,16,24,32,48,64);
-		sizeListBox.setValue(8);
+		sizeListBox.setValue(penSize);
 		sizeListBox.setAcceptableValues(sizeList);
 		sizeListBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
 
