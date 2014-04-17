@@ -44,6 +44,9 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
 import com.google.gwt.event.dom.client.ContextMenuHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.dom.client.MouseMoveEvent;
@@ -271,7 +274,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		Label penSizeLabel=new Label("Pen-Size");
 		sizes.add(penSizeLabel);
-		ValueListBox<Integer> sizeListBox=new ValueListBox<Integer>(new Renderer<Integer>() {
+		final ValueListBox<Integer> sizeListBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
 			@Override
 			public String render(Integer object) {
@@ -302,7 +305,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		HorizontalPanel pens=new HorizontalPanel();
 		pens.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		controler.add(pens);
-		RadioButton eraseR=new RadioButton("pens");
+		final RadioButton eraseR=new RadioButton("pens");
 		pens.add(eraseR);
 		eraseR.setValue(true);
 		eraseR.addClickHandler(new ClickHandler() {
@@ -313,7 +316,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			}
 		});
 		pens.add(new Label("Erase"));
-		RadioButton uneraseR=new RadioButton("pens");
+		final RadioButton uneraseR=new RadioButton("pens");
 		uneraseR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -382,6 +385,46 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			}
 		});
 		*/
+		canvas.addKeyDownHandler(new KeyDownHandler() {
+			
+			@Override
+			public void onKeyDown(KeyDownEvent event) {
+				int code=event.getNativeKeyCode();
+				LogUtils.log(""+code);
+				if(code=='1'){
+					sizeListBox.setValue(1);
+				}
+				if(code=='2'){
+					sizeListBox.setValue(4);
+				}
+				if(code=='3'){
+					sizeListBox.setValue(8);
+				}
+				if(code=='4'){
+					sizeListBox.setValue(16);
+				}
+				if(code=='5'){
+					sizeListBox.setValue(32);
+				}
+				if(code=='6'){
+					sizeListBox.setValue(64);
+				}
+				if(code=='7'){
+					sizeListBox.setValue(128);
+				}
+				penSize=sizeListBox.getValue();
+				
+				if(code==KeyCodes.KEY_TAB){
+					if(penMode==MODE_ERASE){
+						uneraseR.setValue(true);
+						penMode=MODE_UNERASE;
+					}else{
+						eraseR.setValue(true);
+						penMode=MODE_ERASE;
+					}
+				}
+			}
+		});
 		
 		
 		canvas.addTouchMoveHandler(new TouchMoveHandler() {

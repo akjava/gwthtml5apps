@@ -3,7 +3,7 @@ package com.akjava.gwt.androidhtml5.client.inpaint;
 import com.akjava.gwt.lib.client.canvas.Rect;
 
 public class MaskData {
-private boolean transparent;
+private boolean transparent=true;//most use
 private String color="#ffffff";
 private int expand=2;
 private int fade=5;

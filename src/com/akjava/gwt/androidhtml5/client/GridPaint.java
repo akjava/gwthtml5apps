@@ -239,7 +239,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 			public void uploaded(File file, String asStringText) {
 				loadFile(file,asStringText);
 			}
-		}, false);
+		}, true);//I'm not sure no reason to stop reset.
 		topControler.add(fileUp);
 		
 		
