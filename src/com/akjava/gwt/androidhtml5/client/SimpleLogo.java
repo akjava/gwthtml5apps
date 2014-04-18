@@ -430,6 +430,30 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				
 			}
 		});
+		Button leftTurn=new Button("-90",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				rotateRange.setValue(-90);
+			}
+		});
+		h2.add(leftTurn);
+		Button zeroTurn=new Button("0",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				rotateRange.setValue(0);
+			}
+		});
+		h2.add(zeroTurn);
+		Button rightTurn=new Button("90",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				rotateRange.setValue(90);
+			}
+		});
+		h2.add(rightTurn);
 	
 		HorizontalPanel h3=new HorizontalPanel();
 		h3.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
