@@ -15,6 +15,12 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
+/**
+ * @deprecated use commons
+ * @author aki
+ *
+ * @param <T>
+ */
 public abstract class ListEditorGenerator<T> {
 
 	private EasyCellTableObjects<T> easyCells;
