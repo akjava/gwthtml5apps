@@ -23,11 +23,13 @@ import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
+import com.akjava.lib.common.utils.ColorUtils;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
+import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
@@ -39,6 +41,8 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.dom.client.StyleElement;
 import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.dom.client.Touch;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ContextMenuEvent;
@@ -77,6 +81,7 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.ScrollPanel;
@@ -112,6 +117,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	public static final int MODE_WHITE=2;
 	public static final int MODE_COLOR=3;
 	public static final int MODE_UNERASE=4;
+	public static final int MODE_PICK=5;
 	private int penMode=MODE_ERASE;
 	private boolean mouseMoved;
 	
@@ -187,47 +193,26 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		
-
+		backgroundList=new ListBox();
+		backgroundList.addItem("transparent");
+		backgroundList.addItem("black");
+		backgroundList.addItem("white");
+		backgroundList.addItem("color");
 		
-		blackCheck = new CheckBox("black");
-		blackCheck.setEnabled(false);
-		
-		trasparentCheck = new CheckBox("transparent bg");
-		trasparentCheck.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<Boolean> event) {
-				blackCheck.setEnabled(!event.getValue());//when transparent black/white no need;
-			}
-			
-		});
+	
 		HorizontalPanel bgPanel=new HorizontalPanel();
 		bgPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(bgPanel);
-		bgPanel.add(trasparentCheck);
-		trasparentCheck.setValue(true);
-		trasparentCheck.addClickHandler(new ClickHandler() {
+		
+		bgPanel.add(backgroundList);
+		backgroundList.addChangeHandler(new ChangeHandler() {
 			
 			@Override
-			public void onClick(ClickEvent event) {
-				updateBgStyle();
+			public void onChange(ChangeEvent event) {
+				updateBgStyle();;
 			}
 		});
 		
-		blackCheck.addClickHandler(new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				if(trasparentCheck.getValue()){
-					return;
-				}
-				if(blackCheck.getValue()){
-					canvas.setStylePrimaryName("black_bg");
-				}else{
-					canvas.setStylePrimaryName("white_bg");
-				}
-			}
-		});
-		bgPanel.add(blackCheck);
 		
 		//
 		ValueListBox<Integer> scaleBox=new ValueListBox<Integer>(new Renderer<Integer>() {
@@ -356,6 +341,16 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				penMode=MODE_COLOR;
 			}
 		});
+		RadioButton pickR=new RadioButton("pens");
+		pens.add(pickR);
+		pens.add(new Label("Pick"));
+		pickR.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				penMode=MODE_PICK;
+			}
+		});
+		
 		
 		colorPicker = new ColorBox();
 		colorPicker.setValue("#ff0000");
@@ -523,6 +518,11 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
 			
+				if(penMode==MODE_PICK){
+					doPick(event.getX(), event.getY());
+					return ;
+				}
+				
 				//LogUtils.log("mouse-down");
 				mouseRight=event.getNativeButton()==NativeEvent.BUTTON_RIGHT;
 				perfomeDownEvent(event.getX(),event.getY());
@@ -892,15 +892,32 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}
 	}
 	
+	private boolean isTransparent(){
+		return backgroundList.getSelectedIndex()==0;
+	}
+	private String getBgColor(){
+		if(backgroundList.getSelectedIndex()==2){
+			return "#ffffff";
+		}else if(backgroundList.getSelectedIndex()==3){
+			return colorPicker.getValue();
+		}else{
+			return "#000000";
+		}
+	}
+	
+	StyleElement bgElement;
 	private void updateBgStyle(){
-		if(trasparentCheck.getValue()){
+		if(isTransparent()){
 			canvas.setStylePrimaryName("transparent_bg");
 		}else{
-			if(blackCheck.getValue()){
-				canvas.setStylePrimaryName("black_bg");
-			}else{
-				canvas.setStylePrimaryName("white_bg");
+			if(bgElement!=null){
+				bgElement.removeFromParent();
 			}
+			String css=".colorbg{margin-left: 8px;padding: 0px;background:"+getBgColor()+";}";
+			LogUtils.log(css);
+			bgElement = StyleInjector.injectStylesheet(css);
+			
+			canvas.setStylePrimaryName("colorbg");
 			
 		}
 	}
@@ -1051,6 +1068,22 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		undoBt.setEnabled(true);
 	}
 	
+	private void doPick(int cx, int cy) {
+		//LogUtils.log(cx+","+cy);
+		ImageData data=canvas.getContext2d().getImageData(cx, cy, 1, 1);
+		int r=data.getRedAt(0, 0);
+		int g=data.getGreenAt(0, 0);
+		int b=data.getBlueAt(0, 0);
+		//LogUtils.log(r+","+g+","+b);
+		String hex=ColorUtils.toCssColor(r,g,b);
+		
+		LogUtils.log(hex);
+		colorPicker.setValue(hex);
+		
+		if(backgroundList.getSelectedIndex()==3){//
+			updateBgStyle();
+		}
+	}
 	
 	
 	protected void doReset() {
@@ -1528,20 +1561,15 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}
 	}
 
-	
-	private void doClick(int cx, int cy) {
-		
-	}
-	
 	private ImageElement bgImage;
 
 
 
-	private CheckBox trasparentCheck;
+	//private CheckBox trasparentCheck;
 
 
-
-	private CheckBox blackCheck;
+	private ListBox backgroundList;
+	//private CheckBox blackCheck;
 
 	/**
 	 * only need when export,usually css draw backgorund
@@ -1568,12 +1596,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			//bugs,not effect on bgcolor with bgimage,bgimage not repeated like css
 			CanvasUtils.drawImage(canvas, bgImage);
 		}else{
-			if(!trasparentCheck.getValue()){
-				if(blackCheck.getValue()){
-					canvas.getContext2d().setFillStyle("#000000");
-				}else{
-					canvas.getContext2d().setFillStyle("#ffffff");
-				}
+			if(!isTransparent()){
+				canvas.getContext2d().setFillStyle(getBgColor());
+				
 				canvas.getContext2d().fillRect(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
 			}
 		}

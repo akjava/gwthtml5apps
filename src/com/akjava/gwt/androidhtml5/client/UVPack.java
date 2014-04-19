@@ -39,7 +39,11 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
-
+/**
+ * @deprecated maybe,model weight have own data.
+ * @author aki
+ *
+ */
 public class UVPack extends Html5DemoEntryPoint {
 
 	
