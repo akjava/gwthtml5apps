@@ -10,6 +10,12 @@ import com.google.gwt.dom.client.CanvasElement;
  * @author aki
  *
  */
+/**
+ * use com.akjava.gwt.lib.client.JSDownscale
+ * @deprecated
+ * @author aki
+ *
+ */
 public class JSDownScale {
 	private JSDownScale(){}
 	public static native final ImageData downScaleCanvas(CanvasElement cv,double scale)/*-{

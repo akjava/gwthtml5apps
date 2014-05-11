@@ -286,7 +286,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			public void uploaded(File file, String asStringText) {
 				loadFile(file,asStringText);
 			}
-		}, false);
+		}, true);
 		panel1.add(fileUp);
 
 		
