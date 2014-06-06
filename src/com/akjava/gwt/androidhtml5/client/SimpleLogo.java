@@ -16,6 +16,7 @@ import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
+import com.akjava.gwt.html5.client.input.ColorBox;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -23,12 +24,10 @@ import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.canvas.CanvasTextUtils;
 import com.akjava.gwt.lib.client.canvas.Rect;
-import com.akjava.gwt.lib.client.canvas.RectBuilder;
 import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
-import com.google.common.base.Ascii;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -59,13 +58,11 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
-import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.RootLayoutPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.ValueListBox;
@@ -708,10 +705,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
-		moveControler=new DragMoveControler(new MoveListener() {
+		moveControler=new CanvasDragMoveControler(new MoveListener() {
 			
 			@Override
-			public void moved(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
+			public void dragged(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
 				double scale=getScale();
 				offsetX+=vectorX;
 				offsetY+=vectorY;
@@ -808,7 +805,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	private int offsetX,offsetY;
 	
-	private DragMoveControler moveControler;
+	private CanvasDragMoveControler moveControler;
 	
 
 

@@ -13,6 +13,7 @@ import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
+import com.akjava.gwt.html5.client.input.ColorBox;
 import com.akjava.gwt.jsgif.client.GifAnimeBuilder;
 import com.akjava.gwt.lib.client.CanvasPaintUtils;
 import com.akjava.gwt.lib.client.CanvasUtils;
@@ -21,7 +22,6 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
-import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.ColorUtils;
@@ -91,7 +91,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 	private DockLayoutPanel dock;
 	private HorizontalPanel topPanel;
 	private EasyCellTableObjects<GridImageData> easyCellTableObjects;
-	private DragMoveControler moveControler;
+	private CanvasDragMoveControler moveControler;
 	private ValueListBox<Integer> qualityBox;
 	private ValueListBox<Integer> speedBox;
 
@@ -492,9 +492,9 @@ public class GridPaint extends Html5DemoEntryPoint {
 		canvas.setVisible(false);
 		
 
-		moveControler=new DragMoveControler(canvas,new MoveListener() {
+		moveControler=new CanvasDragMoveControler(canvas,new MoveListener() {
 			@Override
-			public void moved(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
+			public void dragged(int sx, int sy, int ex,int ey,int vectorX, int vectorY) {
 				LogUtils.log(sx+","+sy+" moved: vec="+vectorX+","+vectorY);
 				
 				if(mode==SELECT_GRID){

@@ -10,15 +10,15 @@ import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 
-public  class DragMoveControler{
+public  class CanvasDragMoveControler{
 	
 	
-	public DragMoveControler(MoveListener moveListener) {
+	public CanvasDragMoveControler(MoveListener moveListener) {
 		super();
 		this.moveListener = moveListener;
 	}
 	
-	public DragMoveControler(Canvas canvas,MoveListener moveListener) {
+	public CanvasDragMoveControler(Canvas canvas,MoveListener moveListener) {
 		this(moveListener);
 		
 		canvas.addMouseMoveHandler(new MouseMoveHandler() {
@@ -81,7 +81,7 @@ public  class DragMoveControler{
 		int dx=x-startX;
 		int dy=y-startY;
 		if(moveListener!=null && (dx!=0 || dy!=0)){
-			moveListener.moved(startX, startY,x,y, dx, dy);
+			moveListener.dragged(startX, startY,x,y, dx, dy);
 		}
 		startX=x;
 		startY=y;
