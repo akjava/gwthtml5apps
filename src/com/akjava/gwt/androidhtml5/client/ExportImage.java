@@ -564,7 +564,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			result+=data.getCaption()+"\n";
 			result+="\n";
 			if(markedCheck.getValue()){
-				result+="[]("+pathBox.getValue()+image+")\n";
+				result+="![]("+pathBox.getValue()+image+")\n";
 			}else{
 				result+=""+pathBox.getValue()+image+"\n";
 			}
