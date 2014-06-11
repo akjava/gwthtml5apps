@@ -5,10 +5,10 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/akjava_gwtinpaint_140512.jar"/>
 	<classpathentry kind="lib" path="lib/akjava_gwtjsgif_140512.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/GWTLib2011"/>
 	<classpathentry kind="lib" path="/GWTLib2011/lib/akjavahtml5gwt_140511.jar"/>
 	<classpathentry kind="lib" path="/GWTLib2011/lib/guava-16.0.1-sources.jar"/>
 	<classpathentry kind="lib" path="/GWTLib2011/lib/guava-16.0.1.jar"/>
 	<classpathentry kind="lib" path="/GWTLib2011/lib/guava-gwt-16.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/akjavalibgwt-dep_140611.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>
