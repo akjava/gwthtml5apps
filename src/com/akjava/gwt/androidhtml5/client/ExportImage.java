@@ -465,7 +465,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 				if(penMode==MODE_COLOR){
 					drawLine(startX,startY,endX,endY,colorPicker.getValue());
 				}else{
-					LogUtils.log(penMode);
+					
 					erase(startX,startY,endX,endY);
 				}
 				updateCanvas();
@@ -556,7 +556,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 
 
 	private void updateMarkedText() {
-		LogUtils.log("update");
+		
 		String result="";
 		
 		for(ImageElementCaptionData data:easyCellTableObjects.getDatas()){
@@ -659,7 +659,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		new ImageElementLoader().load(asStringText, new ImageElementListener() {
 			@Override
 			public void onLoad(ImageElement element) {
-				LogUtils.log(file.getFileName()+","+element.getWidth()+"x"+element.getHeight());
+				
 				
 				
 				final ImageElementCaptionData data=new ImageElementCaptionData(file.getFileName(),element,asStringText);
