@@ -1,5 +1,6 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import com.akjava.gwt.lib.client.LogUtils;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.event.dom.client.MouseDownEvent;
 import com.google.gwt.event.dom.client.MouseDownHandler;
@@ -18,6 +19,12 @@ public  class CanvasDragMoveControler{
 		this.moveListener = moveListener;
 	}
 	
+	private boolean isShiftKeyDown;
+	
+	public boolean isShiftKeyDown() {
+		return isShiftKeyDown;
+	}
+
 	public CanvasDragMoveControler(Canvas canvas,MoveListener moveListener) {
 		this(moveListener);
 		
@@ -25,6 +32,7 @@ public  class CanvasDragMoveControler{
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
 				if(isStarted()){
+					isShiftKeyDown=event.isShiftKeyDown();
 					move(event.getX(), event.getY());
 				}
 			}
@@ -80,9 +88,23 @@ public  class CanvasDragMoveControler{
 		}
 		int dx=x-startX;
 		int dy=y-startY;
+		
+		//one direction
+		if(isShiftKeyDown()){
+			if(dx>dy){
+				y=startY;
+			}else{
+				x=startX;
+			}
+		}
+		
+		
 		if(moveListener!=null && (dx!=0 || dy!=0)){
 			moveListener.dragged(startX, startY,x,y, dx, dy);
 		}
+		
+		
+		
 		startX=x;
 		startY=y;
 	}

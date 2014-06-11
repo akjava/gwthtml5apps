@@ -445,7 +445,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		
 	
-		CanvasDragMoveControler moveControler=new CanvasDragMoveControler(canvas, new MoveListener() {
+		moveControler = new CanvasDragMoveControler(canvas, new MoveListener() {
 			
 			@Override
 			public void start(int sx, int sy) {
@@ -458,7 +458,10 @@ public class ExportImage extends Html5DemoEntryPoint {
 				if(selection==null){
 					return;
 				}
-				LogUtils.log(penMode);
+				
+				
+				
+				
 				if(penMode==MODE_COLOR){
 					drawLine(startX,startY,endX,endY,colorPicker.getValue());
 				}else{
@@ -758,6 +761,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 	private Canvas canvas;
 	private HorizontalPanel downloadLinks;
 	private CheckBox markedCheck;
+	private CanvasDragMoveControler moveControler;
 	
 	
 
