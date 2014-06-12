@@ -361,7 +361,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 
 							@Override
 							public void update(int index, ImageElementCaptionData data, String value) {
-								
+								downloadLinks.clear();
 								String extension=FileUtils.getExtension(data.getFileName());
 								FileType fileType=FileType.getFileTypeByExtension(extension);
 								if(fileType==null){
