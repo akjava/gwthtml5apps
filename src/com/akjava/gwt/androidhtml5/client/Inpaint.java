@@ -48,6 +48,7 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
@@ -66,7 +67,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	private InputRangeWidget radiuseRange;
 
 	
-	private ImageElement uploadImageElement;
+
 	private Button updateMaskBt;
 	
 	
@@ -138,11 +139,9 @@ public class Inpaint extends Html5DemoEntryPoint {
 			}
 		}, true);
 		h1Panel.add(upload);
-		eastPanel.addNorth(controler, 220);
+		eastPanel.addNorth(controler, 240);
 		//
-		editor = new MaskDataEditor();    
-	    maskDataDriver.initialize(editor);
-	    controler.add(editor);
+		
 	    
 	  
 	    
@@ -152,7 +151,11 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 		HorizontalPanel h1=new HorizontalPanel();
 		controler.add(h1);
+		h1.setSpacing(4);
+		
+		
 	
+		
 		
 		final Label radiusLabel=new Label("radius:5");
 		h1.add(radiusLabel);
@@ -172,11 +175,12 @@ public class Inpaint extends Html5DemoEntryPoint {
 				//updateImage();
 			}
 		});
+		h1.add(new Label("Better to keep value under 5(or freeze)"));
 		
 		
 		HorizontalPanel h4=new HorizontalPanel();
 		controler.add(h4);
-		updateBt = new Button("update",new ClickHandler() {
+		updateBt = new Button("Inpaint",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -186,16 +190,17 @@ public class Inpaint extends Html5DemoEntryPoint {
 		h4.add(updateBt);
 		updateBt.setEnabled(false);
 		
-		updateMaskBt = new Button("update Mask",new ClickHandler() {
+		updateMaskBt = new Button("Preview Mask",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
 				doMask(selectedElement);
 			}
 		});
+		updateMaskBt.setEnabled(false);
 		h4.add(updateMaskBt);
 		
-		Button addMaskBt = new Button("add Mask",new ClickHandler() {
+		Button addMaskBt = new Button("add New Mask",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -207,7 +212,25 @@ public class Inpaint extends Html5DemoEntryPoint {
 		});
 		h4.add(addMaskBt);
 		
+		Button removeMaskBt = new Button("Remove Mask",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				if(maskDataTableSet.getSelection()==null){
+					return;
+				}
+				
+				maskDataTableSet.removeItem(maskDataTableSet.getSelection());
+				
+			}
+		});
+		h4.add(removeMaskBt);
 		
+		
+		controler.add(new Label("Current MaskData"));
+		editor = new MaskDataEditor();    
+	    maskDataDriver.initialize(editor);
+	    controler.add(editor);
 		
 		//scroll
 		ScrollPanel scroll=new ScrollPanel();
@@ -219,8 +242,20 @@ public class Inpaint extends Html5DemoEntryPoint {
 			public void addColumns(CellTable<MaskData> table) {
 				 TextColumn<MaskData> fileInfoColumn = new TextColumn<MaskData>() {
 				      public String getValue(MaskData value) {
-				    	  
-				    	  return value.toString();
+				    	  String data="MaskData(";
+				    	  if(value.isTransparent()){
+				    		  data+="Transparent Mode";
+				    	  }else{
+				    		  if(value.isSimilarColor()){
+				    			  data+="SimilarColor Mode";
+				    		  }else{
+				    			  data+="Color Mode";
+				    		  }
+				    		  data+=":"+value.getColor();
+				    	  }
+				    	  data+=")";
+				    	  return data;
+				    	  //return value.toString();
 				      }
 				    };
 				    table.addColumn(fileInfoColumn,"Name");
@@ -256,6 +291,8 @@ public class Inpaint extends Html5DemoEntryPoint {
 	private void doEdit(MaskData selection){
 		
 		maskDataDriver.flush();//finish last editing
+		maskDataTableSet.update();
+		
 		if(selection==null){
 			editor.setEnabled(false);
 			maskDataDriver.edit(new MaskData());
@@ -309,15 +346,43 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 		
 		
-		ScrollPanel scroll=new ScrollPanel();
+		mainTab = new TabLayoutPanel(30, Unit.PX);
+		dock.add(mainTab);
+		
+		
+		
 		
 		//main = new VerticalPanel();
-		dock.add(scroll);
 		
-		resultPanel = new VerticalPanel();
+		ScrollPanel scroll=new ScrollPanel();
+		mainTab.add(scroll,"Loaded Image");
+		loadedPanel = new VerticalPanel();
+		
+		scroll.add(loadedPanel);
+		
+		ScrollPanel maskScroll=new ScrollPanel();
+		mainTab.add(maskScroll,"Grayscale Mask");
+		greyScaleMaskPanel=new VerticalPanel();
+		maskScroll.add(greyScaleMaskPanel);
+		
+		ScrollPanel inpaintMaskScroll=new ScrollPanel();
+		mainTab.add(inpaintMaskScroll,"inPaint Mask");
+		inpaintMaskPanel=new VerticalPanel();
+		inpaintMaskScroll.add(inpaintMaskPanel);
+		
+		
+		ScrollPanel inpaintScroll=new ScrollPanel();
+		mainTab.add(inpaintScroll,"Raw Inpaint");
+		inpaintPanel=new VerticalPanel();
+		inpaintScroll.add(inpaintPanel);
+		
+		ScrollPanel mixedScroll=new ScrollPanel();
+		mainTab.add(mixedScroll,"Final Mixed");
+		mixedPanel=new VerticalPanel();
+		mixedScroll.add(mixedPanel);
+		
+		mainTab.selectTab(0);
 		sharedCanvas=Canvas.createIfSupported();
-		scroll.add(resultPanel);
-		
 		sharedCanvas.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -340,6 +405,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	}
 	
 	
+	/*
 	protected void loadFile(final File file,final String asStringText) {
 		try{
 			//TODO create method
@@ -372,14 +438,18 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 		
 	}
+	*/
 	
 
 	private Canvas sharedCanvas;
 	
 	private ImageElement selectedElement;
 	private Button updateBt;
-	private VerticalPanel resultPanel;
-
+	private VerticalPanel loadedPanel;
+	private VerticalPanel greyScaleMaskPanel;
+	private VerticalPanel inpaintPanel;
+	private VerticalPanel mixedPanel;
+	private VerticalPanel inpaintMaskPanel;
 	
 
 	private MaskDataEditor editor;
@@ -387,11 +457,15 @@ public class Inpaint extends Html5DemoEntryPoint {
 	private EasyCellTableObjects<MaskData> maskDataTableSet;
 
 	
-	
+	/**
+	 * watch out create image based on canvas size.
+	 * @param maskByte
+	 * @param panel
+	 */
 	private void createAndInsertImage(Uint8Array maskByte,Panel panel){
 	
 		ImageData maskData=CanvasUtils.getImageData(sharedCanvas,false);
-		LogUtils.log(maskByte.length()+","+maskData.getWidth()+"x"+maskData.getHeight());
+		//LogUtils.log(maskByte.length()+","+maskData.getWidth()+"x"+maskData.getHeight());
 		//InPaint.createImageDataFromMask(maskData,maskByte,0,0,0,255,true);//for black & white
 		InPaint.createImageDataFromMaskAsGray(maskData,maskByte);
 		
@@ -401,49 +475,64 @@ public class Inpaint extends Html5DemoEntryPoint {
 		panel.add(img);
 	}
 	
+	
+	Image loadedImage;
 	private void uploadImage(final ImageElement element){
-		resultPanel.clear();
+		loadedPanel.clear();
+		loadedImage=new Image(element.getSrc());
+		loadedPanel.add(loadedImage);
 		
 		ImageElementUtils.copytoCanvas(element, sharedCanvas);
-		resultPanel.add(sharedCanvas);
+		//loadedPanel.add(sharedCanvas);
 		
 		//add alpha?
 		updateBt.setEnabled(true);
+		updateMaskBt.setEnabled(true);
 		this.selectedElement=element;
+		mainTab.selectTab(0);
 	}
 	
-	//TODO support multiple
+	
 	protected void doMask(final ImageElement element) {
 
-		maskDataDriver.flush();//flush current
+		maskDataDriver.flush();//flush current data
+		maskDataTableSet.update();//update label
 		
+		if(element==null){
+			return;//not selected yet
+		}
 		 
-			resultPanel.clear();
-			HorizontalPanel h=new HorizontalPanel();
-			resultPanel.add(h);
-			h.add(sharedCanvas);
-			sharedCanvas.setVisible(false);
-			
-			
 		
-		Uint8Array merged=createMaskData(element);
+		greyScaleMaskPanel.clear();
+		inpaintMaskPanel.clear();
+		
+		ImageElementUtils.copytoCanvas(selectedElement, sharedCanvas);
+		Uint8Array merged=createMaskData(sharedCanvas);
+		createAndInsertImage(merged,greyScaleMaskPanel);
 		
 		
-	
+		ImageData maskData=CanvasUtils.getImageData(sharedCanvas,true);//maybe remain last used data
+		Uint8Array newByte=InPaint.createMaskByColor(maskData, 0,0,0,false);//not 0 is mask
 		
-		createAndInsertImage(merged,h);
+		//return 0 or 1 need to x 255 to rgb
+		for(int i=0;i<newByte.length();i++){
+			newByte.set(i, newByte.get(i)*255);
+		}
+		
+		createAndInsertImage(newByte,inpaintMaskPanel);
 		
 		
-		//redraw origin image
-		ImageElementUtils.copytoCanvas(element, sharedCanvas);
-		sharedCanvas.setVisible(true);
+		
+		mainTab.selectTab(1);//mask tab
+		
 	}
 	
-	private Uint8Array createMaskData(final ImageElement element){
+	private Uint8Array createMaskData(final Canvas canvas){
 		//LogUtils.log(maskData.toString());
 		
+		//ImageElementUtils.copytoCanvas(element, sharedCanvas);
 		
-		ImageData imageData=CanvasUtils.getImageData(sharedCanvas,true);
+		ImageData imageData=CanvasUtils.getImageData(canvas,true);
 		
 		Uint8Array merged=null;
 		List<MaskData> maskDatas=maskDataTableSet.getDatas();
@@ -508,9 +597,14 @@ public class Inpaint extends Html5DemoEntryPoint {
 		Timer timer=new Timer(){
 			public void run(){
 				
-				 Benchmark.start("total");
-				resultPanel.clear();
-				resultPanel.add(sharedCanvas);
+				Benchmark.start("total");
+				loadedPanel.clear();
+				greyScaleMaskPanel.clear();
+				inpaintMaskPanel.clear();
+				inpaintPanel.clear();
+				mixedPanel.clear();
+				
+				//loadedPanel.add(sharedCanvas);
 				sharedCanvas.setVisible(false);
 				
 				
@@ -522,9 +616,12 @@ public class Inpaint extends Html5DemoEntryPoint {
 				if(data.getColor()=="#000000" || data.isTransparent()){//should not expand
 				//	margin=0;//not use
 				}
-				Canvas canvas=ImageElementUtils.copytoCanvasWithMargin(element, sharedCanvas,true,margin,true);
 				
-				ImageData imageData=CanvasUtils.getImageData(canvas,true);
+				//canvas and sharedCanvas is same
+				Canvas canvas=ImageElementUtils.copytoCanvasWithMargin(element, sharedCanvas,true,margin,true);
+				ImageData expandedImageData=CanvasUtils.getImageData(canvas,true);
+				
+				
 				Benchmark.endAndLog("expand");
 				Uint8Array array=null;
 				
@@ -532,7 +629,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				
 				//created by maskData
-				Uint8Array merged=createMaskData(element);
+				Uint8Array merged=createMaskData(canvas);
 				
 				/*
 				Uint8Array expanded=InPaint.expandMaskByte(merged,  imageData.getWidth(),data.getExpand());
@@ -548,26 +645,64 @@ public class Inpaint extends Html5DemoEntryPoint {
 				CanvasUtils.copyTo(maskData,sharedCanvas);
 				String dataUrl=sharedCanvas.toDataUrl();
 				Image img=new Image(dataUrl);
-				resultPanel.add(img);
+				greyScaleMaskPanel.add(img);//add mask
+				LogUtils.log("gray:"+img.getWidth()+"x"+img.getHeight());
+				
+				
+				
 				
 				
 				Uint8Array newByte=InPaint.createMaskByColor(maskData, 0,0,0,false);//not 0 is mask
-				createAndInsertImage(newByte,resultPanel);
+				
+				//return 0 or 1
+				
 				array=newByte;
 				
 				
 				
 				
-				
+				LogUtils.log("imageData:"+expandedImageData.getWidth()+"x"+expandedImageData.getHeight());
 				Benchmark.start("inpaint");
-				InPaint.inpaint(imageData, array, radiuseRange.getValue());
-				CanvasUtils.copyTo(imageData,sharedCanvas);
-				String dataUrl3=sharedCanvas.toDataUrl();
-				Image painted=new Image(dataUrl3);
-				resultPanel.add(painted);
+				InPaint.inpaint(expandedImageData, array, radiuseRange.getValue());
+				
+				//somehow(maybe transparent problem) expanded to result should keep same size
+				
+				
+				canvas.setCoordinateSpaceWidth(expandedImageData.getWidth()-4);
+				canvas.setCoordinateSpaceHeight(expandedImageData.getHeight()-4);
+				sharedCanvas.getContext2d().putImageData(expandedImageData,-2,-2);
+				
+				
+				//CanvasUtils.copyTo(imageData,sharedCanvas);
+				//CanvasUtils.copyTo(imageData,sharedCanvas);
+				
+				String inpaintDataUrl=sharedCanvas.toDataUrl();
+				Image inpaintImage=new Image(inpaintDataUrl);//this image larged.
+				inpaintPanel.add(inpaintImage);
+				
+				//createAndInsertImage use sizes
+				canvas.setCoordinateSpaceWidth(expandedImageData.getWidth());
+				canvas.setCoordinateSpaceHeight(expandedImageData.getHeight());
+				
+				//for support mergin
+				
+				
+				
+				//create grayscale later
+				
+				Uint8Array drawByte=Uint8Array.createUint8(newByte.length());
+				//better to do last ?
+				for(int i=0;i<newByte.length();i++){
+					drawByte.set(i, newByte.get(i)*255);
+				}
+				createAndInsertImage(drawByte,inpaintMaskPanel);
+					
+				
+				
 				Benchmark.endAndLog("inpaint");
 				
 				Benchmark.start("mix");
+				CanvasUtils.copyTo(expandedImageData,sharedCanvas);//sharedcanvas broken by last create-image
 				ImageData paintedData=CanvasUtils.getImageData(sharedCanvas, true);
 				CanvasUtils.drawImage(sharedCanvas,element,margin,margin);
 				
@@ -587,18 +722,30 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				//final mixed
 				
-				resultPanel.add(new Image(lastImage));
+				mixedPanel.add(new Image(lastImage));
 				Benchmark.endAndLog("mix");
 				Benchmark.endAndLog("total");
 				ImageElementUtils.copytoCanvas(element, sharedCanvas);
 				sharedCanvas.setVisible(true);
 				
 				downloadArea.clear();
-				Anchor anchor=HTML5Download.get().generateBase64DownloadLink(lastImage, "image/png", "inpaing.png", "download", true);
+				Anchor anchor=HTML5Download.get().generateBase64DownloadLink(lastImage, "image/png", "inpaing.png", "Download", true);
 				anchor.setName("bottom");
+				
 				downloadArea.add(anchor);
-				resultPanel.add(downloadArea);
-				Location.replace("#bottom");
+				
+				
+				
+				
+				if(loadedImage!=null){
+					loadedPanel.add(loadedImage);//no need?
+				}
+				
+				mixedPanel.add(downloadArea);
+				
+				
+				
+				mainTab.selectTab(4);//final tab
 			}
 		};
 		timer.schedule(50);
@@ -607,6 +754,8 @@ public class Inpaint extends Html5DemoEntryPoint {
 	}
 	
 	VerticalPanel downloadArea=new VerticalPanel();
+
+	private TabLayoutPanel mainTab;
 
 
 	@Override

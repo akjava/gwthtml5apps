@@ -37,6 +37,7 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 		
 		colorEditor = new ColorBox();
 		
+		
 		h1.add(colorEditor);
 		
 		similarColorEditor = new CheckBox("similarColor");
@@ -44,9 +45,11 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 		
 		useClipEditor = new CheckBox("use clip");
 		h1.add(useClipEditor);
+		useClipEditor.setVisible(false);//this is for future support clip-area box
 		
 		invertEditor = new CheckBox("invert");
 		h1.add(invertEditor);
+		invertEditor.setVisible(false);//future invert support
 		
 		/*
 		invertEditor = new CheckBox("invert");
@@ -115,7 +118,8 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 		fadeEditor.setEnabled(bool);
 		similarColorEditor.setEnabled(bool);
 		maxLengthEditor.setEnabled(bool);
-
 		useClipEditor.setEnabled(bool);
+		
+		//TODO disable range label
 	}
 }
