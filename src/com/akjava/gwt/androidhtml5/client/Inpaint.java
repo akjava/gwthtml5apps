@@ -618,8 +618,8 @@ public class Inpaint extends Html5DemoEntryPoint {
 				}
 				
 				//canvas and sharedCanvas is same
-				Canvas canvas=ImageElementUtils.copytoCanvasWithMargin(element, sharedCanvas,true,margin,true);
-				ImageData expandedImageData=CanvasUtils.getImageData(canvas,true);
+				ImageElementUtils.copytoCanvasWithMargin(element, sharedCanvas,true,margin,true);
+				ImageData expandedImageData=CanvasUtils.getImageData(sharedCanvas,true);
 				
 				
 				Benchmark.endAndLog("expand");
@@ -629,7 +629,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				
 				//created by maskData
-				Uint8Array merged=createMaskData(canvas);
+				Uint8Array merged=createMaskData(sharedCanvas);
 				
 				/*
 				Uint8Array expanded=InPaint.expandMaskByte(merged,  imageData.getWidth(),data.getExpand());
@@ -638,7 +638,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				grayByte=InPaint.expandMaskByteAsGray(expanded,  imageData.getWidth(),data.getFade());
 				*/
 				
-				ImageData maskData=CanvasUtils.getImageData(canvas,false);
+				ImageData maskData=CanvasUtils.getImageData(sharedCanvas,false);
 				InPaint.createImageDataFromMaskAsGray(maskData,merged);
 				
 				
@@ -668,8 +668,8 @@ public class Inpaint extends Html5DemoEntryPoint {
 				//somehow(maybe transparent problem) expanded to result should keep same size
 				
 				
-				canvas.setCoordinateSpaceWidth(expandedImageData.getWidth()-4);
-				canvas.setCoordinateSpaceHeight(expandedImageData.getHeight()-4);
+				sharedCanvas.setCoordinateSpaceWidth(expandedImageData.getWidth()-4);
+				sharedCanvas.setCoordinateSpaceHeight(expandedImageData.getHeight()-4);
 				sharedCanvas.getContext2d().putImageData(expandedImageData,-2,-2);
 				
 				
@@ -680,9 +680,12 @@ public class Inpaint extends Html5DemoEntryPoint {
 				Image inpaintImage=new Image(inpaintDataUrl);//this image larged.
 				inpaintPanel.add(inpaintImage);
 				
+				Anchor inpaintAnchor=HTML5Download.get().generateBase64DownloadLink(inpaintDataUrl, "image/png", "inpaingRaw.png", "Download", true);
+				inpaintPanel.add(inpaintAnchor);
+				
 				//createAndInsertImage use sizes
-				canvas.setCoordinateSpaceWidth(expandedImageData.getWidth());
-				canvas.setCoordinateSpaceHeight(expandedImageData.getHeight());
+				sharedCanvas.setCoordinateSpaceWidth(expandedImageData.getWidth());
+				sharedCanvas.setCoordinateSpaceHeight(expandedImageData.getHeight());
 				
 				//for support mergin
 				
@@ -715,7 +718,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				
 				//cut off margin
-				String lastImage=CanvasUtils.toDataUrl(sharedCanvas, sharedCanvas, margin, margin, canvas.getCoordinateSpaceWidth()-margin*2, canvas.getCoordinateSpaceHeight()-margin*2);
+				String lastImage=CanvasUtils.toDataUrl(sharedCanvas, sharedCanvas, margin, margin, sharedCanvas.getCoordinateSpaceWidth()-margin*2, sharedCanvas.getCoordinateSpaceHeight()-margin*2);
 				
 				
 				//resultPanel.add(sharedCanvas);
