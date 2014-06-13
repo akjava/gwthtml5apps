@@ -5,12 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
+import com.akjava.gwt.html5.client.HTML5InputRange;
+import com.akjava.gwt.html5.client.InputRangeListener;
+import com.akjava.gwt.html5.client.InputRangeWidget;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
+import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.html5.client.input.ColorBox;
@@ -35,7 +39,6 @@ import com.google.gwt.cell.client.Cell;
 import com.google.gwt.core.client.JsArray;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
-import com.google.gwt.dom.client.CanvasElement;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.dom.client.Style.Unit;
@@ -110,7 +113,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	private DataUriCommand currentCommand;
 	private long lastAvatorUpdate;
 
-	private int currentEditingId=-1;
+
 
 	private int penSize=16;
 	public static final int MODE_ERASE=0;
@@ -138,6 +141,14 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 
 	private Button saveWithBgBt;
+
+
+
+	private int canvasWidth;
+
+
+
+	private ColorBox bgColorPicker;
 
 	
 	@Override
@@ -205,6 +216,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		bgPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(bgPanel);
 		
+		bgPanel.add(new Label("Background"));
+		
 		bgPanel.add(backgroundList);
 		backgroundList.addChangeHandler(new ChangeHandler() {
 			
@@ -214,7 +227,19 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			}
 		});
 		
+		bgColorPicker = new ColorBox();
+		bgColorPicker.setValue("#00ff00");
+		bgPanel.add(bgColorPicker);
+		Button updateBg=new Button("Update",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				updateBgStyle();
+			}
+		});
+		bgPanel.add(updateBg);
 		
+		bgPanel.add(new Label("Scale"));
 		//
 		ValueListBox<Integer> scaleBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
@@ -244,15 +269,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		int cbase=18;
 		canvasWidth = cbase*16;
-		int ch=cbase*9;
+		//int ch=cbase*9;//what?
 		zoomSize = 1;
-		/*
-		VerticalPanel bg=new VerticalPanel();
-		editPanel.add(bg);
-		bg.setSpacing(0);
-		*/
-		
-		
+	
 		//size choose
 		HorizontalPanel sizes=new HorizontalPanel();
 		sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
@@ -264,13 +283,12 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 			@Override
 			public String render(Integer object) {
-				// TODO Auto-generated method stub
+				
 				return ""+object;
 			}
 
 			@Override
 			public void render(Integer object, Appendable appendable) throws IOException {
-				// TODO Auto-generated method stub
 				
 			}
 		});
@@ -287,6 +305,61 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			
 		});
 		sizes.add(sizeListBox);
+		
+		sizes.add(new Label("Similar-Color:"));
+		
+		final Label rangeLabel=new Label();
+		rangeLabel.setText("10");
+		rangeLabel.setWidth("20px");
+		final InputRangeWidget colorRange=HTML5InputRange.createInputRange(1, 80, 10);
+		colorRange.addInputRangeListener(new InputRangeListener() {
+			@Override
+			public void changed(int newValue) {
+				rangeLabel.setText(""+newValue);
+			}
+		});
+		sizes.add(rangeLabel);
+		colorRange.setWidth("80px");
+		sizes.add(colorRange);
+		 execTransparentBt = new Button("ExecTransparent",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				Timer timer=new Timer(){
+					@Override
+					public void run() {
+						execTransparentBt.setEnabled(false);
+						startCreateCommand();
+						
+						//convert to imagedata
+						ImageData imageData=CanvasUtils.getImageData(canvas, true);
+						//do transparnet
+						int[] rgb=ColorUtils.toRGB(colorPicker.getValue());
+						
+						Uint8Array maskArray=createMaskBySimilarColor(imageData, rgb[0],rgb[1],rgb[2], colorRange.getValue());
+						for(int x=0;x<imageData.getWidth();x++){
+							for(int y=0;y<imageData.getHeight();y++){
+								int mask=maskArray.get(y*imageData.getWidth()+x);
+								if(mask==1){
+									imageData.setAlphaAt(0, x, y);
+								}
+							}
+						}
+						//set imagedata
+						CanvasUtils.copyTo(imageData, canvas);
+						
+						//store
+						String dataUrl=canvas.toDataUrl();
+						endCreateCommand(dataUrl);
+						updateCurrentSelectionDataUrl(dataUrl);
+						execTransparentBt.setEnabled(true);
+					}
+				};
+				timer.schedule(50);
+			}
+		});
+		sizes.add(execTransparentBt);
+		
 		//pen choose
 		HorizontalPanel pens=new HorizontalPanel();
 		pens.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
@@ -487,20 +560,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				if(!scrollLockCheck.getValue()){//for mobile
 					return;
 				}
-				/*if(lockCheck.getValue()){
-					
-				}
-				*/
 				
-				//touch end return empty touchs.usually
-				//LogUtils.log(event.getTouches());
-				
-				int[] pt=touchToPoint(event.getTouches());
 				event.preventDefault();
-				//event.stopPropagation();
 				perfomeUpEvent();
-				//LogUtils.log("end:"+pt[0]+","+pt[1]);
-				//LogUtils.log("touch-end");
+				
 			}
 		});
 		
@@ -665,7 +728,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		exbuttons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(exbuttons);
 		
-		exbuttons.add(new Label("bgimage"));
+		exbuttons.add(new Label("BgImage"));
 		final FileUploadForm bgupload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			
@@ -679,7 +742,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}, false);
 		
 		exbuttons.add(bgupload);
-		Button reset=new Button("reset bg",new ClickHandler() {
+		Button reset=new Button("Reset BG",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -900,7 +963,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		if(backgroundList.getSelectedIndex()==2){
 			return "#ffffff";
 		}else if(backgroundList.getSelectedIndex()==3){
-			return colorPicker.getValue();
+			return bgColorPicker.getValue();
 		}else{
 			return "#000000";
 		}
@@ -1009,20 +1072,35 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		Timer timer=new Timer(){//TODO fix it
 			@Override
 			public void run() {
-				DataUriCommand newCommand=new DataUriCommand();
-				if(currentCommand!=null){
-					newCommand.setBeforeUri(currentCommand.getAfterUri());
-				}else{
-					newCommand.setBeforeUri(selection.getDataUrl());
-				}
-				currentCommand=newCommand;
+				startCreateCommand();
 			}
 		};
 		timer.schedule(50);
 	}
 	
+	private void startCreateCommand(){
+		DataUriCommand newCommand=new DataUriCommand();
+		if(currentCommand!=null){
+			newCommand.setBeforeUri(currentCommand.getAfterUri());
+		}else{
+			newCommand.setBeforeUri(selection.getDataUrl());
+		}
+		currentCommand=newCommand;
+	}
 
+	private void endCreateCommand(String dataUrl){
+		if(currentCommand!=null){
+			currentCommand.setAfterUri(dataUrl);
+			}
+		undoBt.setEnabled(true);
+	}
 
+	private void updateCurrentSelectionDataUrl(String dataUrl){
+		if(selection!=null){
+			selection.setDataUrl(dataUrl);
+		}
+	}
+	
 	/**
 	 * can't get up position
 	 */
@@ -1060,13 +1138,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		lastPoint=null;
 	
 		String dataUrl=canvas.toDataUrl("image/png");
-		if(currentCommand!=null){
-			currentCommand.setAfterUri(dataUrl);
-			}
-		if(selection!=null){
-			selection.setDataUrl(dataUrl);
-		}
-		undoBt.setEnabled(true);
+		endCreateCommand(dataUrl);
+		updateCurrentSelectionDataUrl(dataUrl);
+		
 	}
 	
 	private void doPick(int cx, int cy) {
@@ -1123,56 +1197,13 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 
 
-	private void setImage(String url){
-		new ImageElementLoader().load(url, new ImageElementListener() {
-			@Override
-			public void onLoad(ImageElement element) {
-				imgElement=element;
-				LogUtils.log("size:"+imgElement.getWidth()+"x"+imgElement.getHeight());
-				
-				
-				drawImage(imgElement);
-				
-				
-				
-			
-				reset.setEnabled(true);
-			}
-			@Override
-			public void onError(String url, ErrorEvent event) {
-				Window.alert(event.toDebugString());
-			}
-		});
-	}
-	
+
 
 	
-	private void drawText(String text){
-		overlayCanvas.getContext2d().save();
-		overlayCanvas.getContext2d().setFont("30px Arial");
-		overlayCanvas.getContext2d().setShadowColor("Black");
-		overlayCanvas.getContext2d().setFillStyle("white");
-		overlayCanvas.getContext2d().setShadowOffsetX(2);
-		overlayCanvas.getContext2d().setShadowOffsetY(2);
-		double w=overlayCanvas.getContext2d().measureText(text).getWidth();
-		//originImage.getContext2d().setTextBaseline(TextBaseline.ALPHABETIC);
-		int halfHeight=30;
-		
-		overlayCanvas.getContext2d().fillText(text, (overlayCanvas.getCoordinateSpaceWidth()-w)/2, halfHeight);
-		
-		//originImage.getContext2d().get
-		overlayCanvas.getContext2d().restore();
-	}
-	
+
 
 	
-	/*
-	private void clearCanvas(Canvas targetCanvas){
-		targetCanvas.getContext2d().setFillStyle("rgba(0,0,0,0)");
-		targetCanvas.getContext2d().setGlobalCompositeOperation(Composite.COPY);
-		targetCanvas.getContext2d().fillRect(0, 0, overlayCanvas.getCoordinateSpaceWidth(), overlayCanvas.getCoordinateSpaceHeight());
-	}*/
-	
+
 
 
 	
@@ -1180,30 +1211,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	
 	
 	
-	private void copyToOverlayCanvas(ImageElement element,boolean flip){
-		//flip horizontal
-		overlayCanvas.getContext2d().save();
-		overlayCanvas.getContext2d().setGlobalCompositeOperation(Composite.COPY);
-		if(flip){
-		overlayCanvas.getContext2d().translate(canvas.getCoordinateSpaceWidth(), 0); //flip horizontal
-		overlayCanvas.getContext2d().scale(-1, 1);
-		}
-		overlayCanvas.getContext2d().drawImage(element, 0, 0);
-		overlayCanvas.getContext2d().restore();
-	}
-	private void copyToOverlayCanvas(CanvasElement element){
-		//flip horizontal
-		overlayCanvas.getContext2d().save();
-		overlayCanvas.getContext2d().setGlobalCompositeOperation(Composite.COPY);
-		overlayCanvas.getContext2d().translate(canvas.getCoordinateSpaceWidth(), 0); //flip horizontal
-		overlayCanvas.getContext2d().scale(-1, 1);
-		overlayCanvas.getContext2d().drawImage(element, 0, 0);
-		overlayCanvas.getContext2d().restore();
-	}
-	
-	private int dindex;
 
 	
+
 	private XYPoint mouseToXYPoint(int mx,int my){
 		int x=mx*zoomSize;
 		int y=my*zoomSize;
@@ -1304,11 +1314,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	boolean mouseRight;
 	private int zoomSize;
 
-	private Button overlayBt;
 	private Button undoBt;
 	private Button redoBt;
 
-	private int canvasWidth;
 	private Button reset;
 	private ColorBox colorPicker;
 	protected void drawImage(ImageElement img) {
@@ -1479,7 +1487,6 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	protected void loadFile(final File file,final String asStringText) {
 		try{
 			//TODO create method
-		//ImageElement element=ImageElementUtils.create(asStringText);
 		
 		new ImageElementLoader().load(asStringText, new ImageElementListener() {
 			@Override
@@ -1490,7 +1497,6 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				final ImageElementData data=new ImageElementData(file.getFileName(),element,asStringText);
 				
 				EasyCellTableObjects.addItem(data);
-				//updateList();
 				
 				//stack on mobile,maybe because of called async method
 				Scheduler.get().scheduleDeferred(new ScheduledCommand() {
@@ -1572,6 +1578,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	private ListBox backgroundList;
 	//private CheckBox blackCheck;
 
+
+
+	private Button execTransparentBt;
+
 	/**
 	 * only need when export,usually css draw backgorund
 	 * @param withBg
@@ -1629,7 +1639,58 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 	}
 	
-
+	//TODO move to ColorUtils
+	public static Uint8Array createMaskByColor(ImageData data,int r,int g,int b){
+		return createMaskByColor(data, r, g, b,true);
+	}
+	//TODO move to ColorUtils
+	/**
+	 * 
+	 * @param data
+	 * @param r
+	 * @param g
+	 * @param b
+	 * @param maxLength
+	 * @return imageData-width x imageData-height length (if similar value is 1,or 0)
+	 */
+	public static Uint8Array createMaskBySimilarColor(ImageData data,int r,int g,int b,int maxLength){
+		Uint8Array bytes=Uint8Array.createUint8(data.getWidth()*data.getHeight());
+		for(int y=0;y<data.getHeight();y++){
+			for(int x=0;x<data.getWidth();x++){
+				int imgR=data.getRedAt(x, y);
+				int imgG=data.getGreenAt(x, y);
+				int imgB=data.getBlueAt(x, y);
+				
+				double length=ColorUtils.getColorLength(r, g, b, imgR, imgG, imgB);
+				if(length<maxLength){
+					bytes.set(y*data.getWidth()+x, 1);
+				}
+			}
+		}
+		return bytes;
+	}
+	//TODO move to ColorUtils
+	public static Uint8Array createMaskByColor(ImageData data,int r,int g,int b,boolean setSameColorCase){
+		Uint8Array bytes=Uint8Array.createUint8(data.getWidth()*data.getHeight());
+		for(int y=0;y<data.getHeight();y++){
+			for(int x=0;x<data.getWidth();x++){
+				int imgR=data.getRedAt(x, y);
+				int imgG=data.getGreenAt(x, y);
+				int imgB=data.getBlueAt(x, y);
+				if(r==imgR && g==imgG&&b==imgB){
+					if(setSameColorCase){
+					bytes.set(y*data.getWidth()+x, 1);
+					}
+				}else{
+					if(!setSameColorCase){
+					bytes.set(y*data.getWidth()+x, 1);
+					}
+				}
+			}
+		}
+		return bytes;
+	}
+	
 
 	@Override
 	public String getAppName() {
