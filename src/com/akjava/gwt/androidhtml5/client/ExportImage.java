@@ -19,6 +19,7 @@ import com.akjava.gwt.html5.client.input.ColorBox;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
+import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.StorageControler;
 import com.akjava.gwt.lib.client.StorageException;
@@ -368,6 +369,8 @@ public class ExportImage extends Html5DemoEntryPoint {
 									//return "";
 								}
 								int imgIndex=easyCellTableObjects.getDatas().indexOf(data)+1;//start 0
+								
+								drawCanvas(data);//need redraw here.because when pushed button's row is not selected,doSelect called after update and canvas was not drawed.
 								String name=nameBox.getValue()+imgIndex+"."+extension;
 								Anchor anchor=HTML5Download.get().generateBase64DownloadLink(canvas.toDataUrl(), fileType.getMimeType(),name, name	, true);
 								//anchor.setStylePrimaryName("bt");
@@ -730,10 +733,6 @@ public class ExportImage extends Html5DemoEntryPoint {
 			imageCaptionBox.setValue("");
 		}else{
 			
-			int w=selection.getImageElement().getWidth();
-			int h=selection.getImageElement().getHeight();
-			CanvasUtils.createCanvas(canvas, w, h);
-			
 			imageCaptionBox.setEnabled(true);
 			imageCaptionBox.setValue(selection.getCaption());
 		}
@@ -746,10 +745,13 @@ public class ExportImage extends Html5DemoEntryPoint {
 		if(selection==null){
 			CanvasUtils.clear(canvas);
 		}else{
-			CanvasUtils.drawImage(canvas, selection.getImageElement());
-			
-			canvas.getContext2d().drawImage(selection.getImageCanvas().getCanvasElement(), 0, 0);
+			drawCanvas(selection);
 		}
+	}
+	
+	private void drawCanvas(ImageElementCaptionData data){
+		ImageElementUtils.copytoCanvas(data.getImageElement(), canvas);
+		canvas.getContext2d().drawImage(data.getImageCanvas().getCanvasElement(), 0, 0);
 	}
 	
 	
