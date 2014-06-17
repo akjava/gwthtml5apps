@@ -67,15 +67,12 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
 				for(File file:optional.asSet()){
-					
 					GifPlayer.this.loadFile(file, dataUrl);
 				}
 			}
 			
 			
 		};
-		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
-		
 		
 	
 		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
