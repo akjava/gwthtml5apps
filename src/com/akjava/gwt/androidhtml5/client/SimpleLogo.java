@@ -136,37 +136,12 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		
 		//position
-		HorizontalPanel h=new HorizontalPanel();
-		panel.add(h);
+		//HorizontalPanel h=new HorizontalPanel();
+		//panel.add(h);
 		
-		Label label=new Label("position");
-		label.setWidth("100px");
-		h.add(label);
 		
-		positionBox = new ValueListBox<String>(new Renderer<String>() {
-			@Override
-			public String render(String object) {
-				return object;
-			}
-			@Override
-			public void render(String object, Appendable appendable) throws IOException {
-				// TODO Auto-generated method stub
-				
-			}
-		});
+		//moved
 		
-		positionBox.setValue(getStorageValue(KEY_DRAW_POSITION, "RightTop"));
-		
-		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center","TopCenter","BottomCenter"));
-		
-		positionBox.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				setStorageValue(KEY_DRAW_POSITION, event.getValue());
-				//updateImage(); this is in setting right now
-			}
-		});
-		h.add(positionBox);
 		
 		marginBox=makeIntegerBox(panel, "margin", getStorageValue(KEY_DRAW_MARGIN, 25));
 		
@@ -554,8 +529,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			public void onEnterKeyDown() {
 				updateImage();
 			}};
+			titleBox.setWidth("120px");
 		titleBox.setText(getStorageValue(KEY_LAST_LABEL, "TODO"));
 		h3.add(titleBox);
+		h3.add(new Label("text-color"));
 		colorBox = new ColorBox();
 		colorBox.setValue("#ffffff");
 		h3.add(colorBox);
@@ -596,7 +573,44 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h3.add(transparentTextBox);
 		
 		
-		Button updateBt=new Button("Update",new ClickHandler() {
+		
+		positionBox = new ValueListBox<String>(new Renderer<String>() {
+			@Override
+			public String render(String object) {
+				return object;
+			}
+			@Override
+			public void render(String object, Appendable appendable) throws IOException {
+				// TODO Auto-generated method stub
+				
+			}
+		});
+		
+		HorizontalPanel h3b=new HorizontalPanel();
+		h3b.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		controler.add(h3b);
+		
+		Label label=new Label("position:");
+		//label.setWidth("100px");
+		h3b.add(label);
+		
+		positionBox.setValue(getStorageValue(KEY_DRAW_POSITION, "RightTop"));
+		
+		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center","TopCenter","BottomCenter"));
+		
+		positionBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				setStorageValue(KEY_DRAW_POSITION, event.getValue());
+				
+				updateImage();
+			}
+		});
+		h3b.add(positionBox);
+		
+	
+		
+		Button updateBt=new Button("update",new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -608,7 +622,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		HorizontalPanel h4=new HorizontalPanel();
 		h4.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h4);
-		h4.add(new Label("BG"));
+		h4.add(new Label("background:"));
 		bgColorBox = new ColorBox();
 		bgColorBox.setValue("#000000");
 		h4.add(bgColorBox);
@@ -719,7 +733,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		};
 		
 		eastPanel = new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 180);
+		eastPanel.addNorth(controler, 210);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
