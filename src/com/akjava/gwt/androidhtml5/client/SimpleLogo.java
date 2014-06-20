@@ -292,6 +292,9 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 	
 		HorizontalPanel makeBtPanel=new HorizontalPanel();
+		makeBtPanel.setSpacing(1);
+		makeBtPanel.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
+		
 		controler.add(makeBtPanel);
 		makeBt = new Button("Make",new ClickHandler() {
 			@Override
@@ -311,8 +314,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				
 			}
 		});
-		makeBtPanel.add(makeBt);
+		makeBt.setWidth("100px");
+		
 		makeBt.setEnabled(false);
+		
+		makeBtPanel.add(new Label("image_format:"));
 		
 		typeBox = new ValueListBox<String>(new Renderer<String>() {
 			@Override
@@ -343,13 +349,14 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		typeBox.setAcceptableValues(Lists.newArrayList("png","jpeg","webp"));
 		makeBtPanel.add(typeBox);
 		
+		makeBtPanel.add(makeBt);
 		
 	
 		HorizontalPanel h1=new HorizontalPanel();
 		controler.add(h1);
 		final Label scaleLabel=new Label("Scale:1.0");
 		h1.add(scaleLabel);//TODO ondemand scale
-		scaleLabel.setWidth("70px");
+		scaleLabel.setWidth("60px");
 		
 		scaleRange = HTML5InputRange.createInputRange(-99, 90, 0);
 		scaleRange.setWidth("250px");
@@ -472,10 +479,10 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		controler.add(h2);
 		final Label turnLabel=new Label("Angle:0");
 		h2.add(turnLabel);//TODO ondemand scale
-		turnLabel.setWidth("70px");
+		turnLabel.setWidth("60px");
 		
 		angleRange = HTML5InputRange.createInputRange(-180, 180, 0);
-		angleRange.setWidth("200px");
+		angleRange.setWidth("250px");
 		h2.add(angleRange);
 		angleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
@@ -521,21 +528,29 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		});
 		h2.add(rightTurn);
 	
+		HorizontalPanel h3b=new HorizontalPanel();
+		h3b.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		
 		HorizontalPanel h3=new HorizontalPanel();
 		h3.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		Label title_logo=new Label("title_logo:");
+		title_logo.setWidth("65px");
+		h3.add(title_logo);
 		controler.add(h3);
 		titleBox = new EnterKeySupportTextBox(){
 			@Override
 			public void onEnterKeyDown() {
 				updateImage();
 			}};
-			titleBox.setWidth("120px");
+			titleBox.setWidth("180px");
 		titleBox.setText(getStorageValue(KEY_LAST_LABEL, "TODO"));
 		h3.add(titleBox);
-		h3.add(new Label("text-color"));
+		Label text_color=new Label("text_color:");
+		text_color.setWidth("65px");
+		h3b.add(text_color);
 		colorBox = new ColorBox();
 		colorBox.setValue("#ffffff");
-		h3.add(colorBox);
+		h3b.add(colorBox);
 		
 		
 		transparentTextBox = new ValueListBox<Integer>(new Renderer<Integer>() {
@@ -570,7 +585,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			values.add(i*5);
 		}
 		transparentTextBox.setAcceptableValues(values);
-		h3.add(transparentTextBox);
+		h3b.add(transparentTextBox);
 		
 		
 		
@@ -586,8 +601,8 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
-		HorizontalPanel h3b=new HorizontalPanel();
-		h3b.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+	
+		
 		controler.add(h3b);
 		
 		Label label=new Label("position:");
@@ -617,12 +632,14 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 				updateImage();
 			}
 		});
-		h3.add(updateBt);
+		h3b.add(updateBt);
 		
 		HorizontalPanel h4=new HorizontalPanel();
 		h4.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h4);
-		h4.add(new Label("background:"));
+		Label bg_color=new Label("bg_color:");
+		bg_color.setWidth("65px");
+		h4.add(bg_color);
 		bgColorBox = new ColorBox();
 		bgColorBox.setValue("#000000");
 		h4.add(bgColorBox);
