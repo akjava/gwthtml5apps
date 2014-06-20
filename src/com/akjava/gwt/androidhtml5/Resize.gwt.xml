@@ -6,6 +6,10 @@
 	
 	<entry-point class="com.akjava.gwt.androidhtml5.client.SimpleResize" />
 	
+	
+	<inherits name="com.google.gwt.i18n.I18N"/>
+	<extend-property name="locale" values="ja"/>
+
 	<!-- 
 	
 	<add-linker name="sso" /> 

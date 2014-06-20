@@ -13,6 +13,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.FluentIterable;
 import com.google.gwt.core.client.EntryPoint;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -35,7 +36,8 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 public abstract class Html5DemoEntryPoint implements EntryPoint {
-
+	public static TextConstants textConstants=GWT.create(TextConstants.class);
+	
 	public abstract String getAppName();
 	public abstract String getAppVersion();
 	public abstract String getAppUrl();

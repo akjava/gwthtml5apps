@@ -1,5 +1,6 @@
 package com.akjava.gwt.androidhtml5.client.resize;
 
+import com.akjava.gwt.androidhtml5.client.SimpleResize;
 import com.google.gwt.core.shared.GWT;
 import com.google.gwt.editor.client.Editor;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
@@ -20,7 +21,7 @@ public class ResizeDataEditor extends VerticalPanel implements Editor<ResizeData
 			HorizontalPanel sizes=new HorizontalPanel();
 			sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 			this.add(sizes);
-			Label f1Label=new Label("size");
+			Label f1Label=new Label(SimpleResize.textConstants.size());
 			f1Label.setWidth("100px");
 			sizes.add(f1Label);
 			

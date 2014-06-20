@@ -20,6 +20,7 @@ import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.CanvasResizer;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementUtils;
+import com.akjava.gwt.lib.client.JSDownScale;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.StorageException;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
@@ -38,11 +39,11 @@ import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.cell.client.Cell;
 import com.google.gwt.cell.client.SafeHtmlCell;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
-import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
@@ -75,7 +76,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  * app link is directly apps,no annoying description page
  */
 public class SimpleResize extends Html5DemoEntryPoint {
-
+	
 	private Canvas canvas;
 	
 	private Image mainImage;
@@ -139,9 +140,10 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		
 		topPanel = new HorizontalPanel();
 		topPanel.setWidth("100%");
+		topPanel.setStylePrimaryName("bg1");
 		topPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		topPanel.setSpacing(4);
-		dock.addNorth(topPanel,40);
+		topPanel.setSpacing(1);
+		dock.addNorth(topPanel,30);
 		
 		
 		topPanel.add(createTitleWidget());
@@ -163,15 +165,25 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		
 		VerticalPanel controler=new VerticalPanel();
 		
+		
+		FileUploadForm fileUp=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			@Override
+			public void uploaded(File file, String asStringText) {
+				loadFile(file,asStringText);
+			}
+		}, true);
+		controler.add(fileUp);
+		
 		HorizontalPanel panel1=new HorizontalPanel();
 		controler.add(panel1);
 		panel1.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
+		panel1.add(new Label(textConstants.image_size()));
 		panel1.setSpacing(2);
 		//topPanel.add(controler);
 		
 		//panel1.add(new Label("Width:"));
 		
-		widthButton = new RadioButton("size","width");
+		widthButton = new RadioButton("size",textConstants.width());
 		widthButton.setValue(true);
 		widthButton.addClickHandler(new ClickHandler() {
 			
@@ -184,7 +196,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		});
 		panel1.add(widthButton);
 		
-		heightButton = new RadioButton("size","height");
+		heightButton = new RadioButton("size",textConstants.height());
 		heightButton.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -217,13 +229,16 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		});
 		
 		HorizontalPanel panel2=new HorizontalPanel();
+		panel2.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(panel2);
 		
-		highQualityCheck = new CheckBox("HQ");
+		highQualityCheck = new CheckBox(textConstants.HQ());
 		highQualityCheck.setValue(true);//defaut true
-		panel2.add(highQualityCheck);
+		panel1.add(highQualityCheck);
 		
-		final RadioButton typeSame=new RadioButton("type","same");
+		panel2.add(new Label(textConstants.image_type()));
+		
+		final RadioButton typeSame=new RadioButton("type",textConstants.same());
 		typeSame.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -281,13 +296,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		//dock.add(canvas);
 		//RootLayoutPanel.get().add(dock);
 		
-		FileUploadForm fileUp=FileUtils.createSingleFileUploadForm(new DataURLListener() {
-			@Override
-			public void uploaded(File file, String asStringText) {
-				loadFile(file,asStringText);
-			}
-		}, true);
-		panel1.add(fileUp);
+		
 
 		
 		SimpleCellTable<ImageUrlDataResizeInfo> cellTable = new SimpleCellTable<ImageUrlDataResizeInfo>(999) {
@@ -321,7 +330,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 					    	  return value.getFileName();
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					    /*
 					    TextColumn<ImageUrlDataResizeInfo> sizeModeColumn = new TextColumn<ImageUrlDataResizeInfo>() {
 						      public String getValue(ImageUrlDataResizeInfo value) {
@@ -343,9 +352,9 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 						      public String getValue(ImageUrlDataResizeInfo value) {
 						    	  String header="";
 						    	  if(value.getSizeMode()==SIZE_WIDTH){
-						    		  header= "W";
+						    		  header= textConstants.W();
 						    	  }else if(value.getSizeMode()==SIZE_HEIGHT){
-						    		  header= "H";
+						    		  header= textConstants.H();
 						    	  }else{
 						    		  header= "";
 						    	  }
@@ -354,13 +363,13 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 						    	  return header+" "+value.getWidthLabel();
 						      }
 						    };
-						    table.addColumn(widthColumn,"size");
+						    table.addColumn(widthColumn,textConstants.size());
 					    
 			}
 		};
 		
 		DockLayoutPanel eastPanel=new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 60);
+		eastPanel.addNorth(controler, 80);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
@@ -412,7 +421,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 	 public Panel createMainSettingPage(){
 		VerticalPanel panel=new VerticalPanel();
 		
-		Label sizes=new Label("additional size");
+		Label sizes=new Label(textConstants.additional_size());
 		panel.add(sizes);
 		
 		Map<String,String> labelMaps=new HashMap<String, String>();
@@ -428,7 +437,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 						return ""+object.getSize();
 					}
 				};
-				table.addColumn(valueColumn,"value");
+				table.addColumn(valueColumn,textConstants.value());
 			}
 		};
 		
@@ -549,15 +558,16 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		
 		boolean smallScale=false;
 		if(sizeMode==SIZE_WIDTH){
-			smallScale=(scale<1 || size<element.getWidth());
+			
+			smallScale=((scale!=0 && scale<1) || (size!=0 && size<element.getWidth()));
 		}else{
-			smallScale=(scale<1 || size<element.getHeight());
+			smallScale=((scale!=0 && scale<1) || (size!=0 && size<element.getHeight()));
 		}	
 		
-		boolean useHighQualith=highQualityCheck.getValue() && smallScale;
+		boolean useHighQuality=highQualityCheck.getValue() && smallScale;
 		
 		
-		if(useHighQualith){
+		if(useHighQuality){
 			ImageElementUtils.copytoCanvas(asStringText, canvas);
 			
 			double convertScale;
@@ -747,7 +757,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		@Override
 		public Anchor get() {
 			LogUtils.log("generate:"+getFileName());
-			Anchor a=HTML5Download.get().generateBase64DownloadLink(this.getDataUrl(), "image/"+type, this.getFileName(), "Download", false);
+			Anchor a=HTML5Download.get().generateBase64DownloadLink(this.getDataUrl(), "image/"+type, this.getFileName(), textConstants.Download(), false);
 			a.setStylePrimaryName("bt");
 			return a;
 		}
@@ -793,12 +803,12 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 
 	@Override
 	public String getAppName() {
-		return "SimpleResize";
+		return textConstants.SimpleResize();
 	}
 
 	@Override
 	public String getAppVersion() {
-		return "1.1";
+		return "1.2";
 	}
 	
 	@Override
