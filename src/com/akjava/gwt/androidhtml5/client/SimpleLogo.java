@@ -37,6 +37,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -62,6 +64,7 @@ import com.google.gwt.user.client.ui.DockLayoutPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TextBox;
@@ -399,30 +402,121 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 		});
 		
+		final ListBox scaleControler=new ListBox();
+		scaleControler.addItem("");
+		scaleControler.addItem("reset");
+		scaleControler.addItem("fit_width");
+		scaleControler.addItem("fit_height");
+		
+		scaleControler.addChangeHandler(new ChangeHandler() {
+			
+			@Override
+			public void onChange(ChangeEvent event) {
+				if(selection==null){
+					scaleControler.setSelectedIndex(0);//reset
+					return;
+				}
+				int index=scaleControler.getSelectedIndex();
+				if(index<=0){
+					return;
+				}
+				if(index==1){
+					scaleRange.setValue(0);
+				}else if(index==2){
+					ImageElement imageElement=selection.getImageElement();
+					int iw=imageWidth;
+					int iew=imageElement.getWidth();
+					if(angleRange.getValue()==90 || angleRange.getValue()==-90){
+						iew=imageElement.getHeight();
+					}
+					
+					double r=(double)iw/iew;
+					
+					if(r<1){
+						r=1.0-r;
+						//1.0+v*0.01
+						int v=(int) (r*-100);
+						setScale(v);
+					}else if(r==1){
+						setScale(0);
+					}else{
+						
+						//return 1.0+v*0.1;
+						int v=(int)(r*10)-10;
+						
+						//optimize scaleup
+						int newWidth=(int)getScaleValue(v)*iew;
+						if(newWidth<iw){
+							v++;
+						}
+						
+						setScale(v);
+					}
+					
+					//imageWidth;
+				}else if(index==3){
+					ImageElement imageElement=selection.getImageElement();
+					int ih=imageHeight;
+					int ieh=imageElement.getHeight();
+					if(angleRange.getValue()==90 || angleRange.getValue()==-90){
+						ieh=imageElement.getWidth();
+					}
+					double r=(double)ih/ieh;
+					
+					if(r<1){
+						r=1.0-r;
+						//1.0+v*0.01
+						int v=(int) (r*-100);
+						setScale(v);
+					}else if(r==1){
+						setScale(0);
+					}else{
+						
+						//return 1.0+v*0.1;
+						int v=(int)(r*10)-10;
+						
+						//optimize scaleup
+						int newHeight=(int)getScaleValue(v)*ieh;
+						if(newHeight<ih){
+							v++;
+						}
+						
+						setScale(v);
+					}
+				}
+				
+				scaleControler.setSelectedIndex(0);//reset
+			}
+		});
+		
+		h1.add(scaleControler);
+		
+		
+		
 		HorizontalPanel h2=new HorizontalPanel();
 		controler.add(h2);
 		final Label turnLabel=new Label("Angle:0");
 		h2.add(turnLabel);//TODO ondemand scale
 		turnLabel.setWidth("70px");
 		
-		rotateRange = HTML5InputRange.createInputRange(-180, 180, 0);
-		rotateRange.setWidth("200px");
-		h2.add(rotateRange);
-		rotateRange.addInputRangeListener(new InputRangeListener() {
+		angleRange = HTML5InputRange.createInputRange(-180, 180, 0);
+		angleRange.setWidth("200px");
+		h2.add(angleRange);
+		angleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
 				updateImage();
-				int angle=rotateRange.getValue();
+				int angle=angleRange.getValue();
 				if(selection!=null){
 					selection.setAngle(angle);
 				}
 			}
 		});
-		rotateRange.addInputRangeListener(new InputRangeListener() {
+		angleRange.addInputRangeListener(new InputRangeListener() {
 			@Override
 			public void changed(int newValue) {
 				
-				turnLabel.setText("angle:"+(rotateRange.getValue()));
+				turnLabel.setText("angle:"+(angleRange.getValue()));
 				
 				
 			}
@@ -431,7 +525,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				rotateRange.setValue(-90);
+				angleRange.setValue(-90);
 			}
 		});
 		h2.add(leftTurn);
@@ -439,7 +533,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				rotateRange.setValue(0);
+				angleRange.setValue(0);
 			}
 		});
 		h2.add(zeroTurn);
@@ -447,7 +541,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				rotateRange.setValue(90);
+				angleRange.setValue(90);
 			}
 		});
 		h2.add(rightTurn);
@@ -520,6 +614,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		h4.add(bgColorBox);
 		
 		keepTransparent = new CheckBox("transparent");
+		keepTransparent.setTitle("only_work_on_png");
 		
 		keepTransparent.addClickHandler(new ClickHandler() {
 			
@@ -766,6 +861,20 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		//LogUtils.log("setted:"+v+",value="+scaleRange.getValue()+" scale="+scale+",nv="+getScale());
 	}
 	
+	private double getScaleValue(int v){
+		
+		if(v==0){
+			return 1;
+		}
+		if(v>0){
+			return 1.0+v*0.1;
+		}else if(v<0){
+			
+			return 1.0+v*0.01;
+		}
+		return 1;
+	}
+	
 	private double getScale(){
 		int v=scaleRange.getValue();
 		
@@ -896,7 +1005,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private HorizontalPanel downloadArea;
 	private Canvas canvas;
 	private InputRangeWidget scaleRange;
-	private InputRangeWidget rotateRange;
+	private InputRangeWidget angleRange;
 
 
 	
@@ -914,7 +1023,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			
 		}else{
 			setScale(selection.getScale());
-			rotateRange.setValue((int) selection.getAngle());
+			angleRange.setValue((int) selection.getAngle());
 			offsetX=selection.getOffsetX();
 			offsetY=selection.getOffsetY();
 			
@@ -969,7 +1078,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		double scale=getScale();
 		//LogUtils.log(scale);
 		
-		int angle=rotateRange.getValue();
+		int angle=angleRange.getValue();
 		
 		//int ox=(int) (offsetX*scale);
 		//int oy=(int) (offsetY*scale);
