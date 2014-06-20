@@ -157,7 +157,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		positionBox.setValue(getStorageValue(KEY_DRAW_POSITION, "RightTop"));
 		
-		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center"));
+		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center","TopCenter","BottomCenter"));
 		
 		positionBox.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
