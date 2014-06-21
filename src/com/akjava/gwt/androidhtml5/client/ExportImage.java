@@ -125,6 +125,17 @@ public class ExportImage extends Html5DemoEntryPoint {
 		VerticalPanel controler=new VerticalPanel();
 		controler.setSpacing(1);
 		
+		FileUploadForm upload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			@Override
+			public void uploaded(File file, String value) {
+				loadFile(file, value);
+			}
+		}, true,false);//base component catch everything
+		
+		
+		HorizontalPanel fileUps=new HorizontalPanel();
+		controler.add(fileUps);
+		fileUps.add(upload);
 		
 		//size choose
 		HorizontalPanel sizes=new HorizontalPanel();
@@ -282,17 +293,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		downloadLinks = new HorizontalPanel();
 		controler.add(downloadLinks);
 		
-		FileUploadForm upload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
-			@Override
-			public void uploaded(File file, String value) {
-				loadFile(file, value);
-			}
-		}, true,false);//base component catch everything
 		
-		
-		HorizontalPanel fileUps=new HorizontalPanel();
-		controler.add(fileUps);
-		fileUps.add(upload);
 
 		
 		
