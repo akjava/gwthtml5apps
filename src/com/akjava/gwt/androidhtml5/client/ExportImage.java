@@ -380,7 +380,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 							@Override
 							public String getValue(ImageElementCaptionData object) {
 								// TODO Auto-generated method stub
-								return textConstants.update();
+								return textConstants.updateimage();
 							}
 							
 						});

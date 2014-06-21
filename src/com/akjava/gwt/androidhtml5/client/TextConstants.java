@@ -110,6 +110,8 @@ public String full_width();
 public String normal();
 public String GifPlayer();
 
+
+public String updateimage();
 public String Draw();
 public String Clear_All();
 public String BaseName();
