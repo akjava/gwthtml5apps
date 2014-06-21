@@ -1183,12 +1183,13 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		canvas.getContext2d().drawImage(selection.getImageElement(), 0, 0);
 		//canvas.getContext2d().restore();
 		
-		currentCommand.setAfterUri(canvas.toDataUrl("image/png"));
+		String dataUrl=canvas.toDataUrl("image/png");
+		currentCommand.setAfterUri(dataUrl);
 		
 		
 		undoBt.setEnabled(true);
 		redoBt.setEnabled(false);
-		
+		updateCurrentSelectionDataUrl(dataUrl);
 		
 		LogUtils.log("after-reset:"+canvas.getContext2d().getGlobalCompositeOperation());
 	}
@@ -1380,6 +1381,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					canvas.getContext2d().drawImage(element,0,0);
 					canvas.getContext2d().restore();
 				
+					updateCurrentSelectionDataUrl(beforeUri);
 				}
 				
 				@Override
@@ -1401,6 +1403,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					canvas.getContext2d().drawImage(element,0,0);
 					canvas.getContext2d().restore();
 					
+					updateCurrentSelectionDataUrl(afterUri);
 				}
 				
 				@Override
