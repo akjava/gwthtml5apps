@@ -109,15 +109,15 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	public Panel createMainSettingPage(){
 		VerticalPanel panel=new VerticalPanel();
 		panel.setSpacing(4);
-		Label size=new Label("ImageSize");
+		Label size=new Label(textConstants.ImageSize());
 		size.setStylePrimaryName("title");
 		panel.add(size);
 		int width=getStorageValue(KEY_IMAGE_WIDTH, 500);
 		int height=getStorageValue(KEY_IMAGE_HEIGHT, 200);
-		widthBox = makeIntegerBox(panel,"width",width);
-		heightBox = makeIntegerBox(panel,"height",height);
+		widthBox = makeIntegerBox(panel,textConstants.width(),width);
+		heightBox = makeIntegerBox(panel,textConstants.height(),height);
 		
-		Button resetSize=new Button("reset",new ClickHandler() {
+		Button resetSize=new Button(textConstants.reset(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				widthBox.setValue(500);
@@ -126,11 +126,11 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		});
 		panel.add(resetSize);
 		
-		Label text=new Label("Text");
+		Label text=new Label(textConstants.Text());
 		text.setStylePrimaryName("title");
 		panel.add(text);
 		
-		fontBox = makeTextBox(panel, "Font", getStorageValue(KEY_DRAW_FONT, "64px Audiowide"));
+		fontBox = makeTextBox(panel, textConstants.font(), getStorageValue(KEY_DRAW_FONT, "64px Audiowide"));
 		panel.add(fontBox);
 		
 		
@@ -143,13 +143,13 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		//moved
 		
 		
-		marginBox=makeIntegerBox(panel, "margin", getStorageValue(KEY_DRAW_MARGIN, 25));
+		marginBox=makeIntegerBox(panel, textConstants.margin(), getStorageValue(KEY_DRAW_MARGIN, 25));
 		
-		Button resetFont=new Button("reset",new ClickHandler() {
+		Button resetFont=new Button(textConstants.reset(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				fontBox.setText("64px Audiowide");
-				positionBox.setValue("RightTop");
+				positionBox.setValue(POSITION_RIGHT_TOP);
 				marginBox.setValue(25);
 			}
 		});
@@ -231,6 +231,58 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	
 	
 
+	public   PositionData POSITION_RIGHT_TOP=new PositionData("RightTop",textConstants.RightTop());
+	public class PositionData{
+		private String value;
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + ((value == null) ? 0 : value.hashCode());
+			return result;
+		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			PositionData other = (PositionData) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (value == null) {
+				if (other.value != null)
+					return false;
+			} else if (!value.equals(other.value))
+				return false;
+			return true;
+		}
+		public String getValue() {
+			return value;
+		}
+		public void setValue(String value) {
+			this.value = value;
+		}
+		public PositionData(String value,String label) {
+			super();
+			this.value = value;
+			this.label=label;
+		}
+		private String label;
+		public String getLabel() {
+			return label;
+		}
+		public void setLabel(String label) {
+			this.label = label;
+		}
+		private SimpleLogo getOuterType() {
+			return SimpleLogo.this;
+		}
+	}
+	
 	@Override
 	public Panel initializeWidget() {
 		
@@ -266,7 +318,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "simplelogo_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "simplelogo_help.html"));
 	
 		topPanel.add(createSettingAnchor());
 		
@@ -296,7 +348,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		makeBtPanel.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		
 		controler.add(makeBtPanel);
-		makeBt = new Button("Make",new ClickHandler() {
+		makeBt = new Button(textConstants.Make(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				makeBt.setEnabled(false);
@@ -318,7 +370,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		makeBt.setEnabled(false);
 		
-		makeBtPanel.add(new Label("image_format:"));
+		makeBtPanel.add(new Label(textConstants.image_format()+":"));
 		
 		typeBox = new ValueListBox<String>(new Renderer<String>() {
 			@Override
@@ -354,7 +406,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	
 		HorizontalPanel h1=new HorizontalPanel();
 		controler.add(h1);
-		final Label scaleLabel=new Label("Scale:1.0");
+		final Label scaleLabel=new Label(textConstants.Scale()+":1.0");
 		h1.add(scaleLabel);//TODO ondemand scale
 		scaleLabel.setWidth("60px");
 		
@@ -379,16 +431,16 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			}
 			@Override
 			public void changed(int newValue) {
-				scaleLabel.setText("Scale:"+toLabel(getScale()));
+				scaleLabel.setText(textConstants.Scale()+":"+toLabel(getScale()));
 				
 			}
 		});
 		
 		final ListBox scaleControler=new ListBox();
 		scaleControler.addItem("");
-		scaleControler.addItem("reset");
-		scaleControler.addItem("fit_width");
-		scaleControler.addItem("fit_height");
+		scaleControler.addItem(textConstants.reset());
+		scaleControler.addItem(textConstants.fit_width());
+		scaleControler.addItem(textConstants.fit_height());
 		
 		scaleControler.addChangeHandler(new ChangeHandler() {
 			
@@ -477,7 +529,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		HorizontalPanel h2=new HorizontalPanel();
 		controler.add(h2);
-		final Label turnLabel=new Label("Angle:0");
+		final Label turnLabel=new Label(textConstants.angle()+":0");
 		h2.add(turnLabel);//TODO ondemand scale
 		turnLabel.setWidth("60px");
 		
@@ -498,7 +550,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			@Override
 			public void changed(int newValue) {
 				
-				turnLabel.setText("angle:"+(angleRange.getValue()));
+				turnLabel.setText(textConstants.angle()+":"+(angleRange.getValue()));
 				
 				
 			}
@@ -533,7 +585,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		HorizontalPanel h3=new HorizontalPanel();
 		h3.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		Label title_logo=new Label("title_logo:");
+		Label title_logo=new Label(textConstants.title_logo()+":");
 		title_logo.setWidth("65px");
 		h3.add(title_logo);
 		controler.add(h3);
@@ -545,7 +597,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			titleBox.setWidth("180px");
 		titleBox.setText(getStorageValue(KEY_LAST_LABEL, "TODO"));
 		h3.add(titleBox);
-		Label text_color=new Label("text_color:");
+		Label text_color=new Label(textConstants.text_color()+":");
 		text_color.setWidth("65px");
 		h3b.add(text_color);
 		colorBox = new ColorBox();
@@ -589,13 +641,13 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		
 		
-		positionBox = new ValueListBox<String>(new Renderer<String>() {
+		positionBox = new ValueListBox<PositionData>(new Renderer<PositionData>() {
 			@Override
-			public String render(String object) {
-				return object;
+			public String render(PositionData object) {
+				return object.getLabel();
 			}
 			@Override
-			public void render(String object, Appendable appendable) throws IOException {
+			public void render(PositionData object, Appendable appendable) throws IOException {
 				// TODO Auto-generated method stub
 				
 			}
@@ -605,18 +657,23 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		controler.add(h3b);
 		
-		Label label=new Label("position:");
+		Label label=new Label(textConstants.position()+":");
 		//label.setWidth("100px");
 		h3b.add(label);
 		
-		positionBox.setValue(getStorageValue(KEY_DRAW_POSITION, "RightTop"));
+		String posKey=getStorageValue(KEY_DRAW_POSITION, "RightTop");
+		positionBox.setValue(new PositionData(posKey, ""));//is this work?
 		
-		positionBox.setAcceptableValues(Lists.newArrayList("RightTop","RightBottom","LeftTop","LeftBottom","Center","TopCenter","BottomCenter"));
+		positionBox.setAcceptableValues(Lists.newArrayList(POSITION_RIGHT_TOP,
+				new PositionData("RightBottom", textConstants.RightBottom()),new PositionData("LeftBottom", textConstants.LeftBottom()),
+				new PositionData("LeftTop", textConstants.LeftTop()),
+				new PositionData("Center", textConstants.Center()),new PositionData("TopCenter", textConstants.TopCenter()),new PositionData("BottomCenter", textConstants.BottomCenter())
+				));
 		
-		positionBox.addValueChangeHandler(new ValueChangeHandler<String>() {
+		positionBox.addValueChangeHandler(new ValueChangeHandler<PositionData>() {
 			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				setStorageValue(KEY_DRAW_POSITION, event.getValue());
+			public void onValueChange(ValueChangeEvent<PositionData> event) {
+				setStorageValue(KEY_DRAW_POSITION, event.getValue().getValue());
 				
 				updateImage();
 			}
@@ -625,7 +682,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 	
 		
-		Button updateBt=new Button("update",new ClickHandler() {
+		Button updateBt=new Button(textConstants.update(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -637,15 +694,15 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		HorizontalPanel h4=new HorizontalPanel();
 		h4.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h4);
-		Label bg_color=new Label("bg_color:");
+		Label bg_color=new Label(textConstants.bg_color()+":");
 		bg_color.setWidth("65px");
 		h4.add(bg_color);
 		bgColorBox = new ColorBox();
 		bgColorBox.setValue("#000000");
 		h4.add(bgColorBox);
 		
-		keepTransparent = new CheckBox("transparent");
-		keepTransparent.setTitle("only_work_on_png");
+		keepTransparent = new CheckBox(textConstants.transparent());
+		keepTransparent.setTitle(textConstants.only_work_on_png());
 		
 		keepTransparent.addClickHandler(new ClickHandler() {
 			
@@ -666,7 +723,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 			keepTransparent.setEnabled(false);
 		}
 		
-		showOutSideCheck = new CheckBox("show outside");
+		showOutSideCheck = new CheckBox(textConstants.show_outside());
 		showOutSideCheck.setValue(true);
 		showOutSideCheck.addClickHandler(new ClickHandler() {
 			
@@ -742,7 +799,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 					    	  return value.getFileName();
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					    
 					   
 					    
@@ -1090,7 +1147,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	private IntegerBox heightBox;
 	private TextBox fontBox;
 	private ValueListBox<String> typeBox;
-	private ValueListBox<String> positionBox;
+	private ValueListBox<PositionData> positionBox;
 	private void updateImage(){
 		if(selection==null){
 			return;
@@ -1177,7 +1234,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		int align=CanvasUtils.ALIGN_CENTER;
 		int valign=CanvasUtils.VALIGN_MIDDLE;
 		
-		String positionText=positionBox.getValue().toLowerCase();
+		String positionText=positionBox.getValue().getValue().toLowerCase();
 		if(positionText.indexOf("left")!=-1){
 			align=CanvasUtils.ALIGN_LEFT;
 		}
@@ -1311,7 +1368,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "SimpleLogo";
+		return textConstants.SimpleLogo();
 	}
 
 	@Override
