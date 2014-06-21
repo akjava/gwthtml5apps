@@ -125,29 +125,36 @@ public class GridPaint extends Html5DemoEntryPoint {
 		//title
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "gridpaint_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(),"gridpaint_help.html"));
 		
 		topPanel.add(createSettingAnchor());
+		
+		
 		
 		
 		VerticalPanel controler=new VerticalPanel();
 		controler.setSpacing(1);
 		
+		HorizontalPanel topControler=new HorizontalPanel();
+		topControler.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
+		topControler.setSpacing(1);
+		controler.add(topControler);
+		
+		
 		HorizontalPanel bh=new HorizontalPanel();
 		controler.add(bh);
 		bh.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		
-		
+		HorizontalPanel bh2=new HorizontalPanel();
+		controler.add(bh2);
+		bh2.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		
 		
 		downloadArea = new VerticalPanel();
 		downloadArea.setSpacing(2);
 		
-		bh.add(new Label("grid:"));
-		HorizontalPanel topControler=new HorizontalPanel();
-		topControler.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
-		topControler.setSpacing(1);
-		controler.add(topControler);
+		bh2.add(new Label(textConstants.grid_number()+":"));
+		
 		
 		
 		
@@ -165,7 +172,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		
 		baseSizeListBox.setValue(10);
 		baseSizeListBox.setAcceptableValues(Lists.newArrayList(4,5,8,10,16,20,30,40,50,64));
-		bh.add(baseSizeListBox);
+		bh2.add(baseSizeListBox);
 		
 		//topPanel.add(controler);
 		colorBox = new ColorBox();
@@ -173,7 +180,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		bh.add(colorBox);
 		
 		
-		circleCheck = new CheckBox("Circle");
+		circleCheck = new CheckBox(textConstants.Circle());
 		circleCheck.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -198,29 +205,34 @@ public class GridPaint extends Html5DemoEntryPoint {
 				
 			}
 		});
-		modeBox.addItem("Grid");
-		modeBox.addItem("Pick");
-		modeBox.addItem("P&Gr");
+		modeBox.addItem(textConstants.grid());
+		modeBox.addItem(textConstants.pick());
+		modeBox.addItem(textConstants.P_and_Gr());
 		modeBox.setSelectedIndex(0);
 		bh.add(modeBox);
 		
 		
-		Button fillBt=new Button("Fill",new ClickHandler() {
+		Button fillBt=new Button(textConstants.fill(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
 				fillColor();
 			}
 		});
-		bh.add(fillBt);
-		fillBt.setTitle("replace all colored block to current color");
+		bh2.add(fillBt);
+		fillBt.setTitle(textConstants.replace_all_colored_block_to_current_color());
 		
-		stampCheck = new CheckBox("Stamp");
+		stampCheck = new CheckBox(textConstants.Stamp());
 		stampCheck.addClickHandler(new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
 				target=null;
+				
+				
+				boolean otherControler=!stampCheck.getValue();
+				circleCheck.setEnabled(otherControler);
+				modeBox.setEnabled(otherControler);
 			}
 		});
 		bh.add(stampCheck);
@@ -266,7 +278,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 							easyCellTableObjects.downItem(object);
 						}
 						
-					}}.generateColumn(Lists.newArrayList("X","UP","DOWN"));
+					}}.generateColumn(Lists.newArrayList("X",textConstants.UP(),textConstants.DOWN()));
 					
 				
 				 
@@ -357,7 +369,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 					    	  return value.getFileName();
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					    
 					    TextColumn<GridImageData> widthColumn = new TextColumn<GridImageData>() {
 						      public String getValue(GridImageData value) {
@@ -365,7 +377,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 						    	
 						      }
 						    };
-						    table.addColumn(widthColumn,"Grid");
+						    table.addColumn(widthColumn,textConstants.grid_number());
 					    
 			}
 		};
@@ -374,7 +386,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		HorizontalPanel gifPanel=new HorizontalPanel();
 		controler.add(gifPanel);
 		
-		Button regrid=new Button("ReGrid",new ClickHandler() {
+		Button regrid=new Button(textConstants.ReGrid(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -383,7 +395,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		});
 		gifPanel.add(regrid);
 		
-		Button copyBt=new Button("Copy",new ClickHandler() {
+		Button copyBt=new Button(textConstants.Copy(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -393,7 +405,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		gifPanel.add(copyBt);
 		
 		
-		Button saveBt=new Button("Save",new ClickHandler() {
+		Button saveBt=new Button(textConstants.Save(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -405,7 +417,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		
 		
 		
-		makeBt = new Button("Make Gif",new ClickHandler() {
+		makeBt = new Button(textConstants.Make_Gif(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				makeBt.setEnabled(false);
@@ -428,7 +440,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 						
 						//create buttons
 						downloadArea.clear();
-						Anchor a=HTML5Download.get().generateBase64DownloadLink(gifUrl, "image/gif", "gridanime.gif", "Download Gif", false);
+						Anchor a=HTML5Download.get().generateBase64DownloadLink(gifUrl, "image/gif", "gridanime.gif", textConstants.Download_Gif(), false);
 						a.setStylePrimaryName("bt");
 						downloadArea.add(a);
 						makeBt.setEnabled(true);
@@ -466,7 +478,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 		
 		
 		DockLayoutPanel eastPanel=new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 100);
+		eastPanel.addNorth(controler, 120);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
@@ -542,7 +554,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 	
 	 public Panel createMainSettingPage(){
 			VerticalPanel panel=new VerticalPanel();
-			Label label0=new Label("Export Image Type");
+			Label label0=new Label(textConstants.Export_Image_Type());
 			panel.add(label0);
 			
 			List<String> fileType=Lists.newArrayList("PNG","Jpeg","WebP");
@@ -571,28 +583,28 @@ public class GridPaint extends Html5DemoEntryPoint {
 			panel.add(exportImageType);
 			
 			
-			Label label=new Label("GifAnime");
+			Label label=new Label(textConstants.GifAnime());
 			panel.add(label);
 			
 			HorizontalPanel h1=new HorizontalPanel();
 			h1.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 			panel.add(h1);
 			
-			h1.add(new Label("quality"));
+			h1.add(new Label(textConstants.quality()));
 			qualityBox = new ValueListBox<Integer>(new Renderer<Integer>() {
 
 				@Override
 				public String render(Integer value) {
 					if(value==10){
-						return "medium(10)";
+						return textConstants.medium()+"(10)";
 					}
 					
 					if(value==1){
-						return "High(1)";
+						return textConstants.high()+"(1)";
 					}
 					
 					if(value==20){
-						return "low(20)";
+						return textConstants.low()+"(20)";
 					}
 					
 					return ""+value;
@@ -618,21 +630,21 @@ public class GridPaint extends Html5DemoEntryPoint {
 				}
 			});
 
-			h1.add(new Label("speed"));
+			h1.add(new Label(textConstants.speed()));
 			speedBox = new ValueListBox<Integer>(new Renderer<Integer>() {
 
 				@Override
 				public String render(Integer value) {
 					if(value==1000){
-						return "slow(1000ms)";
+						return textConstants.slow()+"(1000ms)";
 					}
 					
 					if(value==50){
-						return "first(50ms)";
+						return textConstants.first()+"(50ms)";
 					}
 					
 					if(value==500){
-						return "medium(500ms)";
+						return textConstants.medium()+"(500ms)";
 					}
 					
 					return ""+value;
@@ -752,11 +764,11 @@ public class GridPaint extends Html5DemoEntryPoint {
 		
 		Anchor a=null;
 		if(GWTUtils.isIE()){
-			a=HTML5Download.get().generateDownloadLink(blob, mime,"gridPaint."+extension, "RightClickAndSaveAs",false);
+			a=HTML5Download.get().generateDownloadLink(blob, mime,"gridPaint."+extension, textConstants.RightClickAndSaveAs(),false);
 			a.setTitle("to download right mouse button to show contextmenu and select save as by yourself");
 		}else{
 			//TODO support ios
-			a=HTML5Download.get().generateDownloadLink(blob, "image/"+mime,"gridPaint."+extension, "Download Image",true);
+			a=HTML5Download.get().generateDownloadLink(blob, "image/"+mime,"gridPaint."+extension, textConstants.Download_Image(),true);
 		}
 				
 		a.setStylePrimaryName("bt");
@@ -884,9 +896,9 @@ public class GridPaint extends Html5DemoEntryPoint {
 	
 	private void updateStopAndPreviewButton(){
 		if(gifShowing){
-			stopAndPreview.setText("stop");
+			stopAndPreview.setText(textConstants.stop());
 		}else{
-			stopAndPreview.setText("preview");
+			stopAndPreview.setText(textConstants.preview());
 		}
 	}
 	
@@ -1275,6 +1287,9 @@ public class GridPaint extends Html5DemoEntryPoint {
 		}
 		
 		public static void drawGridImage(Canvas targetCanvas,GridImageData gridData){
+			if(gridData==null || gridData.getDataUrl()==null){
+				return;
+			}
 			//LogUtils.log("drawGrid");
 			//draw all
 					ImageElement element=ImageElementUtils.create(gridData.getDataUrl());
@@ -1325,7 +1340,7 @@ public class GridPaint extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "GridPaint";
+		return textConstants.GridPaint();
 	}
 
 	@Override

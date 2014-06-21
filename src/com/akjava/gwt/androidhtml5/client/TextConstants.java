@@ -48,4 +48,36 @@ public String Help();
 public String margin();
 public String ImageSize();
 public String Text();
+
+
+
+public String grid_number();
+public String grid();
+public String pick();
+public String Circle();
+public String P_and_Gr();
+public String fill();
+public String replace_all_colored_block_to_current_color();
+public String Stamp();
+public String GridPaint();
+public String Export_Image_Type();
+public String GifAnime();
+public String quality();
+public String medium();
+public String high();
+public String low();
+public String speed();
+public String slow();
+public String first();
+public String RightClickAndSaveAs();
+public String Download_Image();
+public String stop();
+public String preview();
+public String UP();
+public String DOWN();
+public String ReGrid();
+public String Copy();
+public String Save();
+public String Make_Gif();
+public String Download_Gif();
 }
