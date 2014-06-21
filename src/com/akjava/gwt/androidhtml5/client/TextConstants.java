@@ -80,4 +80,25 @@ public String Copy();
 public String Save();
 public String Make_Gif();
 public String Download_Gif();
+
+
+public String Background();
+public String Undo();
+public String Redo();
+public String Pen_Size();
+public String black();
+public String white();
+public String selectcolor();
+public String x_zoom();
+public String Similar_Color();
+public String ExecTransparent();
+public String Erase();
+public String UnErase();
+public String PickColor();
+public String ScrollLock();
+public String stop_scroll_on_mobile();
+public String SaveWithBg();
+public String Reset_BG();
+public String BgImage();
+public String TransparentIt();
 }

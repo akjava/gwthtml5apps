@@ -102,7 +102,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  */
 public class TransparentIt extends Html5DemoEntryPoint {
 
-	private ImageElement imgElement;
+
 
 	
 
@@ -184,7 +184,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "transparent_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "transparent_help.html"));
 	
 		
 		
@@ -206,17 +206,17 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		backgroundList=new ListBox();
-		backgroundList.addItem("transparent");
-		backgroundList.addItem("black");
-		backgroundList.addItem("white");
-		backgroundList.addItem("color");
+		backgroundList.addItem(textConstants.transparent());
+		backgroundList.addItem(textConstants.black());
+		backgroundList.addItem(textConstants.white());
+		backgroundList.addItem(textConstants.selectcolor());
 		
 	
 		HorizontalPanel bgPanel=new HorizontalPanel();
 		bgPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(bgPanel);
 		
-		bgPanel.add(new Label("Background"));
+		bgPanel.add(new Label(textConstants.Background()));
 		
 		bgPanel.add(backgroundList);
 		backgroundList.addChangeHandler(new ChangeHandler() {
@@ -230,7 +230,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		bgColorPicker = new ColorBox();
 		bgColorPicker.setValue("#00ff00");
 		bgPanel.add(bgColorPicker);
-		Button updateBg=new Button("Update",new ClickHandler() {
+		Button updateBg=new Button(textConstants.update(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -239,7 +239,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		bgPanel.add(updateBg);
 		
-		bgPanel.add(new Label("Scale"));
+		bgPanel.add(new Label(textConstants.Scale()));
 		//
 		ValueListBox<Integer> scaleBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
@@ -265,7 +265,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			}
 		});
 		
-		bgPanel.add(new Label("x zoom"));
+		bgPanel.add(new Label(textConstants.x_zoom()));
 		
 		int cbase=18;
 		canvasWidth = cbase*16;
@@ -277,7 +277,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(sizes);
 		
-		Label penSizeLabel=new Label("Pen-Size");
+		Label penSizeLabel=new Label(textConstants.Pen_Size());
 		sizes.add(penSizeLabel);
 		final ValueListBox<Integer> sizeListBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
@@ -306,7 +306,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		sizes.add(sizeListBox);
 		
-		sizes.add(new Label("Similar-Color:"));
+		sizes.add(new Label(textConstants.Similar_Color()+":"));
 		
 		final Label rangeLabel=new Label();
 		rangeLabel.setText("10");
@@ -321,7 +321,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		sizes.add(rangeLabel);
 		colorRange.setWidth("80px");
 		sizes.add(colorRange);
-		 execTransparentBt = new Button("ExecTransparent",new ClickHandler() {
+		 execTransparentBt = new Button(textConstants.ExecTransparent(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -374,7 +374,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 				penMode=MODE_ERASE;
 			}
 		});
-		pens.add(new Label("Erase"));
+		pens.add(new Label(textConstants.Erase()));
 		final RadioButton uneraseR=new RadioButton("pens");
 		uneraseR.addClickHandler(new ClickHandler() {
 			@Override
@@ -384,10 +384,10 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 
 		pens.add(uneraseR);
-		pens.add(new Label("UnErase"));
+		pens.add(new Label(textConstants.UnErase()));
 		RadioButton blackR=new RadioButton("pens");
 		pens.add(blackR);
-		pens.add(new Label("Black"));
+		pens.add(new Label(textConstants.black()));
 		blackR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -398,7 +398,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		RadioButton whiteR=new RadioButton("pens");
 		pens.add(whiteR);
-		pens.add(new Label("White"));
+		pens.add(new Label(textConstants.white()));
 		whiteR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -408,7 +408,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		RadioButton customR=new RadioButton("pens");
 		pens.add(customR);
-		pens.add(new Label("Color"));
+		pens.add(new Label(textConstants.selectcolor()));
 		customR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -417,7 +417,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		RadioButton pickR=new RadioButton("pens");
 		pens.add(pickR);
-		pens.add(new Label("Pick"));
+		pens.add(new Label(textConstants.PickColor()));
 		pickR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -642,8 +642,8 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 	
 		
-		scrollLockCheck = new CheckBox("ScrollLock");
-		scrollLockCheck.setTitle("stop scroll on mobile");
+		scrollLockCheck = new CheckBox(textConstants.ScrollLock());
+		scrollLockCheck.setTitle(textConstants.stop_scroll_on_mobile());
 		/*//some how not work
 		lockCheck.addClickHandler(new ClickHandler() {
 			
@@ -662,7 +662,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		
-		undoBt = new Button("Undo");
+		undoBt = new Button(textConstants.Undo());
 		undoBt.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -676,7 +676,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		buttons.add(undoBt);
 		undoBt.setEnabled(false);
 		
-		redoBt = new Button("Redo");
+		redoBt = new Button(textConstants.Redo());
 		redoBt.addClickHandler(new ClickHandler() {
 			
 			@Override
@@ -695,7 +695,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		
 		
-		reset = new Button("Reset");
+		reset = new Button(textConstants.reset());
 		reset.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -705,7 +705,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		buttons.add(reset);
 		
 		
-		saveBt = new Button("Save");
+		saveBt = new Button(textConstants.Save());
 		saveBt.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -714,7 +714,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		});
 		buttons.add(saveBt);
 		
-		saveWithBgBt = new Button("SaveWithBg");
+		saveWithBgBt = new Button(textConstants.SaveWithBg());
 		saveWithBgBt.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -728,7 +728,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		exbuttons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(exbuttons);
 		
-		exbuttons.add(new Label("BgImage"));
+		exbuttons.add(new Label(textConstants.BgImage()));
 		final FileUploadForm bgupload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			
@@ -742,7 +742,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}, false);
 		
 		exbuttons.add(bgupload);
-		Button reset=new Button("Reset BG",new ClickHandler() {
+		Button reset=new Button(textConstants.Reset_BG(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -874,7 +874,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 					    	  return value.getFileName();
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					    
 					    
 					    ButtonColumn<ImageElementData> copyBtColumn=new ButtonColumn<ImageElementData>() {
@@ -885,7 +885,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 							}
 							@Override
 							public String getValue(ImageElementData object) {
-								 return "Copy";
+								 return textConstants.Copy();
 							}
 						};
 						table.addColumn(copyBtColumn);
@@ -1468,11 +1468,11 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		
 		Anchor a=null;
 		if(GWTUtils.isIE()){
-			a=HTML5Download.get().generateDownloadLink(blob, "image/png","gridPaint.png", "RightClickAndSaveAs",false);
-			a.setTitle("to download right mouse button to show contextmenu and select save as by yourself");
+			a=HTML5Download.get().generateDownloadLink(blob, "image/png","gridPaint.png", textConstants.RightClickAndSaveAs(),false);
+			//a.setTitle("to download right mouse button to show contextmenu and select save as by yourself");
 		}else{
 			//TODO support ios
-			a=HTML5Download.get().generateDownloadLink(blob, "image/png","transparent.png", "Download Image",true);
+			a=HTML5Download.get().generateDownloadLink(blob, "image/png","transparent.png", textConstants.Download_Image(),true);
 		}
 				
 		a.setStylePrimaryName("bt");
@@ -1694,7 +1694,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "TransparentIt";
+		return textConstants.TransparentIt();
 	}
 
 	@Override
