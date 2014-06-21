@@ -101,4 +101,20 @@ public String SaveWithBg();
 public String Reset_BG();
 public String BgImage();
 public String TransparentIt();
+
+public String GifMaker();
+
+public String hide_control();
+public String full_height();
+public String full_width();
+public String normal();
+public String GifPlayer();
+
+public String Draw();
+public String Clear_All();
+public String BaseName();
+public String ImagePath();
+public String use_marked();
+public String Image_Caption();
+public String ExportImage();
 }

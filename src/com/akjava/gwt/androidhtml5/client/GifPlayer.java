@@ -105,7 +105,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "gifplayer_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "gifplayer_help.html"));
 	
 		
 		
@@ -126,7 +126,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 		
 	
-		hideBt = new Button("hide control",new ClickHandler() {
+		hideBt = new Button(textConstants.hide_control(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -139,7 +139,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		hpanel.add(hideBt);
 		hideBt.setEnabled(false);
 	
-		Button stop=new Button("stop",new ClickHandler() {
+		Button stop=new Button(textConstants.stop(),new ClickHandler() {
 			
 			@Override
 			public void onClick(ClickEvent event) {
@@ -147,11 +147,11 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			}
 		});
 		hpanel.add(stop);
-		hpanel.add(new Label("size"));
+		hpanel.add(new Label(textConstants.size()));
 		sizeBox = new ListBox();
-		sizeBox.addItem("full height");
-		sizeBox.addItem("full width");
-		sizeBox.addItem("normal");
+		sizeBox.addItem(textConstants.full_height());
+		sizeBox.addItem(textConstants.full_width());
+		sizeBox.addItem(textConstants.normal());
 		sizeBox.setSelectedIndex(0);
 		hpanel.add(sizeBox);
 		sizeBox.addChangeHandler(new ChangeHandler() {
@@ -221,7 +221,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 					    	  return value.getFileName();
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					    
 					    
 			}
@@ -493,7 +493,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "GifPlayer";
+		return textConstants.GifPlayer();
 	}
 
 	@Override

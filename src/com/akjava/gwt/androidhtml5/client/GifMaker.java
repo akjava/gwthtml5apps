@@ -107,7 +107,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "gifplayer_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "gifplayer_help.html"));
 	
 		
 		
@@ -136,7 +136,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 		HorizontalPanel h1=new HorizontalPanel();
 		h1.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(h1);
-		makeBt = new Button("Make",new ClickHandler() {
+		makeBt = new Button(textConstants.Make(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				makeBt.setEnabled(false);
@@ -156,10 +156,10 @@ public class GifMaker extends Html5DemoEntryPoint {
 						
 						//create buttons
 						downloadArea.clear();
-						Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "craeted.gif", "Download Gif", false);
+						Anchor a=HTML5Download.get().generateBase64DownloadLink(url, "image/gif", "craeted.gif", textConstants.Download_Gif(), false);
 						a.setStylePrimaryName("bt");
 						downloadArea.add(a);
-						Button preview=new Button("Preview",new ClickHandler() {
+						Button preview=new Button(textConstants.preview(),new ClickHandler() {
 							@Override
 							public void onClick(ClickEvent event) {
 								setGif(url);
@@ -170,7 +170,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 						});
 						downloadArea.add(preview);
 						
-						Button stop=new Button("Stop",new ClickHandler() {
+						Button stop=new Button(textConstants.stop(),new ClickHandler() {
 							@Override
 							public void onClick(ClickEvent event) {
 								if(easyCellTableObjects.getDatas().size()>0){
@@ -195,21 +195,21 @@ public class GifMaker extends Html5DemoEntryPoint {
 		});
 		h1.add(makeBt);
 		makeBt.setEnabled(false);
-		h1.add(new Label("quality"));
+		h1.add(new Label(textConstants.quality()));
 		qualityBox = new ValueListBox<Integer>(new Renderer<Integer>() {
 
 			@Override
 			public String render(Integer value) {
 				if(value==10){
-					return "medium(10)";
+					return textConstants.medium()+"(10)";
 				}
 				
 				if(value==1){
-					return "High(1)";
+					return textConstants.high()+"(1)";
 				}
 				
 				if(value==20){
-					return "low(20)";
+					return textConstants.low()+"(20)";
 				}
 				
 				return ""+value;
@@ -228,21 +228,21 @@ public class GifMaker extends Html5DemoEntryPoint {
 		qualityBox.setAcceptableValues(acceptableValues);
 		h1.add(qualityBox);
 		
-		h1.add(new Label("speed"));
+		h1.add(new Label(textConstants.speed()));
 		speedBox = new ValueListBox<Integer>(new Renderer<Integer>() {
 
 			@Override
 			public String render(Integer value) {
 				if(value==1000){
-					return "slow(1000ms)";
+					return textConstants.slow()+"(1000ms)";
 				}
 				
 				if(value==50){
-					return "first(50ms)";
+					return textConstants.first()+"(50ms)";
 				}
 				
 				if(value==500){
-					return "medium(500ms)";
+					return textConstants.medium()+"(500ms)";
 				}
 				
 				return ""+value;
@@ -327,34 +327,9 @@ public class GifMaker extends Html5DemoEntryPoint {
 					    	  return value.getFileName();
 					      }
 					    };
-					   table.addColumn(fileInfoColumn,"Name");
+					   table.addColumn(fileInfoColumn,textConstants.Name());
 					    
-					    ButtonColumn<ImageUrlData> upBtColumn=new ButtonColumn<ImageUrlData>() {
-							@Override
-							public void update(int index, ImageUrlData object,
-									String value) {
-									
-								easyCellTableObjects.upItem(object);
-							}
-							@Override
-							public String getValue(ImageUrlData object) {
-								 return "Up";
-							}
-						};
-						//table.addColumn(upBtColumn);
-						
-						 ButtonColumn<ImageUrlData> downBtColumn=new ButtonColumn<ImageUrlData>() {
-								@Override
-								public void update(int index, ImageUrlData object,
-										String value) {
-									easyCellTableObjects.downItem(object);
-								}
-								@Override
-								public String getValue(ImageUrlData object) {
-									 return "Down";
-								}
-							};
-						//	table.addColumn(downBtColumn);
+					   
 							
 							 table.addColumn(new ActionCellGenerator<ImageUrlData>(){
 									@Override
@@ -365,7 +340,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 											easyCellTableObjects.downItem(object);
 										}
 									}										
-									}.generateColumn(Lists.newArrayList("up","down")));
+									}.generateColumn(Lists.newArrayList(textConstants.UP(),textConstants.DOWN())));
 					    
 					    
 			}
@@ -573,7 +548,7 @@ public class GifMaker extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "GifMaker";
+		return textConstants.GifMaker();
 	}
 
 	@Override

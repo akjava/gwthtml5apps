@@ -118,7 +118,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		topPanel.add(createTitleWidget());
 		
-		topPanel.add(new Anchor("Help", "exportimage_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "exportimage_help.html"));
 	
 		
 		
@@ -131,7 +131,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 		controler.add(sizes);
 		
-		Label penSizeLabel=new Label("Pen-Size");
+		Label penSizeLabel=new Label(textConstants.Pen_Size());
 		sizes.add(penSizeLabel);
 		final ValueListBox<Integer> sizeListBox=new ValueListBox<Integer>(new Renderer<Integer>() {
 
@@ -175,11 +175,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 			}
 		});
 		pens.add(eraseR);
-		pens.add(new Label("Erase"));
+		pens.add(new Label(textConstants.Erase()));
 		
 		RadioButton pickR=new RadioButton("pens");
 		pens.add(pickR);
-		pens.add(new Label("Color"));
+		pens.add(new Label(textConstants.Draw()));
 		pickR.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -193,7 +193,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		pens.add(colorPicker);
 		
 		
-		Button clearBt=new Button("Clear",new ClickHandler() {
+		Button clearBt=new Button(textConstants.Clear_All(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				if(selection==null){
@@ -209,11 +209,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		HorizontalPanel namePanel=new HorizontalPanel();
 		namePanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		namePanel.add(new Label("BaseName"));
+		namePanel.add(new Label(textConstants.BaseName()));
 		nameBox = new TextBox();
 		namePanel.add(nameBox);
 		nameBox.setValue(storageControler.getValue(KEY_BASE_NAME, "image"));
-		Button updateBt=new Button("Update",new ClickHandler() {
+		Button updateBt=new Button(textConstants.update(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				updateList();
@@ -231,11 +231,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		HorizontalPanel dirPanel=new HorizontalPanel();
 		dirPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		dirPanel.add(new Label("ImagePath"));
+		dirPanel.add(new Label(textConstants.ImagePath()));
 		pathBox = new TextBox();
 		dirPanel.add(pathBox);
 		pathBox.setValue(storageControler.getValue(KEY_BASE_PATH, "/img/"));
-		Button update3Bt=new Button("Update",new ClickHandler() {
+		Button update3Bt=new Button(textConstants.update(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				updateList();
@@ -250,7 +250,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		});
 		dirPanel.add(update3Bt);
 		
-		markedCheck = new CheckBox("use marked");
+		markedCheck = new CheckBox(textConstants.use_marked());
 		markedCheck.setValue(storageControler.getValue(KEY_USE_MARKED, false));
 		markedCheck.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
 
@@ -272,7 +272,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		HorizontalPanel captionPanel=new HorizontalPanel();
 		captionPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		captionPanel.add(new Label("Image Caption"));
+		captionPanel.add(new Label(textConstants.Image_Caption()));
 		
 		
 		markedTextArea = new TextArea();
@@ -318,7 +318,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 					    	  
 					      }
 					    };
-					    table.addColumn(fileInfoColumn,"Name");
+					    table.addColumn(fileInfoColumn,textConstants.Name());
 					   
 					    
 					    
@@ -333,7 +333,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 								}
 								updateMarkedText();
 							}										
-							}.generateColumn(Lists.newArrayList("Up","Down")));
+							}.generateColumn(Lists.newArrayList(textConstants.UP(),textConstants.DOWN())));
 					    
 					    
 					    //if use downloa here need update every mouse-up event,it's really slow
@@ -380,7 +380,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 							@Override
 							public String getValue(ImageElementCaptionData object) {
 								// TODO Auto-generated method stub
-								return "Update";
+								return textConstants.update();
 							}
 							
 						});
@@ -394,7 +394,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		imageCaptionBox.setEnabled(false);
 		captionPanel.add(imageCaptionBox);
 		imageCaptionBox.setWidth("200px");
-		Button update2Bt=new Button("Update",new ClickHandler() {
+		Button update2Bt=new Button(textConstants.update(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				updateCaption();
@@ -771,7 +771,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 
 	@Override
 	public String getAppName() {
-		return "ExportImage";
+		return textConstants.ExportImage();
 	}
 
 	@Override
