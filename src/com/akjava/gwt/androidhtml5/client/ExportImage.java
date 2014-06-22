@@ -23,6 +23,8 @@ import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.StorageControler;
 import com.akjava.gwt.lib.client.StorageException;
+import com.akjava.gwt.lib.client.canvas.CanvasTextUtils;
+import com.akjava.gwt.lib.client.canvas.Rect;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.HtmlColumn;
@@ -32,6 +34,7 @@ import com.google.common.base.Ascii;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
+import com.google.gwt.canvas.dom.client.TextMetrics;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
 import com.google.gwt.cell.client.SafeHtmlCell;
@@ -76,6 +79,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 	
 	public static final int MODE_ERASE=0;
 	public static final int MODE_COLOR=3;
+	public static final int MODE_NUMBER=4;
 	private int penMode=MODE_COLOR;
 
 	private DockLayoutPanel dock;
@@ -132,10 +136,14 @@ public class ExportImage extends Html5DemoEntryPoint {
 			}
 		}, true,false);//base component catch everything
 		
+	
 		
 		HorizontalPanel fileUps=new HorizontalPanel();
 		controler.add(fileUps);
 		fileUps.add(upload);
+		
+		HorizontalPanel clearAllPanel=new HorizontalPanel();
+		controler.add(clearAllPanel);
 		
 		//size choose
 		HorizontalPanel sizes=new HorizontalPanel();
@@ -176,7 +184,9 @@ public class ExportImage extends Html5DemoEntryPoint {
 		pens.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
 		sizes.add(pens);
 		
-		
+		colorPicker = new ColorBox();
+		colorPicker.setValue("#ff0000");
+		pens.add(colorPicker);
 		
 		final RadioButton eraseR=new RadioButton("pens");
 		eraseR.addClickHandler(new ClickHandler() {
@@ -199,9 +209,24 @@ public class ExportImage extends Html5DemoEntryPoint {
 		});
 		pickR.setValue(true);
 		
-		colorPicker = new ColorBox();
-		colorPicker.setValue("#ff0000");
-		pens.add(colorPicker);
+		
+		RadioButton pickNumber=new RadioButton("pens");
+		pens.add(pickNumber);
+		pens.add(new Label(textConstants.Number()));
+		pickNumber.addClickHandler(new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				penMode=MODE_NUMBER;
+			}
+		});
+		
+		
+		numberBox = new ListBox();
+		for(int i=0;i<=20;i++){
+			numberBox.addItem(""+i);
+		}
+		sizes.add(numberBox);
+		numberBox.setSelectedIndex(1);
 		
 		
 		Button clearBt=new Button(textConstants.Clear_All(),new ClickHandler() {
@@ -214,7 +239,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 				updateCanvas();
 			}
 		});
-		sizes.add(clearBt);
+		clearAllPanel.add(clearBt);
 		
 		
 		
@@ -454,7 +479,12 @@ public class ExportImage extends Html5DemoEntryPoint {
 			@Override
 			public void start(int sx, int sy) {
 				// TODO Auto-generated method stub
-				
+				if(penMode==MODE_NUMBER){
+					tmpNumber=new NumberData(numberBox.getSelectedIndex());
+					tmpNumber.setX(sx);
+					tmpNumber.setY(sy);
+					updateCanvas();
+				}
 			}
 			
 			@Override
@@ -468,9 +498,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 				
 				if(penMode==MODE_COLOR){
 					drawLine(startX,startY,endX,endY,colorPicker.getValue());
-				}else{
+				}else if(penMode==MODE_ERASE){
 					
 					erase(startX,startY,endX,endY);
+				}else{
+					return;
 				}
 				updateCanvas();
 			}
@@ -483,6 +515,34 @@ public class ExportImage extends Html5DemoEntryPoint {
 		});
 		
 		return root;
+	}
+	private NumberData tmpNumber;
+	private class NumberData{
+		int x;
+		int y;
+		int number;
+		public NumberData(int number) {
+			super();
+			this.number = number;
+		}
+		public int getX() {
+			return x;
+		}
+		public void setX(int x) {
+			this.x = x;
+		}
+		public int getY() {
+			return y;
+		}
+		public void setY(int y) {
+			this.y = y;
+		}
+		public int getNumber() {
+			return number;
+		}
+		public void setNumber(int number) {
+			this.number = number;
+		}
 	}
 	
 	private void erase(int x1,int y1,int x2,int y2){
@@ -750,9 +810,47 @@ public class ExportImage extends Html5DemoEntryPoint {
 		}
 	}
 	
+	
+	
 	private void drawCanvas(ImageElementCaptionData data){
 		ImageElementUtils.copytoCanvas(data.getImageElement(), canvas);
 		canvas.getContext2d().drawImage(data.getImageCanvas().getCanvasElement(), 0, 0);
+		
+		if(tmpNumber!=null){
+			int r=20;
+			int dx=tmpNumber.getX()-r;
+			int dy=tmpNumber.getY()-r;
+			int w=r*2;
+			int h=r*2;
+			
+			Rect rect=new Rect(dx, dy, w, h);
+			canvas.getContext2d().setFillStyle(colorPicker.getValue());
+			canvas.getContext2d().fillRect(dx, dy, w, h);
+			//set font?
+			
+			canvas.getContext2d().setFont("32px Audiowide");
+			canvas.getContext2d().setFillStyle("#000000");//TODO text-picker
+			
+			
+			drawCenterInRect(canvas, ""+tmpNumber.getNumber(), rect);
+			
+		}
+	}
+	
+	public static void drawCenterInRect(Canvas canvas,String text,Rect rect){
+		canvas.getContext2d().save();
+		TextMetrics metrix=canvas.getContext2d().measureText(text);
+		
+		int dx=(int) ((rect.getWidth()-metrix.getWidth())/2);
+		int dy=rect.getHeight()/2;
+		
+		//int size=parseFontSize(canvas.getContext2d().getFont());
+		//double descentOffset=(double)size/4; offset no need anymore
+		
+		canvas.getContext2d().setTextBaseline("middle");
+		
+		canvas.getContext2d().fillText(text, rect.getX()+dx, rect.getY()+dy);
+		canvas.getContext2d().restore();
 	}
 	
 	
@@ -765,6 +863,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 	private HorizontalPanel downloadLinks;
 	private CheckBox markedCheck;
 	private CanvasDragMoveControler moveControler;
+	private ListBox numberBox;
 	
 	
 

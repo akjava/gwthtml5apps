@@ -119,4 +119,5 @@ public String ImagePath();
 public String use_marked();
 public String Image_Caption();
 public String ExportImage();
+public String Number();
 }
