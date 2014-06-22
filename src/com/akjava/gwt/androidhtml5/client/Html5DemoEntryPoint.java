@@ -83,21 +83,33 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 				
 				//create setting
 				DockLayoutPanel settingPanel=new DockLayoutPanel(Unit.PX);
-				HorizontalPanel settingButtons=new HorizontalPanel();
-				settingButtons.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-				settingButtons.setSpacing(2);
-				settingButtons.add(new Label("Settings"));
-				Button closeBt=new Button("close",new ClickHandler() {
+				HorizontalPanel settingTitles=new HorizontalPanel();
+				settingTitles.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+				settingTitles.setSpacing(2);
+				settingTitles.add(new Label(getAppName()+" >> "+textConstants.Settings()));
+				
+				
+				VerticalPanel settingMain=new VerticalPanel();
+				settingMain.setSize("100%", "100%");
+				
+				HorizontalPanel firstControlPanel=new HorizontalPanel();
+				settingMain.add(firstControlPanel);
+				Button closeBt=new Button(textConstants.close(),new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent event) {
 						onCloseSettingPanel();
 						rootDeck.showWidget(0);
 					}
 				});
-				settingButtons.add(closeBt);
-				settingPanel.addNorth(settingButtons,30);
-				settingPanel.add(createMainSettingPage());
-				rootDeck.add(settingPanel);
+				closeBt.setWidth("200px");
+				firstControlPanel.add(closeBt);
+				
+				
+				settingPanel.addNorth(settingTitles,30);
+				settingPanel.add(settingMain);
+				settingMain.add(createMainSettingPage());
+				
+				rootDeck.add(settingPanel);//index 1 is setting
 		
 		parseLinkCsv(getLinkContainer());
 	}

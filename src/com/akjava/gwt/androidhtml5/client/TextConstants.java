@@ -2,6 +2,10 @@ package com.akjava.gwt.androidhtml5.client;
 import com.google.gwt.i18n.client.Constants;
 
 public interface TextConstants extends Constants {
+	
+
+public String close();
+public String Settings();	
 public String width();
 public String height();
 public String HQ();

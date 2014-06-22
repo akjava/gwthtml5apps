@@ -287,7 +287,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 			}
 		});
 		
-		topPanel.add(new Anchor("Help", "resize_help.html"));
+		topPanel.add(new Anchor(textConstants.Help(), "resize_help.html"));
 		
 		topPanel.add(createSettingAnchor());
 		
