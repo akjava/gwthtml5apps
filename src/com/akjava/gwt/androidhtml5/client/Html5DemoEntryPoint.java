@@ -70,6 +70,9 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 		}
 	}
 	
+	
+
+	
 	@Override
 	public void onModuleLoad() {
 		LogUtils.log(getAppName()+":version "+getAppVersion());
@@ -109,6 +112,7 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 				settingPanel.addNorth(settingTitles,30);
 				settingPanel.add(settingMain);
 				Panel panel=createMainSettingPage();
+				panel.setWidth("100%");//need this?
 				panel.getElement().getStyle().setMargin(12, Unit.PX);
 				settingMain.add(panel);
 				

@@ -124,4 +124,13 @@ public String use_marked();
 public String Image_Caption();
 public String ExportImage();
 public String Number();
+
+public String textcolor();
+public String bgcolor();
+public String digimeter();
+public String square();
+public String circle();
+public String none();
+public String bgtype();
+
 }

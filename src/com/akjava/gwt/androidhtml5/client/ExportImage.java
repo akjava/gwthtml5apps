@@ -4,9 +4,6 @@ package com.akjava.gwt.androidhtml5.client;
 import java.io.IOException;
 import java.util.List;
 
-import javax.swing.border.StrokeBorder;
-
-import com.akjava.gwt.androidhtml5.client.TransparentIt.XYPoint;
 import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.File;
@@ -16,6 +13,7 @@ import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.html5.client.input.ColorBox;
+import com.akjava.gwt.lib.client.CanvasPaintUtils;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -23,21 +21,18 @@ import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.StorageControler;
 import com.akjava.gwt.lib.client.StorageException;
-import com.akjava.gwt.lib.client.canvas.CanvasTextUtils;
 import com.akjava.gwt.lib.client.canvas.Rect;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
-import com.akjava.gwt.lib.client.widget.cell.HtmlColumn;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.io.FileType;
 import com.google.common.base.Ascii;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
-import com.google.gwt.canvas.dom.client.TextMetrics;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
-import com.google.gwt.cell.client.SafeHtmlCell;
+import com.google.gwt.canvas.dom.client.TextMetrics;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
@@ -45,8 +40,6 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
-import com.google.gwt.event.dom.client.MouseDownEvent;
-import com.google.gwt.event.dom.client.MouseDownHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.text.shared.Renderer;
@@ -58,8 +51,9 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.DeckLayoutPanel;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
+import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.HorizontalPanel;
-import com.google.gwt.user.client.ui.Image;
+import com.google.gwt.user.client.ui.IntegerBox;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
@@ -76,6 +70,18 @@ public class ExportImage extends Html5DemoEntryPoint {
 	public final String KEY_BASE_NAME="exportimage_key_basename";
 	public final String KEY_BASE_PATH="exportimage_key_basepath";
 	public final String KEY_USE_MARKED="exportimage_key_usemarked";
+	
+	public final String KEY_FONT="exportimage_key_font";
+	public final String KEY_TEXT_COLOR="exportimage_key_text_color";
+	public final String KEY_BG_COLOR="exportimage_key_bg_color";
+	public final String KEY_BG_DIAMETER="exportimage_key_bg_diameter";
+	public final String KEY_BG_TYPE="exportimage_key_bg_type";
+	
+	public final int BG_TYPE_SQUARE=0;
+	public final int BG_TYPE_CIRCLE=1;
+	public final int BG_TYPE_NONE=2;
+	//public final int BG_TYPE_TRANSPARENT_SQUARE=3;
+	
 	
 	public static final int MODE_ERASE=0;
 	public static final int MODE_COLOR=3;
@@ -124,7 +130,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		topPanel.add(new Anchor(textConstants.Help(), "exportimage_help.html"));
 	
-		
+		topPanel.add(createSettingAnchor());
 		
 		VerticalPanel controler=new VerticalPanel();
 		controler.setSpacing(1);
@@ -227,6 +233,15 @@ public class ExportImage extends Html5DemoEntryPoint {
 		}
 		sizes.add(numberBox);
 		numberBox.setSelectedIndex(1);
+		
+		Button clearNumber=new Button("x",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				clearNumber();
+			}
+		});
+		sizes.add(clearNumber);
 		
 		
 		Button clearBt=new Button(textConstants.Clear_All(),new ClickHandler() {
@@ -516,6 +531,168 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		return root;
 	}
+	
+	protected void clearNumber() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	private IntegerBox makeIntegerBox(Panel parent,String name,int value){
+		HorizontalPanel h1=new HorizontalPanel();
+		//h.setWidth("100%");
+		
+		parent.add(h1);
+		
+		Label label=new Label(name);
+		label.setWidth("100px");
+		h1.add(label);
+		
+		IntegerBox box=new IntegerBox();
+		box.setWidth("40px");
+		box.setValue(value);
+		h1.add(box);
+		return box;
+	}
+	
+	private TextBox makeTextBox(Panel parent,String name,String value){
+		HorizontalPanel h=new HorizontalPanel();
+		parent.add(h);
+		
+		Label label=new Label(name);
+		label.setWidth("100px");
+		h.add(label);
+		
+		TextBox box=new TextBox();
+		box.setValue(value);
+		h.add(box);
+		return box;
+	}
+	
+	private ColorBox makeColorBox(Panel parent,String name,String value){
+		HorizontalPanel h=new HorizontalPanel();
+		parent.add(h);
+		
+		Label label=new Label(name);
+		label.setWidth("100px");
+		h.add(label);
+		
+		ColorBox box=new ColorBox();
+		box.setValue(value);
+		h.add(box);
+		return box;
+	}
+	
+	private class BGType{
+		private int type;
+		public BGType(int type, String label) {
+			super();
+			this.type = type;
+			this.label = label;
+		}
+		public int getType() {
+			return type;
+		}
+		public void setType(int type) {
+			this.type = type;
+		}
+		public String getLabel() {
+			return label;
+		}
+		public void setLabel(String label) {
+			this.label = label;
+		}
+		private String label;
+	}
+	
+	@Override
+	 public Panel createMainSettingPage(){
+			VerticalPanel panel=new VerticalPanel();
+			HTML html=new HTML("<h3>"+textConstants.Number()+"</h3>");
+			panel.add(html);
+			
+			fontBox = makeTextBox(panel,textConstants.font(),storageControler.getValue(KEY_FONT,"16px Audiowide"));
+			
+			
+			textColorBox = makeColorBox(panel,textConstants.textcolor(),storageControler.getValue(KEY_TEXT_COLOR,  "#000000"));
+			
+			
+			bgColorBox = makeColorBox(panel,textConstants.bgcolor(),storageControler.getValue(KEY_BG_COLOR, "#ff0000"));
+			
+			
+			digimeterBox = makeIntegerBox(panel, textConstants.digimeter(), storageControler.getValue(KEY_BG_COLOR, 24));
+			
+			
+			final List<BGType> types=Lists.newArrayList(new BGType(BG_TYPE_SQUARE, textConstants.square()),
+					new BGType(BG_TYPE_CIRCLE, textConstants.circle()),
+					new BGType(BG_TYPE_NONE, textConstants.none())
+			);
+			int selection=storageControler.getValue(KEY_BG_TYPE, 0);
+			BGType bgtype=null;
+			for(BGType type:types){
+				if(type.getType()==selection){
+					bgtype=type;
+					break;
+				}
+			}
+			if(bgtype==null){
+				bgtype=types.get(0);
+			}
+			
+			bgTypeBox = new ValueListBox<ExportImage.BGType>(new Renderer<BGType>() {
+
+				@Override
+				public String render(BGType object) {
+					return object.getLabel();
+				}
+
+				@Override
+				public void render(BGType object, Appendable appendable) throws IOException {
+					// TODO Auto-generated method stub
+					
+				}
+			});
+			bgTypeBox.setValue(bgtype);
+			bgTypeBox.setAcceptableValues(types);
+			
+			
+			HorizontalPanel h1=new HorizontalPanel();
+			panel.add(h1);
+			
+			Label label=new Label(textConstants.bgtype());
+			label.setWidth("100px");
+			h1.add(label);
+			
+			
+			
+			h1.add(bgTypeBox);
+			
+			Button resetBt=new Button(textConstants.reset(),new ClickHandler() {
+				@Override
+				public void onClick(ClickEvent event) {
+					fontBox.setValue("16px Audiowide");
+					textColorBox.setValue("#000000");
+					bgColorBox.setValue("#ff0000");
+					digimeterBox.setValue(24);
+					bgTypeBox.setValue(types.get(0));
+				}
+			});
+			panel.add(resetBt);
+			
+			//TODO create list box
+			//valuelistbox
+			
+			/*
+			 * フォント
+文字色
+背景色
+背景形
+背景直径
+			 */
+			
+			
+			return panel;
+		}
+	
 	private NumberData tmpNumber;
 	private class NumberData{
 		int x;
@@ -817,19 +994,30 @@ public class ExportImage extends Html5DemoEntryPoint {
 		canvas.getContext2d().drawImage(data.getImageCanvas().getCanvasElement(), 0, 0);
 		
 		if(tmpNumber!=null){
-			int r=20;
-			int dx=tmpNumber.getX()-r;
-			int dy=tmpNumber.getY()-r;
-			int w=r*2;
-			int h=r*2;
+			double r=(double)digimeterBox.getValue()/2;
+			double dx=(double)tmpNumber.getX()-r;
+			double dy=(double)tmpNumber.getY()-r;
+			double w=r*2;
+			double h=r*2;
 			
-			Rect rect=new Rect(dx, dy, w, h);
-			canvas.getContext2d().setFillStyle(colorPicker.getValue());
-			canvas.getContext2d().fillRect(dx, dy, w, h);
+			Rect rect=new Rect((int)dx, (int)dy, (int)w, (int)h);
+			if(bgTypeBox.getValue().getType()==BG_TYPE_SQUARE){
+				canvas.getContext2d().setFillStyle(bgColorBox.getValue());
+				canvas.getContext2d().fillRect(dx, dy, w, h);
+			}else if(bgTypeBox.getValue().getType()==BG_TYPE_CIRCLE){
+				canvas.getContext2d().setFillStyle(bgColorBox.getValue());
+				
+				CanvasPaintUtils.drawCircleInRect(canvas, (int)dx, (int)dy,(int) w,(int) h, true, true);
+				
+				
+			}else{//none
+				
+			}
+			
 			//set font?
 			
-			canvas.getContext2d().setFont("32px Audiowide");
-			canvas.getContext2d().setFillStyle("#000000");//TODO text-picker
+			canvas.getContext2d().setFont(fontBox.getText());
+			canvas.getContext2d().setFillStyle(textColorBox.getValue());//TODO text-picker
 			
 			
 			drawCenterInRect(canvas, ""+tmpNumber.getNumber(), rect);
@@ -853,7 +1041,22 @@ public class ExportImage extends Html5DemoEntryPoint {
 		canvas.getContext2d().restore();
 	}
 	
-	
+	@Override
+	public void onCloseSettingPanel(){
+		try {
+			//number settings
+			storageControler.setValue(KEY_FONT, fontBox.getValue());
+			storageControler.setValue(KEY_TEXT_COLOR, textColorBox.getValue());
+			storageControler.setValue(KEY_BG_COLOR, bgColorBox.getValue());
+			
+			storageControler.setValue(KEY_BG_DIAMETER, digimeterBox.getValue());
+			storageControler.setValue(KEY_BG_TYPE, bgTypeBox.getValue().getType());
+		} catch (StorageException e) {
+			LogUtils.log(e.getMessage());
+			//TODO 
+		}
+	}
+
 
 	private ListBox sizeBox;
 	private TextBox nameBox;
@@ -864,6 +1067,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 	private CheckBox markedCheck;
 	private CanvasDragMoveControler moveControler;
 	private ListBox numberBox;
+	private ValueListBox<BGType> bgTypeBox;
+	private IntegerBox digimeterBox;
+	private ColorBox bgColorBox;
+	private ColorBox textColorBox;
+	private TextBox fontBox;
 	
 	
 
