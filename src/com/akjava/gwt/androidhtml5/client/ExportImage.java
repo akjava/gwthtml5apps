@@ -2,7 +2,9 @@ package com.akjava.gwt.androidhtml5.client;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import com.akjava.gwt.androidhtml5.client.data.ImageElementData;
 import com.akjava.gwt.html5.client.download.HTML5Download;
@@ -29,6 +31,7 @@ import com.akjava.lib.common.io.FileType;
 import com.google.common.base.Ascii;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
@@ -495,9 +498,16 @@ public class ExportImage extends Html5DemoEntryPoint {
 			public void start(int sx, int sy) {
 				// TODO Auto-generated method stub
 				if(penMode==MODE_NUMBER){
-					tmpNumber=new NumberData(numberBox.getSelectedIndex());
-					tmpNumber.setX(sx);
-					tmpNumber.setY(sy);
+					if(moveControler.isShiftKeyDown()){
+						int selection=numberBox.getSelectedIndex();
+						if(selection<numberBox.getItemCount()-1){
+							numberBox.setSelectedIndex(selection+1);	
+						}	
+					}
+					NumberData number=new NumberData(numberBox.getSelectedIndex());
+					number.setX(sx);
+					number.setY(sy);
+					addNumberToCurrent(number);
 					updateCanvas();
 				}
 			}
@@ -533,8 +543,8 @@ public class ExportImage extends Html5DemoEntryPoint {
 	}
 	
 	protected void clearNumber() {
-		// TODO Auto-generated method stub
-		
+		removeNumberToCurrent(new NumberData(numberBox.getSelectedIndex()));
+		updateCanvas();
 	}
 
 	private IntegerBox makeIntegerBox(Panel parent,String name,int value){
@@ -619,7 +629,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			bgColorBox = makeColorBox(panel,textConstants.bgcolor(),storageControler.getValue(KEY_BG_COLOR, "#ff0000"));
 			
 			
-			digimeterBox = makeIntegerBox(panel, textConstants.digimeter(), storageControler.getValue(KEY_BG_COLOR, 24));
+			digimeterBox = makeIntegerBox(panel, textConstants.digimeter(), storageControler.getValue(KEY_BG_DIAMETER, 24));
 			
 			
 			final List<BGType> types=Lists.newArrayList(new BGType(BG_TYPE_SQUARE, textConstants.square()),
@@ -693,7 +703,39 @@ public class ExportImage extends Html5DemoEntryPoint {
 			return panel;
 		}
 	
-	private NumberData tmpNumber;
+	
+	
+	private void addNumberToCurrent(NumberData data){
+		if(selection==null){
+			return;
+		}
+		List<NumberData> numbers=selection.getNumbers();
+		
+		int index=numbers.indexOf(data);
+		if(index!=-1){
+			numbers.get(index).setX(data.getX());
+			numbers.get(index).setY(data.getY());
+		}else{
+			numbers.add(data);
+		}
+	}
+	
+	private void removeNumberToCurrent(NumberData data){
+		if(selection==null){
+			return;
+		}
+		List<NumberData> numbers=selection.getNumbers();
+		numbers.remove(data);
+	}
+	
+	private List<NumberData> getCurrentNumbers(){
+		if(selection==null){
+			return null;
+		}
+		List<NumberData> numbers=selection.getNumbers();
+		return numbers;
+	}
+	
 	private class NumberData{
 		int x;
 		int y;
@@ -717,9 +759,34 @@ public class ExportImage extends Html5DemoEntryPoint {
 		public int getNumber() {
 			return number;
 		}
-		public void setNumber(int number) {
-			this.number = number;
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + number;
+			return result;
 		}
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			NumberData other = (NumberData) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (number != other.number)
+				return false;
+			return true;
+		}
+		private ExportImage getOuterType() {
+			return ExportImage.this;
+		}
+		
+		
 	}
 	
 	private void erase(int x1,int y1,int x2,int y2){
@@ -830,6 +897,10 @@ public class ExportImage extends Html5DemoEntryPoint {
 	public class ImageElementCaptionData extends ImageElementData{
 		private String caption;
 		private Canvas imageCanvas;
+		private List<NumberData> numbers=new ArrayList<ExportImage.NumberData>();
+		public List<NumberData> getNumbers() {
+			return numbers;
+		}
 		public Canvas getImageCanvas() {
 			return imageCanvas;
 		}
@@ -993,10 +1064,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 		ImageElementUtils.copytoCanvas(data.getImageElement(), canvas);
 		canvas.getContext2d().drawImage(data.getImageCanvas().getCanvasElement(), 0, 0);
 		
-		if(tmpNumber!=null){
+		if(getCurrentNumbers()!=null){
+		for(NumberData number:getCurrentNumbers()){
 			double r=(double)digimeterBox.getValue()/2;
-			double dx=(double)tmpNumber.getX()-r;
-			double dy=(double)tmpNumber.getY()-r;
+			double dx=(double)number.getX()-r;
+			double dy=(double)number.getY()-r;
 			double w=r*2;
 			double h=r*2;
 			
@@ -1020,11 +1092,13 @@ public class ExportImage extends Html5DemoEntryPoint {
 			canvas.getContext2d().setFillStyle(textColorBox.getValue());//TODO text-picker
 			
 			
-			drawCenterInRect(canvas, ""+tmpNumber.getNumber(), rect);
+			drawCenterInRect(canvas, ""+number.getNumber(), rect);
 			
+		}
 		}
 	}
 	
+	//TODO replace common
 	public static void drawCenterInRect(Canvas canvas,String text,Rect rect){
 		canvas.getContext2d().save();
 		TextMetrics metrix=canvas.getContext2d().measureText(text);
@@ -1055,6 +1129,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			LogUtils.log(e.getMessage());
 			//TODO 
 		}
+		updateCanvas();//possible number-settings changed.
 	}
 
 
