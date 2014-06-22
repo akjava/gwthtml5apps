@@ -89,11 +89,12 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 				settingTitles.add(new Label(getAppName()+" >> "+textConstants.Settings()));
 				
 				
-				VerticalPanel settingMain=new VerticalPanel();
-				settingMain.setSize("100%", "100%");
+				DockLayoutPanel settingMain=new DockLayoutPanel(Unit.PX);
+				
 				
 				HorizontalPanel firstControlPanel=new HorizontalPanel();
-				settingMain.add(firstControlPanel);
+				firstControlPanel.setSpacing(2);
+				settingMain.addNorth(firstControlPanel,30);
 				Button closeBt=new Button(textConstants.close(),new ClickHandler() {
 					@Override
 					public void onClick(ClickEvent event) {
@@ -107,7 +108,9 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 				
 				settingPanel.addNorth(settingTitles,30);
 				settingPanel.add(settingMain);
-				settingMain.add(createMainSettingPage());
+				Panel panel=createMainSettingPage();
+				panel.getElement().getStyle().setMargin(12, Unit.PX);
+				settingMain.add(panel);
 				
 				rootDeck.add(settingPanel);//index 1 is setting
 		
@@ -211,7 +214,7 @@ public abstract class Html5DemoEntryPoint implements EntryPoint {
 	}
 	//TODO move up
 	public Anchor createSettingAnchor(){
-		Anchor setting=new Anchor("Settings");
+		Anchor setting=new Anchor(textConstants.Settings());
 		//topPanel.add(setting);
 		setting.addClickHandler(new ClickHandler() {
 			
