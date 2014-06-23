@@ -543,11 +543,9 @@ public class ExportImage extends Html5DemoEntryPoint {
 					addNumberToCurrent(number);
 					updateCanvas();
 				}else if(penMode==MODE_COLOR){
-					if(moveControler.isShiftKeyDown()){
-						shiftDownX=sx;
-						shiftDownY=sy;
-						firstDraged=false;
-						}
+					shiftDownX=sx;
+					shiftDownY=sy;
+					firstDraged=false;
 					}
 			}
 			
@@ -580,6 +578,10 @@ public class ExportImage extends Html5DemoEntryPoint {
 							endX=shiftDownX;
 						}
 						
+					}else{
+						shiftDownX=endX;
+						shiftDownY=endY;
+						//for next shift down
 					}
 					drawLine(startX,startY,endX,endY,colorPicker.getValue());
 				}else if(penMode==MODE_ERASE){
@@ -593,7 +595,6 @@ public class ExportImage extends Html5DemoEntryPoint {
 			
 			@Override
 			public void end(int sx, int sy) {
-				// TODO Auto-generated method stub
 				
 			}
 		});
