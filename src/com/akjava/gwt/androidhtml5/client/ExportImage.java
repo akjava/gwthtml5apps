@@ -522,7 +522,10 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		//can i this with event-bus?
 		moveControler = new CanvasDragMoveControler(canvas, new MoveListener() {
-			
+			int shiftDownX;
+			int shiftDownY;
+			boolean firstDraged;
+			boolean horizontalOnly;
 			@Override
 			public void start(int sx, int sy) {
 				// TODO Auto-generated method stub
@@ -539,7 +542,13 @@ public class ExportImage extends Html5DemoEntryPoint {
 					number.setY(sy);
 					addNumberToCurrent(number);
 					updateCanvas();
-				}
+				}else if(penMode==MODE_COLOR){
+					if(moveControler.isShiftKeyDown()){
+						shiftDownX=sx;
+						shiftDownY=sy;
+						firstDraged=false;
+						}
+					}
 			}
 			
 			@Override
@@ -552,6 +561,26 @@ public class ExportImage extends Html5DemoEntryPoint {
 				
 				
 				if(penMode==MODE_COLOR){
+					//one direction
+					if(moveControler.isShiftKeyDown()){
+						if(!firstDraged){
+							if(vectorX>vectorY){
+								horizontalOnly=true;
+							}else{
+								horizontalOnly=false;
+							}
+							firstDraged=true;
+						}
+						
+						if(horizontalOnly){
+							startY=shiftDownY;
+							endY=shiftDownY;
+						}else{
+							startX=shiftDownX;
+							endX=shiftDownX;
+						}
+						
+					}
 					drawLine(startX,startY,endX,endY,colorPicker.getValue());
 				}else if(penMode==MODE_ERASE){
 					

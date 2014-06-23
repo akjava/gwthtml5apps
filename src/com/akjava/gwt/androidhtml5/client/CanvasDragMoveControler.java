@@ -92,14 +92,7 @@ public  class CanvasDragMoveControler{
 		int dx=x-startX;
 		int dy=y-startY;
 		
-		//one direction
-		if(isShiftKeyDown()){
-			if(dx>dy){
-				y=startY;
-			}else{
-				x=startX;
-			}
-		}
+		
 		
 		
 		if(moveListener!=null && (dx!=0 || dy!=0)){
