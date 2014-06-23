@@ -360,8 +360,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		markedTextArea.setSize("350px", "180px");
 		controler.add(markedTextArea);
 		
-		downloadLinks = new HorizontalPanel();
-		controler.add(downloadLinks);
+		
 		
 		
 
@@ -474,8 +473,11 @@ public class ExportImage extends Html5DemoEntryPoint {
 		captionPanel.add(update2Bt);
 		controler.add(captionPanel);
 		
+		downloadLinks = new HorizontalPanel();
+		controler.add(downloadLinks);
+		
 		eastPanel = new DockLayoutPanel(Unit.PX);
-		eastPanel.addNorth(controler, 380);
+		eastPanel.addNorth(controler, 400);
 		
 		ScrollPanel cellScroll=new ScrollPanel();
 		cellScroll.setSize("100%", "100%");
@@ -518,7 +520,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		
 		
 		
-	
+		//can i this with event-bus?
 		moveControler = new CanvasDragMoveControler(canvas, new MoveListener() {
 			
 			@Override
@@ -1087,13 +1089,15 @@ public class ExportImage extends Html5DemoEntryPoint {
 	}
 	
 	
-	
+	/*
+	 * must draw based on ImageElementCaptionData data
+	 */
 	private void drawCanvas(ImageElementCaptionData data){
 		ImageElementUtils.copytoCanvas(data.getImageElement(), canvas);
 		canvas.getContext2d().drawImage(data.getImageCanvas().getCanvasElement(), 0, 0);
 		
-		if(getCurrentNumbers()!=null){
-		for(NumberData number:getCurrentNumbers()){
+		if(data.getNumbers()!=null){
+		for(NumberData number:data.getNumbers()){
 			double r=(double)digimeterBox.getValue()/2;
 			double dx=(double)number.getX()-r;
 			double dy=(double)number.getY()-r;
