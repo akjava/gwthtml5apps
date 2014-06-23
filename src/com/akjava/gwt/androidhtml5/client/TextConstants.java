@@ -125,6 +125,9 @@ public String Image_Caption();
 public String ExportImage();
 public String Number();
 
+public String Clear_Numbers();
+public String Clear_Lines();
+
 public String textcolor();
 public String bgcolor();
 public String digimeter();

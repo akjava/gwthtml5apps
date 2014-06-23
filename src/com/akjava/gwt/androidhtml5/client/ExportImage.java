@@ -247,6 +247,32 @@ public class ExportImage extends Html5DemoEntryPoint {
 		sizes.add(clearNumber);
 		
 		
+		
+		Button clearLinesBt=new Button(textConstants.Clear_Lines(),new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				if(selection==null){
+					return;
+				}
+				CanvasUtils.clear(selection.getImageCanvas());
+				updateCanvas();
+			}
+		});
+		clearAllPanel.add(clearLinesBt);
+		
+		Button clearNumbersBt=new Button(textConstants.Clear_Numbers(),new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				if(selection==null){
+					return;
+				}
+				getCurrentNumbers().clear();
+				updateCanvas();
+			}
+		});
+		clearAllPanel.add(clearNumbersBt);
+		
+		
 		Button clearBt=new Button(textConstants.Clear_All(),new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
@@ -254,6 +280,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 					return;
 				}
 				CanvasUtils.clear(selection.getImageCanvas());
+				getCurrentNumbers().clear();
 				updateCanvas();
 			}
 		});
@@ -499,6 +526,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 				// TODO Auto-generated method stub
 				if(penMode==MODE_NUMBER){
 					if(moveControler.isShiftKeyDown()){
+						
 						int selection=numberBox.getSelectedIndex();
 						if(selection<numberBox.getItemCount()-1){
 							numberBox.setSelectedIndex(selection+1);	

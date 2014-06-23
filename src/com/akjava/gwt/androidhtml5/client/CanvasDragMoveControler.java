@@ -42,6 +42,7 @@ public  class CanvasDragMoveControler{
 
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
+				isShiftKeyDown=event.isShiftKeyDown();
 				end(event.getX(), event.getY());
 			}
 		});
@@ -50,6 +51,7 @@ public  class CanvasDragMoveControler{
 			
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
+				isShiftKeyDown=event.isShiftKeyDown();
 				start(event.getX(), event.getY());
 			}
 		});
@@ -58,6 +60,7 @@ public  class CanvasDragMoveControler{
 			
 			@Override
 			public void onMouseOut(MouseOutEvent event) {
+				isShiftKeyDown=event.isShiftKeyDown();
 				end(event.getX(), event.getY());
 			}
 		});
