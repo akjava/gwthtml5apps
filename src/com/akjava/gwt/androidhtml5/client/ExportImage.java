@@ -202,6 +202,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				penMode=MODE_ERASE;
+				sizeListBox.getElement().removeAttribute("disabled");
 			}
 		});
 		pens.add(eraseR);
@@ -214,6 +215,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				penMode=MODE_COLOR;
+				sizeListBox.getElement().removeAttribute("disabled");
 			}
 		});
 		pickR.setValue(true);
@@ -226,6 +228,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 			@Override
 			public void onClick(ClickEvent event) {
 				penMode=MODE_NUMBER;
+				sizeListBox.getElement().setAttribute("disabled", "true");
 			}
 		});
 		
@@ -236,6 +239,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		}
 		sizes.add(numberBox);
 		numberBox.setSelectedIndex(1);
+		
 		
 		Button clearNumber=new Button("x",new ClickHandler() {
 			
@@ -309,6 +313,15 @@ public class ExportImage extends Html5DemoEntryPoint {
 		});
 		namePanel.add(updateBt);
 		controler.add(namePanel);
+		
+		namePanel.add(new Label(textConstants.StartNumber()));
+		startNumberBox = new ListBox();
+		for(int i=1;i<=10;i++){
+			startNumberBox.addItem(""+i);
+		}
+		namePanel.add(startNumberBox);
+		
+		
 		
 		HorizontalPanel dirPanel=new HorizontalPanel();
 		dirPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
@@ -893,7 +906,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		if(fileType==null){
 			return "";
 		}
-		int index=easyCellTableObjects.getDatas().indexOf(data)+1;//start 0
+		int index=easyCellTableObjects.getDatas().indexOf(data)+startNumberBox.getSelectedIndex()+1;
 		return nameBox.getText()+index+"."+extension;
 	}
 
@@ -1209,6 +1222,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 	private ColorBox bgColorBox;
 	private ColorBox textColorBox;
 	private TextBox fontBox;
+	private ListBox startNumberBox;
 	
 	
 
