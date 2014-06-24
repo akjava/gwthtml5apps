@@ -137,6 +137,6 @@ public String none();
 public String bgtype();
 
 public String StartNumber();
-public String BackgroundColor();
+
 
 }

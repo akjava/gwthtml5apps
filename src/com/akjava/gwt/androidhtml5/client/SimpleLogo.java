@@ -994,7 +994,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		String name=titleBox.getText().isEmpty()?"logo":titleBox.getText();
 		
 		
-		Anchor anchor=HTML5Download.get().generateBase64DownloadLink(dataUrl, "image/"+type, name+"."+extension, "Download", true);
+		Anchor anchor=HTML5Download.get().generateBase64DownloadLink(dataUrl, "image/"+type, name+"."+extension, textConstants.Download(), true);
 		anchor.setStylePrimaryName("bt");
 		downloadArea.clear();
 		downloadArea.add(anchor);
