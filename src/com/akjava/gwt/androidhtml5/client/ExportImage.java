@@ -40,6 +40,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -320,6 +322,13 @@ public class ExportImage extends Html5DemoEntryPoint {
 			startNumberBox.addItem(""+i);
 		}
 		namePanel.add(startNumberBox);
+		startNumberBox.addChangeHandler(new ChangeHandler() {
+			
+			@Override
+			public void onChange(ChangeEvent event) {
+				updateList();
+			}
+		});
 		
 		
 		
@@ -451,10 +460,9 @@ public class ExportImage extends Html5DemoEntryPoint {
 								if(fileType==null){
 									//return "";
 								}
-								int imgIndex=easyCellTableObjects.getDatas().indexOf(data)+1;//start 0
 								
 								drawCanvas(data);//need redraw here.because when pushed button's row is not selected,doSelect called after update and canvas was not drawed.
-								String name=nameBox.getValue()+imgIndex+"."+extension;
+								String name=toImageFileName(data);
 								Anchor anchor=HTML5Download.get().generateBase64DownloadLink(canvas.toDataUrl(), fileType.getMimeType(),name, name	, true);
 								//anchor.setStylePrimaryName("bt");
 								downloadLinks.add(anchor);
