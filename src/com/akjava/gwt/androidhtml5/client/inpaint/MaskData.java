@@ -1,6 +1,6 @@
 package com.akjava.gwt.androidhtml5.client.inpaint;
 
-import com.akjava.gwt.lib.client.canvas.Rect;
+import com.akjava.lib.common.graphics.Rect;
 
 public class MaskData {
 private boolean transparent=true;//most use

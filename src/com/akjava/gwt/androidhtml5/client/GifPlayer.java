@@ -62,7 +62,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	@Override
 	public Panel initializeWidget() {
 		
-	root=new DropDockDataUrlRootPanel(Unit.PX,false){
+	mainRoot=new DropDockDataUrlRootPanel(Unit.PX,false){
 			
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
@@ -75,10 +75,10 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		};
 		
 	
-		root.setFilePredicate(FilePredicates.getImageExtensionOnly());
+		mainRoot.setFilePredicate(FilePredicates.getImageExtensionOnly());
 		
 		
-		root.addMouseWheelHandler(new MouseWheelHandler() {
+		mainRoot.addMouseWheelHandler(new MouseWheelHandler() {
 			
 			@Override
 			public void onMouseWheel(MouseWheelEvent event) {
@@ -93,7 +93,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		
 		dock = new DockLayoutPanel(Unit.PX);
 		//dock.setSize("100%", "100%");
-		root.add(dock);
+		mainRoot.add(dock);
 		
 		topPanel = new HorizontalPanel();
 		topPanel.setWidth("100%");
@@ -280,7 +280,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 			}
 		});
 		
-		return root;
+		return mainRoot;
 	}
 	
 
@@ -426,7 +426,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	private Image image;
 	private ScrollPanel mainScrollPanel;
 	private DockLayoutPanel eastPanel;
-	private DropDockDataUrlRootPanel root;
+	private DropDockDataUrlRootPanel mainRoot;
 	private Button hideBt;
 	private DeckLayoutPanel mainPanel;
 
@@ -469,7 +469,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 		image.removeFromParent();
 		mainPanel.add(image);
 		mainPanel.showWidget(0);
-		root.add(dock);
+		mainRoot.add(dock);
 		updateImageSize();
 		show=true;
 		}
@@ -478,7 +478,7 @@ public class GifPlayer extends Html5DemoEntryPoint {
 	private void hideWidgets(){
 		image.removeFromParent();
 		dock.removeFromParent();
-		root.add(image);
+		mainRoot.add(image);
 		updateImageSize();
 		show=false;
 	}

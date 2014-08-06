@@ -1072,7 +1072,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		Timer timer=new Timer(){//TODO fix it
 			@Override
 			public void run() {
-				startCreateCommand();
+				startCreateCommand();//for undo
 			}
 		};
 		timer.schedule(50);
@@ -1289,7 +1289,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	}
 
 	
-	public class XYPoint{
+	public static class XYPoint{
 		public XYPoint(int x,int y){
 			this.x=x;
 			this.y=y;
@@ -1309,6 +1309,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		}
 		private int y;
 		
+		public String toString(){
+			return x+":"+y;
+		}
 	}
 	
 	boolean mouseDown;

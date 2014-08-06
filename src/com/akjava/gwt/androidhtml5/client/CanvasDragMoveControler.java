@@ -10,6 +10,7 @@ import com.google.gwt.event.dom.client.MouseOutEvent;
 import com.google.gwt.event.dom.client.MouseOutHandler;
 import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
+import com.google.gwt.event.shared.HandlerRegistration;
 
 public  class CanvasDragMoveControler{
 	
@@ -25,10 +26,15 @@ public  class CanvasDragMoveControler{
 		return isShiftKeyDown;
 	}
 
+	private MouseMoveHandler moveHandler;
+	private MouseUpHandler upHandler;
+	private MouseDownHandler downHandler;
+	
+	private HandlerRegistration moveRegistration,upRegistration,downRegistration;
 	public CanvasDragMoveControler(Canvas canvas,MoveListener moveListener) {
 		this(moveListener);
 		
-		canvas.addMouseMoveHandler(new MouseMoveHandler() {
+		moveHandler=new MouseMoveHandler() {
 			@Override
 			public void onMouseMove(MouseMoveEvent event) {
 				if(isStarted()){
@@ -36,25 +42,28 @@ public  class CanvasDragMoveControler{
 					move(event.getX(), event.getY());
 				}
 			}
-		});
+		};
+		moveRegistration=canvas.addMouseMoveHandler(moveHandler);
 		
-		canvas.addMouseUpHandler(new MouseUpHandler() {
+		upHandler=new MouseUpHandler() {
 
 			@Override
 			public void onMouseUp(MouseUpEvent event) {
 				isShiftKeyDown=event.isShiftKeyDown();
 				end(event.getX(), event.getY());
 			}
-		});
+		};
+		upRegistration=canvas.addMouseUpHandler(upHandler);
 		
-		canvas.addMouseDownHandler(new MouseDownHandler() {
+		downHandler=new MouseDownHandler() {
 			
 			@Override
 			public void onMouseDown(MouseDownEvent event) {
 				isShiftKeyDown=event.isShiftKeyDown();
 				start(event.getX(), event.getY());
 			}
-		});
+		};
+		downRegistration=canvas.addMouseDownHandler(downHandler);
 		
 		canvas.addMouseOutHandler(new MouseOutHandler() {
 			
@@ -64,6 +73,9 @@ public  class CanvasDragMoveControler{
 				end(event.getX(), event.getY());
 			}
 		});
+	}
+	public void removeHandlers(){
+		moveRegistration.removeHandler();
 	}
 	
 	private int startX;
