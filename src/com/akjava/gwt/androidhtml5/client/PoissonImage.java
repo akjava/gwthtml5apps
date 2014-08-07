@@ -51,6 +51,80 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	 Driver driver = GWT.create(Driver.class);
 	private VerticalPanel containers;
 
+	public  static class SimpleMixCanvas extends VerticalPanel{
+		private Canvas canvas;
+		private boolean showOrigin=true;
+		public boolean isShowOrigin() {
+			return showOrigin;
+		}
+		public void setShowOrigin(boolean showOrigin) {
+			this.showOrigin = showOrigin;
+		}
+
+		private ImageElement origin;
+		private ImageElement poissonedImage;
+		
+		
+		public ImageElement getPoissonedImage() {
+			return poissonedImage;
+		}
+		public void setPoissonedImage(ImageElement poissonedImage) {
+			this.poissonedImage = poissonedImage;
+		}
+		public SimpleMixCanvas(){
+			canvas=CanvasUtils.createCanvas(100, 100);
+			
+			canvas.addClickHandler(new ClickHandler() {
+				
+				@Override
+				public void onClick(ClickEvent event) {
+					showOrigin=!showOrigin;
+					update();
+				}
+			});
+			CanvasUtils.disableSelection(canvas);
+			add(canvas);
+		}
+		public void setDest(ImageElement origin){
+			ImageElementUtils.copytoCanvas(origin, canvas, false);
+			this.origin=origin;
+			update();
+		}
+		/*
+		private Canvas srcCanvas;
+		private ImageData destImage;
+		public void setMixed(Canvas srcCanvas,ImageData destImage){
+			this.srcCanvas=srcCanvas;
+			this.destImage=destImage;
+		}
+		
+		 //CanvasTools.from(canvas).clear().put().drawxx();
+				CanvasUtils.clear(canvas);
+				if(destImage!=null && srcCanvas!=null){
+				//CanvasUtils.putImageData(canvas,destImage)
+				canvas.getContext2d().putImageData(destImage, 0, 0);
+				//CanvasUtils.drawImageOnce(canvas,src,mode);
+				canvas.getContext2d().save();
+				canvas.getContext2d().setGlobalCompositeOperation(Composite.DESTINATION_OVER);
+				canvas.getContext2d().drawImage(srcCanvas.getCanvasElement(), 0, 0);
+				canvas.getContext2d().restore();
+				}
+		 */
+		
+		public void update(){
+			if(showOrigin){
+				CanvasUtils.clear(canvas);
+				//CanvasTools.from(canvas).clear().ignoreNull().drawImage(origin)
+			if(origin!=null){
+			canvas.getContext2d().drawImage(origin, 0, 0);
+			}
+			}else{
+				if(poissonedImage!=null){
+					canvas.getContext2d().drawImage(poissonedImage,0,0);
+				}
+			}
+		}
+	}
 
 
 	public  static class PoissonImageData{
@@ -143,6 +217,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			this.possitionIteration = possitionIteration;
 		}
 		public PoissonImageDataEditor(final PoissonExecuter executer){
+			
+			HorizontalPanel h=new HorizontalPanel();
+			add(h);
 			imageMaskDataEditor=new ImageMaskDataEditor(){
 				@Override
 				public void updateCanvas() {
@@ -157,19 +234,22 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 				}
 			}
 			;
-			this.add(imageMaskDataEditor);
+			h.add(imageMaskDataEditor);
 			
 			posScaleAngleDataEditor=new ImagePosScaleAngleEditor(){
 				public void doOverLayer(Canvas canvas) {
+					CanvasUtils.setBackgroundImage(imageMaskDataEditor.getCanvas(), canvas.toDataUrl());//link image
+					
 					canvas.getContext2d().save();
 					canvas.getContext2d().setGlobalAlpha(0.5);
 					canvas.getContext2d().drawImage(layerCanvas.getCanvasElement(), 0, 0);
 					canvas.getContext2d().restore();
-					
+					if(possitionIteration!=0){
 					executer.doPoisson(possitionIteration);//for preview,//this make slow
+					}
 				}
 			};
-			this.add(posScaleAngleDataEditor);
+			h.add(posScaleAngleDataEditor);
 			
 			overrayImageEditor=SimpleEditor.of();
 		}
@@ -229,7 +309,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 
 	@Override
 	public int getEastPanelWidth() {
-		return 400;
+		return 200;
 	}
 
 	@Override
@@ -260,6 +340,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			@Override
 			public void onLoad(final ImageElement element) {
 				destImageElement=element;
+				mixCanvas.setDest(destImageElement);
 				new ImageElementLoader().load(srcImage, new ImageElementListener() {
 					
 					@Override
@@ -284,35 +365,41 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		});
 		
 		
-		panel.add(new Label("dest"));
+		HorizontalPanel h=new HorizontalPanel();
+		panel.add(h);
+		h.setSpacing(16);
+		h.add(new Label("dest"));
 		
 		FileUploadForm destUpLoad=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			@Override
 			public void uploaded(File file, String text) {
+				
 				destImageElement=ImageElementUtils.create(text);
+				mixCanvas.setDest(destImageElement);
 				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
 			}
 		}, true);
-		panel.add(destUpLoad);
+		h.add(destUpLoad);
 		
-		panel.add(new Label("src"));
+		h.add(new Label("src"));
 		
 		FileUploadForm srcUpLoad=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			@Override
 			public void uploaded(File file, String text) {
+				
 				srcImageElement=ImageElementUtils.create(text);
 				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
 			}
 		}, true);
-		panel.add(srcUpLoad);
+		h.add(srcUpLoad);
 		
 		
 		editorPanel.add(editor);
 		
 		
-		previewIterationRange = new LabeledInputRange("Preview-Iteration:",1,100,20,"140px","400px") {
+		previewIterationRange = new LabeledInputRange("Preview-Iteration:",0,100,5,"140px","400px") {
 			
 			@Override
 			public void onValueChanged(int newValue) {
@@ -326,7 +413,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		};
 		editorPanel.add(previewIterationRange);
 		
-		final LabeledInputRange updateIterationRange = new LabeledInputRange("Update-Iteration:",20,400,100,"140px","400px") {
+		updateIterationRange = new LabeledInputRange("Update-Iteration:",20,400,100,"140px","400px") {
 			
 			@Override
 			public void onValueChanged(int newValue) {
@@ -358,13 +445,21 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	    
 	    panel.add(editorPanel);
 	    
-	    panel.add(containers);
+	    HorizontalPanel h2=new HorizontalPanel();
+		panel.add(h2);
+		
+		mixCanvas = new SimpleMixCanvas();
+		
+		h2.add(mixCanvas);
+	    h2.add(containers);
 	    
 	    return scroll;
 	}
 	
 
 	boolean possing;
+	private SimpleMixCanvas mixCanvas;
+	private LabeledInputRange updateIterationRange;
 	
 	/*
 	public static interface ButtonExecuteListener {
@@ -465,13 +560,13 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		ImageData imageData=data.getImageMaskData().getImageData();
 		//extremlly slow
-		LogUtils.log("create mask");
+		
 		Uint8Array masks=InPaint.createMaskByAlpha(imageData);
 		//TODO method
 		Canvas maskCanvas=CanvasUtils.createCanvas(imageData.getWidth(), imageData.getHeight());
 		
 		ImageData newData=CanvasUtils.getImageData(maskCanvas, false);
-		LogUtils.log("create imagedata");
+		
 		InPaint.createImageDataFromMask(newData, masks, 255, 255, 255, 255, false);
 		
 		maskCanvas.getContext2d().putImageData(newData, 0, 0);
@@ -506,11 +601,20 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		*/
 		//containers.add(srcCanvas);
 		
+		//mixCanvas.setMixed(srcCanvas,data.getImageMaskData().getImageData());
+	
+		
 		//data.getPosScaleAngleData()
 		Poisson.setImageDatas(srcData,from(pCanvas,data.getImageMaskData().getImageElement()), newData,resultData);
 		ImageData poisoned=Poisson.blend(iteration, 0, 0);
 		CanvasUtils.copyTo(poisoned, pCanvas);
 		containers.add(pCanvas);
+		if(iteration==updateIterationRange.getValue()){
+		mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
+		mixCanvas.setShowOrigin(false);
+		mixCanvas.update();
+		}
+		
 		possing=false;
 		}catch (Exception e) {
 			LogUtils.log(e.getMessage());

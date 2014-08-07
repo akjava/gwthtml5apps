@@ -163,8 +163,9 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 				}
 				}
 			}
-			
+			if(mouseDown){
 			updateCanvas();
+			}
 			
 			mouseMoved=false;
 			mouseDown=false;

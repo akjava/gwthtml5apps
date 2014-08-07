@@ -7,6 +7,7 @@ import com.akjava.gwt.html5.client.HTML5InputRange;
 import com.akjava.gwt.html5.client.InputRangeListener;
 import com.akjava.gwt.html5.client.InputRangeWidget;
 import com.akjava.gwt.lib.client.CanvasUtils;
+import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.dom.client.ImageElement;
@@ -20,6 +21,8 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValueEditor<PositionScaleAngleData>{
 
+
+	
 	public static class PositionScaleAngleData{
 		private double scale=1;
 		private double positionX;
@@ -65,6 +68,8 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 	public ImagePosScaleAngleEditor(){
 		this(null);
 	}
+
+	
 	public ImagePosScaleAngleEditor(@Nullable Canvas canvas){
 		if(canvas==null){
 			canvas=Canvas.createIfSupported();
@@ -99,6 +104,27 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 				
 			}
 		});
+		
+	Button sminus=new Button("-",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				int value=scaleRange.getValue()-1;
+				
+				scaleRange.setValue(value);
+			}
+		});
+		h1.add(sminus);
+	Button splus=new Button("+",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				int value=scaleRange.getValue()+1;
+				
+				scaleRange.setValue(value);
+			}
+		});
+		h1.add(splus);
 		
 		Button scale1=new Button("1.0",new ClickHandler() {
 			@Override
@@ -135,18 +161,7 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 				
 			}
 		});
-		Button plus=new Button("+",new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				int value=angleRange.getValue()+1;
-				if(value>180){
-					value=value-360;
-				}
-				angleRange.setValue(value);
-			}
-		});
-		h2.add(plus);
+	
 		Button minus=new Button("-",new ClickHandler() {
 			
 			@Override
@@ -159,7 +174,18 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 			}
 		});
 		h2.add(minus);
-		
+	Button plus=new Button("+",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				int value=angleRange.getValue()+1;
+				if(value>180){
+					value=value-360;
+				}
+				angleRange.setValue(value);
+			}
+		});
+		h2.add(plus);
 		Button leftTurn=new Button("-90",new ClickHandler() {
 			
 			@Override
