@@ -9,6 +9,9 @@ import com.akjava.gwt.html5.client.InputRangeListener;
 import com.akjava.gwt.html5.client.InputRangeWidget;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
+import com.akjava.gwt.html5.client.file.FileUploadForm;
+import com.akjava.gwt.html5.client.file.FileUtils;
+import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.inpaint.client.InPaint;
 import com.akjava.gwt.lib.client.CanvasUtils;
@@ -38,18 +41,19 @@ import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
-public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements PossionExecuter{
+public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements PoissonExecuter{
 
-	 interface Driver extends SimpleBeanEditorDriver< PoisonImageData,  PoisonImageDataEditor> {}
+	 interface Driver extends SimpleBeanEditorDriver< PoissonImageData,  PoissonImageDataEditor> {}
 	 Driver driver = GWT.create(Driver.class);
 	private VerticalPanel containers;
 
 
 
-	public  static class PoisonImageData{
+	public  static class PoissonImageData{
 		private ImageElement overrayImage;
 		public ImageElement getOverrayImage() {
 			return overrayImage;
@@ -59,7 +63,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 			this.overrayImage = overrayImage;
 		}
 
-		public PoisonImageData(ImageElement image,ImageElement overrayImage){
+		public PoissonImageData(ImageElement image,ImageElement overrayImage){
 			imageMaskData=new ImageMaskData();
 			imageMaskData.setImageElement(image);
 			this.overrayImage=overrayImage;
@@ -85,6 +89,8 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 			this.imageMaskData = imageMaskData;
 		}
 	}
+	
+	
 	
 	//TODO move to
 	public abstract class LabeledInputRange extends HorizontalPanel{
@@ -119,7 +125,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 	
 	
 	
-	public static class PoisonImageDataEditor extends VerticalPanel implements Editor<PoisonImageData>,ValueAwareEditor<PoisonImageData>{
+	public static class PoissonImageDataEditor extends VerticalPanel implements Editor<PoissonImageData>,ValueAwareEditor<PoissonImageData>{
 		ImageMaskDataEditor imageMaskDataEditor;
 		ImagePosScaleAngleEditor posScaleAngleDataEditor;
 		
@@ -136,7 +142,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 		public void setPossitionIteration(int possitionIteration) {
 			this.possitionIteration = possitionIteration;
 		}
-		public PoisonImageDataEditor(final PossionExecuter executer){
+		public PoissonImageDataEditor(final PoissonExecuter executer){
 			imageMaskDataEditor=new ImageMaskDataEditor(){
 				@Override
 				public void updateCanvas() {
@@ -160,7 +166,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 					canvas.getContext2d().drawImage(layerCanvas.getCanvasElement(), 0, 0);
 					canvas.getContext2d().restore();
 					
-					executer.doPossion(possitionIteration);//for preview,//this make slow
+					executer.doPoisson(possitionIteration);//for preview,//this make slow
 				}
 			};
 			this.add(posScaleAngleDataEditor);
@@ -168,7 +174,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 			overrayImageEditor=SimpleEditor.of();
 		}
 		@Override
-		public void setDelegate(EditorDelegate<PoisonImageData> delegate) {
+		public void setDelegate(EditorDelegate<PoissonImageData> delegate) {
 			//no error check
 		}
 		@Override
@@ -182,7 +188,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 			
 		}
 		@Override
-		public void setValue(PoisonImageData value) {
+		public void setValue(PoissonImageData value) {
 			
 			//based on image size  & set value
 			
@@ -233,11 +239,15 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 		return panel;
 	}
 	private LabeledInputRange previewIterationRange;
+	
+	private ImageElement destImageElement,srcImageElement;
 	@Override
 	public Panel getCenterPanel() {
+		ScrollPanel scroll=new ScrollPanel();
 		final VerticalPanel panel=new VerticalPanel();
+		scroll.add(panel);
 		//editor & editor
-		final PoisonImageDataEditor editor=new PoisonImageDataEditor(this);    
+		final PoissonImageDataEditor editor=new PoissonImageDataEditor(this);    
 		driver.initialize(editor);
 		
 		VerticalPanel editorPanel=new VerticalPanel();
@@ -249,12 +259,13 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 			
 			@Override
 			public void onLoad(final ImageElement element) {
+				destImageElement=element;
 				new ImageElementLoader().load(srcImage, new ImageElementListener() {
 					
 					@Override
 					public void onLoad(ImageElement element2) {
-						
-						driver.edit(new PoisonImageData(element,element2));
+						srcImageElement=element2;
+						driver.edit(new PoissonImageData(element,element2));
 					}
 					
 					@Override
@@ -271,6 +282,31 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 				LogUtils.log("load-faild:"+url);
 			}
 		});
+		
+		
+		panel.add(new Label("dest"));
+		
+		FileUploadForm destUpLoad=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			
+			@Override
+			public void uploaded(File file, String text) {
+				destImageElement=ImageElementUtils.create(text);
+				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
+			}
+		}, true);
+		panel.add(destUpLoad);
+		
+		panel.add(new Label("src"));
+		
+		FileUploadForm srcUpLoad=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			
+			@Override
+			public void uploaded(File file, String text) {
+				srcImageElement=ImageElementUtils.create(text);
+				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
+			}
+		}, true);
+		panel.add(srcUpLoad);
 		
 		
 		editorPanel.add(editor);
@@ -313,7 +349,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 	    	Button updateBt=new ExecuteButton("Update"){
 				@Override
 				public void executeOnClick() {
-					doPossion(updateIterationRange.getValue());
+					doPoisson(updateIterationRange.getValue());
 				}
 	    	};
 	    	
@@ -324,7 +360,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 	    
 	    panel.add(containers);
 	    
-	    return panel;
+	    return scroll;
 	}
 	
 
@@ -409,7 +445,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 	};
 	
 	
-	public void doPossion(int iteration){
+	public void doPoisson(int iteration){
 		if(possing){
 			return;
 		}
@@ -419,7 +455,7 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 		containers.clear();
 		
 		
-		PoisonImageData data=driver.flush();//possible called before data set and make that broken
+		PoissonImageData data=driver.flush();//possible called before data set and make that broken
 		
 		if(data.getOverrayImage()==null){
 			LogUtils.log("overrayImage is null");
@@ -471,8 +507,8 @@ public  class PoisonImage extends AbstractDropEastDemoEntryPoint implements Poss
 		//containers.add(srcCanvas);
 		
 		//data.getPosScaleAngleData()
-		Poison.setImageDatas(srcData,from(pCanvas,data.getImageMaskData().getImageElement()), newData,resultData);
-		ImageData poisoned=Poison.blend(iteration, 0, 0);
+		Poisson.setImageDatas(srcData,from(pCanvas,data.getImageMaskData().getImageElement()), newData,resultData);
+		ImageData poisoned=Poisson.blend(iteration, 0, 0);
 		CanvasUtils.copyTo(poisoned, pCanvas);
 		containers.add(pCanvas);
 		possing=false;

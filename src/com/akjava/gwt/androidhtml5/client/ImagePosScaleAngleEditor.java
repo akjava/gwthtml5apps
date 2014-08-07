@@ -86,7 +86,6 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 			public void changed(int newValue) {
 				updateImage();
 				updateScaleValue(newValue);
-				
 			}
 		});
 		scaleRange.addInputRangeListener(new InputRangeListener() {
@@ -100,6 +99,14 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 				
 			}
 		});
+		
+		Button scale1=new Button("1.0",new ClickHandler() {
+			@Override
+			public void onClick(ClickEvent event) {
+				scaleRange.setValue(0);
+			}
+		});
+		h1.add(scale1);
 		
 		
 		HorizontalPanel h2=new HorizontalPanel();
@@ -128,6 +135,31 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 				
 			}
 		});
+		Button plus=new Button("+",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				int value=angleRange.getValue()+1;
+				if(value>180){
+					value=value-360;
+				}
+				angleRange.setValue(value);
+			}
+		});
+		h2.add(plus);
+		Button minus=new Button("-",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				int value=angleRange.getValue()-1;
+				if(value<-180){
+					value=value+360;
+				}
+				angleRange.setValue(value);
+			}
+		});
+		h2.add(minus);
+		
 		Button leftTurn=new Button("-90",new ClickHandler() {
 			
 			@Override
