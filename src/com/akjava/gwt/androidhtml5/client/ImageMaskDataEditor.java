@@ -64,6 +64,7 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 	//imageElementEditor=SimpleEditor.of();
 	
 	VerticalPanel controler=new VerticalPanel();
+	controler.setHeight("60px");
 	HorizontalPanel sizes=new HorizontalPanel();
 	sizes.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
 	controler.add(sizes);

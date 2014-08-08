@@ -13,6 +13,7 @@ import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.Uint8Array;
+import com.akjava.gwt.html5.client.input.ColorBox;
 import com.akjava.gwt.inpaint.client.InPaint;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
@@ -33,13 +34,19 @@ import com.google.gwt.editor.client.EditorDelegate;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.editor.client.ValueAwareEditor;
 import com.google.gwt.editor.client.adapters.SimpleEditor;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -209,7 +216,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		}
 		SimpleEditor<ImageElement> overrayImageEditor;
 		private Canvas layerCanvas=Canvas.createIfSupported();
-		private int possitionIteration=20;
+		private int possitionIteration=0;
 		public int getPossitionIteration() {
 			return possitionIteration;
 		}
@@ -323,9 +330,27 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	private ImageElement destImageElement,srcImageElement;
 	@Override
 	public Panel getCenterPanel() {
+		
+		
 		ScrollPanel scroll=new ScrollPanel();
 		final VerticalPanel panel=new VerticalPanel();
 		scroll.add(panel);
+		
+		
+		
+		final ColorBox dummy=new ColorBox();
+		panel.add(dummy);
+		
+		LogUtils.log(dummy);
+		dummy.addValueChangeHandler(new ValueChangeHandler<String>() {
+			@Override
+			public void onValueChange(ValueChangeEvent<String> event) {
+				LogUtils.log(event.getValue());
+			}
+			
+		});
+		
+		dummy.setValue("#ffffff");
 		//editor & editor
 		final PoissonImageDataEditor editor=new PoissonImageDataEditor(this);    
 		driver.initialize(editor);
@@ -398,8 +423,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		editorPanel.add(editor);
 		
+		int initialValue=GWT.isScript()?5:0;
 		
-		previewIterationRange = new LabeledInputRange("Preview-Iteration:",0,100,5,"140px","400px") {
+		previewIterationRange = new LabeledInputRange("Preview-Iteration:",0,100,initialValue,"140px","400px") {
 			
 			@Override
 			public void onValueChanged(int newValue) {
@@ -412,6 +438,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			}
 		};
 		editorPanel.add(previewIterationRange);
+		editor.setPossitionIteration(initialValue);
 		
 		updateIterationRange = new LabeledInputRange("Update-Iteration:",20,400,100,"140px","400px") {
 			
@@ -541,6 +568,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	
 	
 	public void doPoisson(int iteration){
+		LogUtils.log("poison:"+iteration);
 		if(possing){
 			return;
 		}
@@ -607,13 +635,17 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		//data.getPosScaleAngleData()
 		Poisson.setImageDatas(srcData,from(pCanvas,data.getImageMaskData().getImageElement()), newData,resultData);
 		ImageData poisoned=Poisson.blend(iteration, 0, 0);
+		
 		CanvasUtils.copyTo(poisoned, pCanvas);
-		containers.add(pCanvas);
+		
 		if(iteration==updateIterationRange.getValue()){
 		mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
 		mixCanvas.setShowOrigin(false);
 		mixCanvas.update();
+		}else{
+			//only preview -mode
 		}
+		containers.add(pCanvas);
 		
 		possing=false;
 		}catch (Exception e) {

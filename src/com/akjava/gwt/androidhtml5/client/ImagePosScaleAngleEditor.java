@@ -76,9 +76,12 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 		}
 		this.canvas=canvas;
 	
+		VerticalPanel controler=new VerticalPanel();
+		controler.setHeight("60px");
+		add(controler);
 
 		HorizontalPanel h1=new HorizontalPanel();
-		this.add(h1);
+		controler.add(h1);
 		final Label scaleLabel=new Label("Scale"+":1.0");
 		h1.add(scaleLabel);//TODO ondemand scale
 		scaleLabel.setWidth("60px");
@@ -136,7 +139,7 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 		
 		
 		HorizontalPanel h2=new HorizontalPanel();
-		this.add(h2);
+		controler.add(h2);
 		final Label turnLabel=new Label("Angle"+":0");
 		h2.add(turnLabel);//TODO ondemand scale
 		turnLabel.setWidth("60px");
