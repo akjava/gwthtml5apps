@@ -47,7 +47,7 @@ public class CanvasTools {
 		}
 		
 		if(minX<=maxX && minY<=maxY){
-			return new Rect(minX,minY,maxX-minX,maxY-minY);
+			return new Rect(minX,minY,maxX-minX,maxY-minY).expandIn(expandW, expandH, data.getWidth(), data.getHeight());
 		}else{
 			return new Rect(0,0,0,0);//invalid case.
 		}

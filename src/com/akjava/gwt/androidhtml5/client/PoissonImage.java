@@ -21,6 +21,7 @@ import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.AsyncMultiCaller;
+import com.akjava.lib.common.graphics.Rect;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
 import com.google.common.collect.Lists;
@@ -34,8 +35,6 @@ import com.google.gwt.editor.client.EditorDelegate;
 import com.google.gwt.editor.client.SimpleBeanEditorDriver;
 import com.google.gwt.editor.client.ValueAwareEditor;
 import com.google.gwt.editor.client.adapters.SimpleEditor;
-import com.google.gwt.event.dom.client.ChangeEvent;
-import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
@@ -43,10 +42,8 @@ import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
-import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
-import com.google.gwt.user.client.ui.ListBox;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -351,8 +348,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		});
 		
 		dummy.setValue("#ffffff");
-		//editor & editor
-		final PoissonImageDataEditor editor=new PoissonImageDataEditor(this);    
+		editor = new PoissonImageDataEditor(this);    
 		driver.initialize(editor);
 		
 		VerticalPanel editorPanel=new VerticalPanel();
@@ -487,6 +483,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	boolean possing;
 	private SimpleMixCanvas mixCanvas;
 	private LabeledInputRange updateIterationRange;
+	private PoissonImageDataEditor editor;
 	
 	/*
 	public static interface ButtonExecuteListener {
@@ -567,6 +564,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	};
 	
 	
+	private Canvas sharedCanvas=Canvas.createIfSupported();
 	public void doPoisson(int iteration){
 		LogUtils.log("poison:"+iteration);
 		if(possing){
@@ -575,53 +573,63 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		try{
 		possing=true;
 
+		
 		containers.clear();
 		
 		
 		PoissonImageData data=driver.flush();//possible called before data set and make that broken
 		
-		if(data.getOverrayImage()==null){
+		if(data.getOverrayImage()==null){//not initialized
 			LogUtils.log("overrayImage is null");
 			possing=false;
 			return;
 		}
 		
-		ImageData imageData=data.getImageMaskData().getImageData();
+		CanvasTools canvasTools=CanvasTools.from(editor.imageMaskDataEditor.getCanvas());
+		
+		Rect transParentAreaRect=canvasTools.getTransparentArea(128, 8, 8);
+		//LogUtils.log(transParentAreaRect);
+		
+		ImageData maskBaseImageData=canvasTools.getImageData(transParentAreaRect);
+		
+		
+		
 		//extremlly slow
 		
-		Uint8Array masks=InPaint.createMaskByAlpha(imageData);
+		Uint8Array masks=InPaint.createMaskByAlpha(maskBaseImageData);
 		//TODO method
-		Canvas maskCanvas=CanvasUtils.createCanvas(imageData.getWidth(), imageData.getHeight());
+		Canvas maskCanvas=CanvasUtils.createCanvas(sharedCanvas,maskBaseImageData.getWidth(), maskBaseImageData.getHeight());
+		CanvasUtils.clear(maskCanvas);//clear here
+		ImageData maskData=CanvasUtils.getImageData(maskCanvas, false);
+		InPaint.createImageDataFromMask(maskData, masks, 255, 255, 255, 255, false);
 		
-		ImageData newData=CanvasUtils.getImageData(maskCanvas, false);
-		
-		InPaint.createImageDataFromMask(newData, masks, 255, 255, 255, 255, false);
-		
+		/*//add mask to show
 		maskCanvas.getContext2d().putImageData(newData, 0, 0);
 		maskCanvas.getElement().getStyle().setBackgroundColor("#000");
-		//containers.add(maskCanvas);//mask
+		containers.add(maskCanvas);//mask
+		*/
 		
 		
+		/*
 		Canvas canvas=CanvasUtils.copyTo(data.getImageMaskData().getImageData(), null);
 		canvas.getElement().getStyle().setBackgroundColor("#000");
-		//containers.add(canvas);//created
+		containers.add(canvas);//created
+		*/
 		
-		
-		
-		Canvas pCanvas=Canvas.createIfSupported();
-		
-		ImageData resultData=ImageDataUtils.create(pCanvas,data.getImageMaskData().getImageElement());
+		//CanvasUtils.createCanvas(ImageElement)
+		Canvas pCanvas=ImageElementUtils.copytoCanvas(data.getImageMaskData().getImageElement(), null);
+		CanvasTools resultCanvas=CanvasTools.from(pCanvas);
+		ImageData destData=resultCanvas.getImageData(transParentAreaRect);
+		ImageData resultData=resultCanvas.getImageData(transParentAreaRect);
 		
 		
 		//set
 		//create method size only?
 		Canvas srcCanvas=CanvasUtils.createCanvas(data.getImageMaskData().getImageElement().getWidth(),data.getImageMaskData().getImageElement().getHeight());
-		
 		PositionScaleAngleData psa=data.getPosScaleAngleData();
-		
 		CanvasUtils.drawCenter(srcCanvas, data.getOverrayImage(),(int)psa.getPositionX(),(int)psa.getPositionY(),psa.getScale(),psa.getScale(),psa.getAngle(),1);
 		
-		ImageData srcData=CanvasUtils.getImageData(srcCanvas,true);
+		ImageData srcData=CanvasTools.from(srcCanvas).getImageData(transParentAreaRect);
 		
 		/*
 		ImageData srcData=CanvasUtils.getImageData(editor.getPosScaleAngleDataEditor().getCanvas(),true);
@@ -633,10 +641,25 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	
 		
 		//data.getPosScaleAngleData()
-		Poisson.setImageDatas(srcData,from(pCanvas,data.getImageMaskData().getImageElement()), newData,resultData);
+		
+		//what is problem?
+		//CanvasUtils.createCanvas(ImageData imageData);
+		/*
+		containers.add(CanvasUtils.createCanvas(null, srcData));
+		containers.add(CanvasUtils.createCanvas(null, destData));
+		containers.add(CanvasUtils.createCanvas(null, maskData));
+		containers.add(CanvasUtils.createCanvas(null, resultData));
+		*/
+		
+		Poisson.setImageDatas(srcData,destData, maskData,resultData);
 		ImageData poisoned=Poisson.blend(iteration, 0, 0);
 		
-		CanvasUtils.copyTo(poisoned, pCanvas);
+		//containers.add(CanvasUtils.createCanvas(null, poisoned));
+		
+		resultCanvas.putImageData(transParentAreaRect, poisoned);
+		
+		
+		//CanvasUtils.copyTo(poisoned, pCanvas);
 		
 		if(iteration==updateIterationRange.getValue()){
 		mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
