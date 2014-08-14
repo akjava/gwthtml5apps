@@ -8,19 +8,24 @@ import javax.annotation.Nullable;
 import com.akjava.gwt.androidhtml5.client.ImageMaskDataEditor.ImageMaskData;
 import com.akjava.gwt.androidhtml5.client.TransparentIt.XYPoint;
 import com.akjava.gwt.lib.client.CanvasUtils;
+import com.akjava.gwt.lib.client.GWTHTMLUtils;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.experimental.CursorUtils;
 import com.google.common.collect.Lists;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.canvas.dom.client.Context2d.Composite;
 import com.google.gwt.canvas.dom.client.Context2d.LineJoin;
 import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.dom.client.ImageElement;
+import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
+import com.google.gwt.event.dom.client.MouseOverEvent;
+import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.text.shared.Renderer;
@@ -41,6 +46,8 @@ private boolean mouseDown;
 public ImageMaskDataEditor(){
 	this(null,null);
 }
+
+
 /**
  * possible share canvas,but not complete because of some event listener
  * @param canvas
@@ -108,6 +115,38 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 		}
 	});
 	sizes.add(resetBt);
+	
+	
+	
+	ValueListBox<Integer> scaleBox=new ValueListBox<Integer>(new Renderer<Integer>() {
+
+		@Override
+		public String render(Integer object) {
+
+			return ""+object;
+		}
+
+		@Override
+		public void render(Integer object, Appendable appendable) throws IOException {
+			
+		}
+	});
+	
+	
+	scaleBox.setValue(1);
+	scaleBox.setAcceptableValues(Lists.newArrayList(1,2,4,8));
+	sizes.add(scaleBox);
+	scaleBox.addValueChangeHandler(new ValueChangeHandler<Integer>() {
+		@Override
+		public void onValueChange(ValueChangeEvent<Integer> event) {
+			updateScale(event.getValue());
+		}
+	});
+	
+	sizes.add(new Label("x Zoom"));
+	
+	
+	
 	
 	HorizontalPanel pens=new HorizontalPanel();
 	pens.setVerticalAlignment(VerticalPanel.ALIGN_MIDDLE);
@@ -201,6 +240,7 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 			
 			lastPoint=newPoint;
 			updateCanvas();
+			updateCursor();//somehow cursor changed by someone
 		}
 		}
 	});
@@ -208,7 +248,57 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 	this.add(controler);
 	this.add(this.canvas);
 	
+	CanvasUtils.disableSelection(this.canvas);
+	//default
+	this.canvas.addMouseOverHandler(new MouseOverHandler() {
+		@Override
+		public void onMouseOver(MouseOverEvent event) {
+			updateCursor();
+		}
+	});
+	
 }
+
+private void updateCursor(){
+	if(penMode==MODE_ERASE){
+		CursorUtils.setCursor(ImageMaskDataEditor.this.canvas, Cursor.CROSSHAIR);
+		}else{
+		CursorUtils.setCursor(ImageMaskDataEditor.this.canvas, Cursor.POINTER);
+		}
+}
+
+
+protected void updateScale(Integer value) {
+	currentScale=value;
+	rescaleCanvas();
+	//resetCanvas();
+	//updateCanvas();
+	updateCanvas();
+	updateCursor();
+}
+public int getScaledCanvasWidth(){
+	return (int) (canvas.getCoordinateSpaceWidth()*currentScale);
+}
+
+public int getScaledCanvasHeight(){
+	return (int) (canvas.getCoordinateSpaceHeight()*currentScale);
+}
+
+public double getCurrentScale() {
+	return currentScale;
+}
+
+
+private void rescaleCanvas(){
+	int w=(int) (value.getImageElement().getWidth()*currentScale);
+	int h=(int) (value.getImageElement().getHeight()*currentScale);
+	CanvasUtils.setSizeCanvas(canvas, w, h);
+	CanvasUtils.setSizeCanvas(overlayCanvas, w, h);
+}
+
+/**
+ * for overwrite
+ */
 public void updateCanvas() {
 	
 }
@@ -352,12 +442,15 @@ private void resetCanvas(){
 @Override
 public void setValue(ImageMaskData value) {
 	this.value=value;
-	int w=value.getImageElement().getWidth();
-	int h=value.getImageElement().getHeight();
 	
-	CanvasUtils.createCanvas(canvas, w, h);
-	CanvasUtils.createCanvas(overlayCanvas, w, h);
+	
 	imageElement=value.getImageElement();
+	//set same size
+	CanvasUtils.setCoordinateSpace(canvas, imageElement.getWidth(), imageElement.getHeight());
+	CanvasUtils.setCoordinateSpace(overlayCanvas, imageElement.getWidth(), imageElement.getHeight());
+	
+	rescaleCanvas();
+	
 	
 	if(value.getImageData()==null){
 		resetCanvas();
@@ -370,6 +463,7 @@ public void setValue(ImageMaskData value) {
 	
 	//imageElementEditor.setValue(value.getImageElement());
 }
+
 @Override
 public ImageMaskData getValue() {
 	//flush here?

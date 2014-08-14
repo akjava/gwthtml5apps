@@ -255,6 +255,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 			}
 		});
 		
+		
 		scaleBox.setValue(1);
 		scaleBox.setAcceptableValues(Lists.newArrayList(1,2,4,8));
 		bgPanel.add(scaleBox);

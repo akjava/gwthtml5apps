@@ -21,6 +21,7 @@ import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.AsyncMultiCaller;
+import com.akjava.gwt.lib.client.experimental.ExecuteButton;
 import com.akjava.lib.common.graphics.Rect;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -40,7 +41,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
-import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -54,7 +54,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	 interface Driver extends SimpleBeanEditorDriver< PoissonImageData,  PoissonImageDataEditor> {}
 	 Driver driver = GWT.create(Driver.class);
 	private VerticalPanel containers;
-
+	
 	public  static class SimpleMixCanvas extends VerticalPanel{
 		private Canvas canvas;
 		private boolean showOrigin=true;
@@ -234,15 +234,17 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 					layerCanvas.getContext2d().setGlobalCompositeOperation(Composite.XOR);
 					layerCanvas.getContext2d().drawImage(getCanvas().getCanvasElement(), 0, 0);
 					layerCanvas.getContext2d().restore();
-					posScaleAngleDataEditor.updateImage();
+					posScaleAngleDataEditor.updateImage(); //call do overlay
 				}
+				
 			}
 			;
 			h.add(imageMaskDataEditor);
 			
 			posScaleAngleDataEditor=new ImagePosScaleAngleEditor(){
 				public void doOverLayer(Canvas canvas) {
-					CanvasUtils.setBackgroundImage(imageMaskDataEditor.getCanvas(), canvas.toDataUrl());//link image
+					
+					CanvasUtils.setBackgroundImage(imageMaskDataEditor.getCanvas(), canvas.toDataUrl(),imageMaskDataEditor.getScaledCanvasWidth(),imageMaskDataEditor.getScaledCanvasHeight());//link image
 					
 					canvas.getContext2d().save();
 					canvas.getContext2d().setGlobalAlpha(0.5);
@@ -398,7 +400,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 				
 				destImageElement=ImageElementUtils.create(text);
 				mixCanvas.setDest(destImageElement);
-				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
+				PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+				
+				driver.edit(newData);
 			}
 		}, true);
 		h.add(destUpLoad);
@@ -409,12 +413,24 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			
 			@Override
 			public void uploaded(File file, String text) {
-				
+				ImageMaskData maskData=null;
+				try{
+					PoissonImageData oldData=driver.flush();
+					maskData=oldData.getImageMaskData();
+				}catch (Exception e) {
+					//it happen on initial
+				}
 				srcImageElement=ImageElementUtils.create(text);
-				driver.edit(new PoissonImageData(destImageElement,srcImageElement));
+				PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+				
+				if(maskData!=null){
+					newData.getImageMaskData().setImageData(ImageDataUtils.copy(sharedCanvas,maskData.getImageData()));
+				}
+				driver.edit(newData);
 			}
 		}, true);
 		h.add(srcUpLoad);
+		
 		
 		
 		editorPanel.add(editor);
@@ -490,32 +506,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		public void executeOnClick();
 	}
 	*/
-	public abstract class ExecuteButton extends Button{
-		public ExecuteButton(String label){
-			super(label);
-			this.addClickHandler(new ClickHandler() {
-				@Override
-				public void onClick(ClickEvent event) {
-					setEnabled(false);
-					Timer timer=new Timer(){
-						@Override
-						public void run() {
-							try{
-								executeOnClick();
-							}catch(Exception e){
-								new RuntimeException(e);//i dont care
-							}finally{
-								setEnabled(true);
-							}
-						}
-						
-					};
-					timer.schedule(20);
-				}
-			});
-		}
-		public abstract void executeOnClick();
-	}
+
 	
 	public abstract class AsyncMultiImageElementLoader extends AsyncMultiCaller<String>{
 		private List<ImageElement> imageElements=Lists.newArrayList();
@@ -587,7 +578,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		CanvasTools canvasTools=CanvasTools.from(editor.imageMaskDataEditor.getCanvas());
 		
-		Rect transParentAreaRect=canvasTools.getTransparentArea(128, 8, 8);
+		Rect transParentAreaRect=canvasTools.getTransparentArea(128, 16, 16);
 		//LogUtils.log(transParentAreaRect);
 		
 		ImageData maskBaseImageData=canvasTools.getImageData(transParentAreaRect);
