@@ -8,8 +8,24 @@ import com.google.gwt.canvas.dom.client.ImageData;
 import com.google.gwt.dom.client.ImageElement;
 
 public class ImageDataUtils {
+public static Canvas sharedCanvas;
+private static Canvas getSharedCanvas(){
+	if(sharedCanvas==null){
+		sharedCanvas=Canvas.createIfSupported();
+	}
+	return sharedCanvas;
+}
+public static ImageData create(int w,int h){
+	return create(null,w,h);
+	}
 
-
+	public static ImageData create(Canvas canvas,int w,int h){
+		if(canvas==null){
+			canvas=getSharedCanvas();
+		}
+		return canvas.getContext2d().createImageData(w, h);
+		}
+	
 
 public static ImageData create(Canvas canvas,ImageElement element){
 	if(canvas==null){
