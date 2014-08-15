@@ -10,6 +10,7 @@ import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.CursorUtils;
+import com.akjava.gwt.lib.client.experimental.ImageScaleRangeConverter;
 import com.google.gwt.canvas.client.Canvas;
 import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Cursor;
@@ -277,13 +278,8 @@ public class ImagePosScaleAngleEditor extends VerticalPanel implements LeafValue
 	}
 	
 	private int scaleToRangeValue(double scale){
-		if(scale==1){
-			return 0;
-		}else if(scale>1){
-			return (int)(scale-1/0.1);
-		}else{//scale<1
-			return (int)((1.0-scale)/0.01);
-		}
+		return new ImageScaleRangeConverter().reverse().convert(scale);
+		
 	}
 	
 	

@@ -337,26 +337,13 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		
 		
-		final ColorBox dummy=new ColorBox();
-		panel.add(dummy);
-		
-		LogUtils.log(dummy);
-		dummy.addValueChangeHandler(new ValueChangeHandler<String>() {
-			@Override
-			public void onValueChange(ValueChangeEvent<String> event) {
-				LogUtils.log(event.getValue());
-			}
-			
-		});
-		
-		dummy.setValue("#ffffff");
 		editor = new PoissonImageDataEditor(this);    
 		driver.initialize(editor);
 		
 		VerticalPanel editorPanel=new VerticalPanel();
 		
 		final String destImage="vinci_dst.png";
-		final String srcImage="test.png";
+		final String srcImage="vinci_src.png";
 		
 		new ImageElementLoader().load(destImage, new ImageElementListener() {
 			
