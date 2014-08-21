@@ -253,6 +253,13 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 		public void setAttempt(int attempt) {
 			this.attempt = attempt;
 		}
+		int hitMatched;
+		public int getHitMatched() {
+			return hitMatched;
+		}
+		public void setHitMatched(int hitMatched) {
+			this.hitMatched = hitMatched;
+		}
 		int hit;
 		int miss;
 		int remainTarget;
@@ -402,7 +409,40 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 	}
 	
 	private boolean hitRect(Rect src,Rect dest){
-		return src.collision(dest);
+		if(!src.collision(dest)){
+			return false;
+		}
+		
+		Rect checkRect=dest.copy();
+		checkRect.setWidth(checkRect.getWidth()/2);
+		checkRect.setHeight(checkRect.getHeight()/2);
+		
+		//left-top
+		if(src.contains(checkRect)){
+			return true;
+		}
+		//right-top
+		checkRect.setX(dest.getX()+dest.getWidth()/2);
+		if(src.contains(checkRect)){
+			return true;
+		}
+		//right-bottom
+		checkRect.setY(dest.getY()+dest.getHeight()/2);
+		if(src.contains(checkRect)){
+			return true;
+		}
+		//left-bottom
+		checkRect.setX(dest.getX());
+		if(src.contains(checkRect)){
+			return true;
+		}
+		//center
+		checkRect.setX(dest.getX()+(dest.getWidth()/4));
+		checkRect.setY(dest.getY()+(dest.getHeight()/4));
+		if(src.contains(checkRect)){
+			return true;
+		}
+		return false;
 	}
 	
 	private boolean containMatchRect(Rect larger,Rect smaller){
