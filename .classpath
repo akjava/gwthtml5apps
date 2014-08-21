@@ -2,6 +2,7 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="patch"/>
+	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="com.google.gwt.eclipse.core.GWT_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/akjava_gwtinpaint_140512.jar"/>
@@ -12,5 +13,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/GWTLib2011"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/html5gwt"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/GWTJSZip"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/3"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

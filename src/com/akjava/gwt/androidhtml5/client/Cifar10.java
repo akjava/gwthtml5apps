@@ -5,15 +5,13 @@ import static com.google.common.base.Preconditions.checkState;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.akjava.gwt.androidhtml5.client.cifar10.Cifar10Data;
 import com.akjava.gwt.html5.client.download.HTML5Download;
 import com.akjava.gwt.html5.client.file.Blob;
 import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.Uint8Array;
-import com.akjava.gwt.jszip.client.JSFileOptions;
 import com.akjava.gwt.jszip.client.JSZip;
-import com.akjava.gwt.lib.client.Base64Utils;
 import com.akjava.gwt.lib.client.CanvasUtils;
-import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.ExecuteButton;
 import com.akjava.gwt.lib.client.experimental.ImageBuilder;
@@ -33,29 +31,7 @@ public class Cifar10 extends AbstractDropArrayEastDemoEntryPoint{
 private Canvas sharedCanvas=Canvas.createIfSupported();
 private VerticalPanel mainPanel;
 private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
-	public static class Cifar10Data{
-		private int classNumber;
-		public int getClassNumber() {
-			return classNumber;
-		}
-		public void setClassNumber(int classNumber) {
-			this.classNumber = classNumber;
-		}
-		public ImageData getImageData() {
-			return imageData;
-		}
-		public void setImageData(ImageData imageData) {
-			this.imageData = imageData;
-		}
-		private ImageData imageData;
-		private String name;
-		public String getName() {
-			return name;
-		}
-		public void setName(String name) {
-			this.name = name;
-		}
-	}
+
 	
 	//TODO cyfar10 package
 	
