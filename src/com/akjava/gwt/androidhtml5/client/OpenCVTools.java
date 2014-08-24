@@ -60,8 +60,6 @@ import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
-import com.google.gwt.user.client.ui.TextArea;
-import com.google.gwt.user.client.ui.TextBox;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 public class OpenCVTools extends AbstractDropEastDemoEntryPoint{
@@ -512,6 +510,9 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 		VerticalPanel panel=new VerticalPanel();
 		sidePanel.addNorth(panel,200);
 		
+		VerticalPanel bottom=new VerticalPanel();
+		sidePanel.addSouth(bottom,40);
+		
 		panel.add(new Label("positive-zip(must contain info.txt or info.dat)"));
 		
 
@@ -717,6 +718,70 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 		sidePanel.add(scroll);
 		
 		
+		//create option-panel
+		HorizontalPanel ratioPanel=new HorizontalPanel();
+		ratioPanel.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
+		bottom.add(ratioPanel);
+		ratioPanel.add(new Label("ratio-calcurator"));
+		final Label resultLabel=new Label();
+		FileUploadForm upload2 = FileUtils.createSingleFileUploadForm(new DataArrayListener() {
+			
+
+			@Override
+			public void uploaded(File file, Uint8Array array) {
+				JSZip zip = JSZip.loadFromArray(array);
+				
+				//JsArrayString files=zip.getFiles();
+				//List<String> fileNameList=JavaScriptUtils.toList(files);
+				
+				JSFile indexFile=zip.getFile("info.txt");
+				if(indexFile==null){
+					indexFile=zip.getFile("info.dat");//i'm windows-os user and .dat extensin used other case
+				}
+				
+				if(indexFile==null){
+					Window.alert("info.txt or info.dat name not found here.or in folder");
+					return;
+				}
+				
+				
+				String text=indexFile.asText();
+				
+				List<String> lines=CSVUtils.splitLinesWithGuava(text);
+				
+				checkState(lines.size()>0,"info.txt or info.dat is empty");
+				List<PositiveData> datas=FluentIterable.from(lines).transform(new PositiveDataConverter()).toList();
+				double totalRatio=0;
+				int index=0;
+				for(PositiveData data:datas){
+					for(Rect rect:data.getRects()){
+						double ratio=(double)rect.getWidth()/rect.getHeight();
+						if(index==0){
+							LogUtils.log(ratio);
+						}
+						totalRatio+=ratio;
+						index++;
+					}
+				}
+				double average=totalRatio/index;
+				
+				String label=String.valueOf(average);
+				label=label.substring(0,Math.min(4, label.length()));
+				label+=":1";
+				
+				int r=(int)(24*average);
+				label +=" ("+r+"x24)";
+				double n=1.0/average;
+				int nv=(int)(24*n);
+				label+=" (24x"+nv+")";
+				resultLabel.setText(label);
+			}
+		},true,false);
+		ratioPanel.add(upload2);
+		ratioPanel.add(resultLabel);
+		
+		
+		
 		return sidePanel;
 	}
 	
@@ -786,6 +851,8 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 			
 		}
 	}
+	
+
 	
 	//viewer
 	
