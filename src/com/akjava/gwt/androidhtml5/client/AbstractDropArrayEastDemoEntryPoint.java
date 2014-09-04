@@ -10,6 +10,11 @@ import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Panel;
 
+/**
+ * i'm not sure array can convert base64 correctly
+ * @author aki
+ *
+ */
 public abstract class AbstractDropArrayEastDemoEntryPoint extends Html5DemoEntryPoint {
 
 	
