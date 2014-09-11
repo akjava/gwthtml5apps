@@ -40,13 +40,30 @@ public static ImageData copy(Canvas canvas,ImageData data){
 	return copy(canvas.getContext2d(),data);
 	}
 
+
 public static ImageData copy(Context2d ctx,ImageData data){
 	ImageData newData=ctx.createImageData(data);
 	for(int i=0;i<data.getData().getLength();i++){
-		newData.getData().set(i, data.getData().get(i));//maybe slow copy
+		newData.getData().set(i, data.getData().get(i));
 	}
 	return newData;
 	}
+public static ImageData copyFast(Canvas canvas,ImageData data){
+	return copyFast(canvas.getContext2d(),data);
+	}	
+
+public  static  native final ImageData copyFast(Context2d ctx,ImageData src)/*-{
+var dst = ctx.createImageData(src.width, src.height);
+dst.data.set(src.data);
+return dst;
+}-*/;
+
+/**
+ *  var dst = ctx.createImageData(src.width, src.height);
+    dst.data.set(src.data);
+    return dst;
+ * 
+ */
 
 
 }
