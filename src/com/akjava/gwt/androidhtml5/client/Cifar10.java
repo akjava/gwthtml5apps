@@ -15,6 +15,7 @@ import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.ExecuteButton;
 import com.akjava.gwt.lib.client.experimental.ImageBuilder;
+import com.akjava.gwt.lib.client.experimental.ImageDataUtils;
 import com.akjava.lib.common.utils.FileNames;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -57,7 +58,7 @@ private List<Cifar10Data> datas=new ArrayList<Cifar10Data>();
 			int index=3073*i;
 			
 			data.setClassNumber(bytes[index]);
-			ImageData imageData=ImageDataUtils.create(32,32);
+			ImageData imageData=ImageDataUtils.createWithSharedCanvas(32,32);
 			//red
 			for(int ry=0;ry<32;ry++){
 				for(int rx=0;rx<32;rx++){
