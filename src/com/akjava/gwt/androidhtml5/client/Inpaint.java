@@ -22,6 +22,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.experimental.ImageDataUtils;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.Benchmark;
@@ -120,6 +121,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 		return root;
 	}
 	
+	private ImageElement maskImageElement;
 	
 	private void createWestPanel(){
 		DockLayoutPanel eastPanel=new DockLayoutPanel(Unit.PX);
@@ -139,7 +141,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 			}
 		}, true);
 		h1Panel.add(upload);
-		eastPanel.addNorth(controler, 240);
+		eastPanel.addNorth(controler, 280);
 		//
 		
 	    
@@ -189,6 +191,29 @@ public class Inpaint extends Html5DemoEntryPoint {
 		});
 		h4.add(updateBt);
 		updateBt.setEnabled(false);
+		
+		//test
+		HorizontalPanel masks=new HorizontalPanel();
+		masks.add(new Label("Mask-image:"));
+		controler.add(masks);
+		
+		FileUploadForm maskUpload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
+			
+			@Override
+			public void uploaded(File file, String text) {
+				maskImageElement=ImageElementUtils.create(text);
+			}
+		});
+		masks.add(maskUpload);
+		Button inpaintWithMask = new Button("Inpaint with Mask",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				doInPaint(selectedElement,maskImageElement);
+			}
+		});
+		masks.add(inpaintWithMask);
+		
 		
 		updateMaskBt = new Button("Preview Mask",new ClickHandler() {
 			
@@ -490,6 +515,10 @@ public class Inpaint extends Html5DemoEntryPoint {
 		updateMaskBt.setEnabled(true);
 		this.selectedElement=element;
 		mainTab.selectTab(0);
+		mainTab.selectTab(3);
+		//temporaly doing.,how to drop convert?
+		doInPaint(element,maskImageElement);
+		
 	}
 	
 	
@@ -583,6 +612,174 @@ public class Inpaint extends Html5DemoEntryPoint {
 				array1.set(i, v2);//over write
 			}
 		}
+		
+	}
+	
+	protected void doInPaint(final ImageElement element,final ImageElement maskImage) {
+		final MaskData data=maskDataDriver.flush();
+		
+		
+		updateBt.setEnabled(false);
+	
+		this.selectedElement=element;
+		
+		Timer timer=new Timer(){
+			public void run(){
+				
+				Benchmark.start("total");
+				loadedPanel.clear();
+				greyScaleMaskPanel.clear();
+				inpaintMaskPanel.clear();
+				inpaintPanel.clear();
+				mixedPanel.clear();
+				
+				//loadedPanel.add(sharedCanvas);
+				sharedCanvas.setVisible(false);
+				
+				
+				//resultPanel.add(new Image(element.getSrc()));
+				//use edge case
+				int margin=2;
+				
+				Benchmark.start("expand");
+				if(data.getColor()=="#000000" || data.isTransparent()){//should not expand
+				//	margin=0;//not use
+				}
+				
+				//canvas and sharedCanvas is same
+				ImageElementUtils.copytoCanvasWithMargin(element, sharedCanvas,true,margin,true);
+				ImageData expandedImageData=CanvasUtils.getImageData(sharedCanvas,true);
+				
+				
+				Benchmark.endAndLog("expand");
+				Uint8Array array=null;
+				
+				//Uint8Array grayByte=null;
+				
+				
+				//created by maskData
+				Uint8Array merged=null;
+				
+				/*
+				Uint8Array expanded=InPaint.expandMaskByte(merged,  imageData.getWidth(),data.getExpand());
+				createAndInsertImage(expanded,resultPanel);
+				
+				grayByte=InPaint.expandMaskByteAsGray(expanded,  imageData.getWidth(),data.getFade());
+				*/
+				
+				
+				
+				int w=element.getWidth()+margin*2;
+				int h=element.getHeight()+margin*2;
+				CanvasUtils.createCanvas(sharedCanvas, w, h);
+				
+				sharedCanvas.getContext2d().drawImage(maskImage, margin, margin);
+				String dataUrl=sharedCanvas.toDataUrl();
+				Image img=new Image(dataUrl);
+				greyScaleMaskPanel.add(img);//add mask
+				ImageData maskData=ImageDataUtils.copyFrom(sharedCanvas);
+				
+				Uint8Array newByte=InPaint.createMaskByColor(maskData, 0,0,0,false);//not 0 is mask
+				
+				//return 0 or 1
+				
+				array=newByte;
+				
+				
+				
+				
+				LogUtils.log("imageData:"+expandedImageData.getWidth()+"x"+expandedImageData.getHeight());
+				Benchmark.start("inpaint");
+				InPaint.inpaint(expandedImageData, array, radiuseRange.getValue());
+				
+				//somehow(maybe transparent problem) expanded to result should keep same size
+				
+				
+				sharedCanvas.setCoordinateSpaceWidth(expandedImageData.getWidth()-4);
+				sharedCanvas.setCoordinateSpaceHeight(expandedImageData.getHeight()-4);
+				sharedCanvas.getContext2d().putImageData(expandedImageData,-2,-2);
+				
+				
+				//CanvasUtils.copyTo(imageData,sharedCanvas);
+				//CanvasUtils.copyTo(imageData,sharedCanvas);
+				
+				String inpaintDataUrl=sharedCanvas.toDataUrl();
+				Image inpaintImage=new Image(inpaintDataUrl);//this image larged.
+				inpaintPanel.add(inpaintImage);
+				
+				Anchor inpaintAnchor=HTML5Download.get().generateBase64DownloadLink(inpaintDataUrl, "image/png", "inpaingRaw.png", "Download", true);
+				inpaintPanel.add(inpaintAnchor);
+				
+				//createAndInsertImage use sizes
+				sharedCanvas.setCoordinateSpaceWidth(expandedImageData.getWidth());
+				sharedCanvas.setCoordinateSpaceHeight(expandedImageData.getHeight());
+				
+				//for support mergin
+				
+				
+				
+				//create grayscale later
+				
+				Uint8Array drawByte=Uint8Array.createUint8(newByte.length());
+				//better to do last ?
+				for(int i=0;i<newByte.length();i++){
+					drawByte.set(i, newByte.get(i)*255);
+				}
+				createAndInsertImage(drawByte,inpaintMaskPanel);
+					
+				
+				
+				Benchmark.endAndLog("inpaint");
+				
+				Benchmark.start("mix");
+				CanvasUtils.copyTo(expandedImageData,sharedCanvas);//sharedcanvas broken by last create-image
+				ImageData paintedData=CanvasUtils.getImageData(sharedCanvas, true);
+				CanvasUtils.drawImage(sharedCanvas,element,margin,margin);
+				
+				if(merged!=null){
+				CanvasUtils.copyAlpha(paintedData,merged);
+				Canvas paintedCanvas=CanvasUtils.createCanvas(null, paintedData);
+				CanvasUtils.drawImage(sharedCanvas,paintedCanvas);
+				}
+				updateBt.setEnabled(true);
+				
+				
+				//cut off margin
+				String lastImage=CanvasUtils.toDataUrl(sharedCanvas, sharedCanvas, margin, margin, sharedCanvas.getCoordinateSpaceWidth()-margin*2, sharedCanvas.getCoordinateSpaceHeight()-margin*2);
+				
+				
+				//resultPanel.add(sharedCanvas);
+				
+				//final mixed
+				
+				mixedPanel.add(new Image(lastImage));
+				Benchmark.endAndLog("mix");
+				Benchmark.endAndLog("total");
+				ImageElementUtils.copytoCanvas(element, sharedCanvas);
+				sharedCanvas.setVisible(true);
+				
+				downloadArea.clear();
+				Anchor anchor=HTML5Download.get().generateBase64DownloadLink(lastImage, "image/png", "inpaing.png", "Download", true);
+				anchor.setName("bottom");
+				
+				downloadArea.add(anchor);
+				
+				
+				
+				
+				if(loadedImage!=null){
+					loadedPanel.add(loadedImage);//no need?
+				}
+				
+				mixedPanel.add(downloadArea);
+				
+				
+				
+				mainTab.selectTab(3);//final tab
+			}
+		};
+		timer.schedule(50);
+	
 		
 	}
 	
