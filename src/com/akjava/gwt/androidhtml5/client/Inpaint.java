@@ -504,6 +504,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	Image loadedImage;
 	private void uploadImage(final ImageElement element){
 		loadedPanel.clear();
+		
 		loadedImage=new Image(element.getSrc());
 		loadedPanel.add(loadedImage);
 		
@@ -515,9 +516,11 @@ public class Inpaint extends Html5DemoEntryPoint {
 		updateMaskBt.setEnabled(true);
 		this.selectedElement=element;
 		mainTab.selectTab(0);
-		mainTab.selectTab(3);
+		
+		//can't drop convert anymore somewhere need wait loading.
+		//mainTab.selectTab(3);
 		//temporaly doing.,how to drop convert?
-		doInPaint(element,maskImageElement);
+		//doInPaint(element,maskImageElement);
 		
 	}
 	

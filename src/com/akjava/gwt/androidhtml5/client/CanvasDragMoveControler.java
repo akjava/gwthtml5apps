@@ -12,6 +12,11 @@ import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.MouseUpHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 
+/**
+ * @deprecated use experimantal
+ * @author aki
+ *
+ */
 public  class CanvasDragMoveControler{
 	
 	
