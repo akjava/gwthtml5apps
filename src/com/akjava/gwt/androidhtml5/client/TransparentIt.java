@@ -1145,6 +1145,9 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	}
 	
 	private void doPick(int cx, int cy) {
+		cx/=currentScale;
+		cy/=currentScale;
+		
 		//LogUtils.log(cx+","+cy);
 		ImageData data=canvas.getContext2d().getImageData(cx, cy, 1, 1);
 		int r=data.getRedAt(0, 0);
@@ -1153,7 +1156,7 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		//LogUtils.log(r+","+g+","+b);
 		String hex=ColorUtils.toCssColor(r,g,b);
 		
-		LogUtils.log(hex);
+		//LogUtils.log(hex);
 		colorPicker.setValue(hex);
 		
 		if(backgroundList.getSelectedIndex()==3){//
@@ -1704,9 +1707,12 @@ public class TransparentIt extends Html5DemoEntryPoint {
 		return textConstants.TransparentIt();
 	}
 
+	/**
+	 * 1.1.1 fix scaled pick not working.
+	 */
 	@Override
 	public String getAppVersion() {
-		return "1.1";
+		return "1.1.1";
 	}
 	
 	@Override
