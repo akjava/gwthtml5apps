@@ -1,6 +1,10 @@
 package com.akjava.gwt.androidhtml5.client;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 import java.util.List;
+
+import javax.annotation.Nullable;
 
 import com.akjava.gwt.androidhtml5.client.ImageMaskDataEditor.ImageMaskData;
 import com.akjava.gwt.androidhtml5.client.ImagePosScaleAngleEditor.PositionScaleAngleData;
@@ -14,6 +18,9 @@ import com.akjava.gwt.html5.client.file.FileUtils;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.inpaint.client.InPaint;
+import com.akjava.gwt.inpaint.client.InpaintEngine;
+import com.akjava.gwt.inpaint.client.InpaintEngine.InpaintListener;
+import com.akjava.gwt.inpaint.client.MaskData;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
@@ -39,6 +46,7 @@ import com.google.gwt.editor.client.adapters.SimpleEditor;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HorizontalPanel;
@@ -67,7 +75,21 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		private ImageElement origin;
 		private ImageElement poissonedImage;
 		
+		private Canvas maskCanvas;
+		private boolean useMask;
 		
+		public Canvas getMaskCanvas() {
+			return maskCanvas;
+		}
+		public void setMaskCanvas(Canvas maskCanvas) {
+			this.maskCanvas = maskCanvas;
+		}
+		public boolean isUseMask() {
+			return useMask;
+		}
+		public void setUseMask(boolean useMask) {
+			this.useMask = useMask;
+		}
 		public ImageElement getPoissonedImage() {
 			return poissonedImage;
 		}
@@ -115,15 +137,24 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		 */
 		
 		public void update(){
+			CanvasUtils.clear(canvas);
 			if(showOrigin){
-				CanvasUtils.clear(canvas);
+				
 				//CanvasTools.from(canvas).clear().ignoreNull().drawImage(origin)
 			if(origin!=null){
 			canvas.getContext2d().drawImage(origin, 0, 0);
 			}
 			}else{
 				if(poissonedImage!=null){
-					canvas.getContext2d().drawImage(poissonedImage,0,0);
+					if(useMask){
+						canvas.getContext2d().drawImage(maskCanvas.getCanvasElement(),0,0);
+						canvas.getContext2d().save();
+						canvas.getContext2d().setGlobalCompositeOperation(Composite.SOURCE_IN);
+						canvas.getContext2d().drawImage(poissonedImage,0,0);
+						canvas.getContext2d().restore();
+					}else{
+						canvas.getContext2d().drawImage(poissonedImage,0,0);
+					}
 				}
 			}
 		}
@@ -326,6 +357,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	private LabeledInputRange previewIterationRange;
 	
 	private ImageElement destImageElement,srcImageElement;
+	private CheckBox maskSrcCheck;
 	@Override
 	public Panel getCenterPanel() {
 		
@@ -495,8 +527,13 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	    	};
 	    editorPanel.add(updateBt);
 	    
-	    inpaintCheck = new CheckBox();
+	    inpaintCheck = new CheckBox("use inpaint on src");
+	    inpaintCheck.setTitle("poisson not good at clipeed image on edge.so do inpaint to try erase edge.");
 	    editorPanel.add(inpaintCheck);
+	    
+	    maskSrcCheck = new CheckBox("mask src only");
+	    maskSrcCheck.setTitle("mask area only");
+	    editorPanel.add(maskSrcCheck);
 	    
 	    
 	    panel.add(editorPanel);
@@ -574,11 +611,13 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	
 	private Canvas sharedCanvas=Canvas.createIfSupported();
 	private CheckBox inpaintCheck;
-	public void doPoisson(int iteration,boolean doInpaint){
-		LogUtils.log("poison:"+iteration);
+	public void doPoisson(final int iteration,boolean doInpaint){
+		
 		if(possing){
+			LogUtils.log("poissing.quit");
 			return;
 		}
+		LogUtils.log("poison:"+iteration);
 		try{
 		possing=true;
 
@@ -596,11 +635,12 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		CanvasTools canvasTools=CanvasTools.from(editor.imageMaskDataEditor.getCanvas());
 		
-		Rect transParentAreaRect=canvasTools.getTransparentArea(128, 16, 16);
+		final Rect transParentAreaRect=canvasTools.getTransparentArea(128, 16, 16);
 		//LogUtils.log(transParentAreaRect);
 		
 		if(transParentAreaRect.getWidth()==0 || transParentAreaRect.getHeight()==0){
 			LogUtils.log("no rect,quit");
+			possing=false;
 			return;
 		}
 		
@@ -614,7 +654,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		//TODO method
 		Canvas maskCanvas=CanvasUtils.createCanvas(sharedCanvas,maskBaseImageData.getWidth(), maskBaseImageData.getHeight());
 		CanvasUtils.clear(maskCanvas);//clear here
-		ImageData maskData=CanvasUtils.getImageData(maskCanvas, false);
+		final ImageData maskData=CanvasUtils.getImageData(maskCanvas, false);
 		InPaint.createImageDataFromMask(maskData, masks, 255, 255, 255, 255, false);
 		
 		/*//add mask to show
@@ -631,65 +671,303 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		*/
 		
 		//CanvasUtils.createCanvas(ImageElement)
-		Canvas pCanvas=ImageElementUtils.copytoCanvas(poissonData.getImageMaskData().getImageElement(), null);
-		CanvasTools resultCanvas=CanvasTools.from(pCanvas);
-		ImageData destData=resultCanvas.getImageData(transParentAreaRect);
-		ImageData resultData=resultCanvas.getImageData(transParentAreaRect);
+		final Canvas pCanvas=ImageElementUtils.copytoCanvas(poissonData.getImageMaskData().getImageElement(), null);
+		final CanvasTools resultCanvas=CanvasTools.from(pCanvas);
+		final ImageData destData=resultCanvas.getImageData(transParentAreaRect);
+		final ImageData resultData=resultCanvas.getImageData(transParentAreaRect);
 		
 		
 		//set
 		//create method size only?
-		Canvas srcCanvas=CanvasUtils.createCanvas(poissonData.getImageMaskData().getImageElement().getWidth(),poissonData.getImageMaskData().getImageElement().getHeight());
+		final Canvas srcCanvas=CanvasUtils.createCanvas(poissonData.getImageMaskData().getImageElement().getWidth(),poissonData.getImageMaskData().getImageElement().getHeight());
 		PositionScaleAngleData psa=poissonData.getPosScaleAngleData();
 		CanvasUtils.drawCenter(srcCanvas, poissonData.getOverrayImage(),(int)psa.getPositionX(),(int)psa.getPositionY(),psa.getScale(),psa.getScale(),psa.getAngle(),1);
 		
-		ImageData srcData=CanvasTools.from(srcCanvas).getImageData(transParentAreaRect);
-		
-		/*
-		ImageData srcData=CanvasUtils.getImageData(editor.getPosScaleAngleDataEditor().getCanvas(),true);
-		CanvasUtils.copyTo(srcData, srcCanvas);
-		*/
-		//containers.add(srcCanvas);
-		
-		//mixCanvas.setMixed(srcCanvas,data.getImageMaskData().getImageData());
-	
-		
-		//data.getPosScaleAngleData()
-		
-		//what is problem?
-		//CanvasUtils.createCanvas(ImageData imageData);
-		/*
-		containers.add(CanvasUtils.createCanvas(null, srcData));
-		containers.add(CanvasUtils.createCanvas(null, destData));
-		containers.add(CanvasUtils.createCanvas(null, maskData));
-		containers.add(CanvasUtils.createCanvas(null, resultData));
-		*/
-		
-		Poisson.setImageDatas(srcData,destData, maskData,resultData);
-		ImageData poisoned=Poisson.blend(iteration, 0, 0);
-		
-		//containers.add(CanvasUtils.createCanvas(null, poisoned));
-		
-		resultCanvas.putImageData(transParentAreaRect, poisoned);
-		
-		
-		//CanvasUtils.copyTo(poisoned, pCanvas);
-		
-		if(iteration==updateIterationRange.getValue()){
-		mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
-		mixCanvas.setShowOrigin(false);
-		mixCanvas.update();
+		if(doInpaint){
+			
+			
+			new LoggingImageElementLoader(){
+				@Override
+				public void onLoad(ImageElement imageElement) {
+					InpaintEngine engine=new InpaintEngine();
+					int fade=0;
+					int expand=0;
+					int inpaintRadius=1;
+					List<MaskData> inpaintmasks=Lists.newArrayList(new MaskData().fade(fade).expand(expand));
+					engine.doInpaint(imageElement, inpaintRadius, inpaintmasks, new InpaintListener() {
+						
+						@Override
+						public void createMixedImage(ImageData dataUrl) {
+							
+							Canvas inpaintedCanvas=CanvasUtils.copyTo(dataUrl, null);
+							
+							//TODO make method
+							ImageData srcData=CanvasTools.from(inpaintedCanvas).getImageData(transParentAreaRect);
+							
+							/*
+							ImageData srcData=CanvasUtils.getImageData(editor.getPosScaleAngleDataEditor().getCanvas(),true);
+							CanvasUtils.copyTo(srcData, srcCanvas);
+							*/
+							//containers.add(srcCanvas);
+							
+							//mixCanvas.setMixed(srcCanvas,data.getImageMaskData().getImageData());
+						
+							
+							//data.getPosScaleAngleData()
+							
+							//what is problem?
+							//CanvasUtils.createCanvas(ImageData imageData);
+							/*
+							containers.add(CanvasUtils.createCanvas(null, srcData));
+							containers.add(CanvasUtils.createCanvas(null, destData));
+							containers.add(CanvasUtils.createCanvas(null, maskData));
+							containers.add(CanvasUtils.createCanvas(null, resultData));
+							*/
+							
+							Poisson.setImageDatas(srcData,destData, maskData,resultData);
+							ImageData poisoned=Poisson.blend(iteration, 0, 0);
+							
+							//containers.add(CanvasUtils.createCanvas(null, poisoned));
+							
+							resultCanvas.putImageData(transParentAreaRect, poisoned);
+							
+							
+							//CanvasUtils.copyTo(poisoned, pCanvas);
+							
+							if(iteration==updateIterationRange.getValue()){
+							mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
+							mixCanvas.setShowOrigin(false);
+							mixCanvas.setUseMask(maskSrcCheck.getValue());
+							mixCanvas.setMaskCanvas(srcCanvas);
+							mixCanvas.update();
+							}else{
+								//only preview -mode
+							}
+							containers.add(pCanvas);
+							
+							possing=false;
+						}
+						
+						@Override
+						public void createInpainteMaks(ImageData dataUrl) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void createInpaintImage(ImageData dataUrl) {
+							// TODO Auto-generated method stub
+							
+						}
+						
+						@Override
+						public void createGreyScaleMaks(ImageData dataUrl) {
+							// TODO Auto-generated method stub
+							
+						}
+					});
+				}
+				
+			}.load(srcCanvas);
+			//new LoggingImageElementLoader(){}.load("url");
+			
+			
+			
+			
+			
+			
 		}else{
-			//only preview -mode
-		}
-		containers.add(pCanvas);
+			//LogUtils.log("not inpaint");
+			ImageData srcData=CanvasTools.from(srcCanvas).getImageData(transParentAreaRect);
+			
+			/*
+			ImageData srcData=CanvasUtils.getImageData(editor.getPosScaleAngleDataEditor().getCanvas(),true);
+			CanvasUtils.copyTo(srcData, srcCanvas);
+			*/
+			//containers.add(srcCanvas);
+			
+			//mixCanvas.setMixed(srcCanvas,data.getImageMaskData().getImageData());
 		
-		possing=false;
+			
+			//data.getPosScaleAngleData()
+			
+			//what is problem?
+			//CanvasUtils.createCanvas(ImageData imageData);
+			/*
+			containers.add(CanvasUtils.createCanvas(null, srcData));
+			containers.add(CanvasUtils.createCanvas(null, destData));
+			containers.add(CanvasUtils.createCanvas(null, maskData));
+			containers.add(CanvasUtils.createCanvas(null, resultData));
+			*/
+			
+			Poisson.setImageDatas(srcData,destData, maskData,resultData);
+			ImageData poisoned=Poisson.blend(iteration, 0, 0);
+			
+			//containers.add(CanvasUtils.createCanvas(null, poisoned));
+			
+			resultCanvas.putImageData(transParentAreaRect, poisoned);
+			
+			
+			//CanvasUtils.copyTo(poisoned, pCanvas);
+			
+			if(iteration==updateIterationRange.getValue()){
+			mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
+			mixCanvas.setUseMask(maskSrcCheck.getValue());
+			mixCanvas.setMaskCanvas(srcCanvas);
+			mixCanvas.setShowOrigin(false);
+			mixCanvas.update();
+			}else{
+				//only preview -mode
+			}
+			containers.add(pCanvas);
+			
+			possing=false;
+		}
+		
+		
+		
 		}catch (Exception e) {
 			LogUtils.log(e.getMessage());
 			possing=false;
 		}
 	}
+	
+	public static class PoissonWithInpaintExecuter{
+		private ImageData srcData;
+		private Canvas canvas;
+		public PoissonWithInpaintExecuter(ImageData srcData, ImageData destData, ImageData maskData){
+			this(srcData, destData, maskData, null);
+		}
+		public PoissonWithInpaintExecuter(ImageData srcData, ImageData destData, ImageData maskData,@Nullable ImageData resultData) {
+			super();
+			this.srcData = checkNotNull(srcData,"PoissonWithInpaintExecuter:need src");
+			this.destData = checkNotNull(destData,"PoissonWithInpaintExecuter:need destData");
+			this.maskData = checkNotNull(maskData,"PoissonWithInpaintExecuter:need maskData");;
+			this.resultData = resultData!=null?resultData:ImageDataUtils.copy(getCanvas(), destData);
+		}
+
+		private Canvas getCanvas() {
+			if(canvas==null){
+				canvas=Canvas.createIfSupported();
+			}
+			return canvas;
+		}
+
+		private ImageData destData;
+		private ImageData maskData;
+		private ImageData resultData;
+		private boolean inpaintSrc;
+		private boolean inpaintDesc;
+		private boolean readySrc;
+		private boolean readyDest;
+		private boolean inpainting;
+		
+		public void execute(final PoissonListener listener,final int iteration){
+			readySrc=inpaintSrc?false:true;
+			readyDest=inpaintDesc?false:true;
+			inpainting=false;
+			Timer timer=new Timer(){
+
+				@Override
+				public void run() {
+					if(inpainting){
+						return;
+					}
+					
+					if(!readySrc){
+						inpainting=true;
+						inPaintTransparentArea(srcData,1,0,0,new InpaintListener() {
+							
+							@Override
+							public void createMixedImage(ImageData imageData) {
+								srcData=imageData;
+								readySrc=true;
+								inpainting=false;
+							}
+							
+							@Override
+							public void createInpainteMaks(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override
+							public void createInpaintImage(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override
+							public void createGreyScaleMaks(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+						});
+						return;
+					}else if(!readyDest){
+						inpainting=true;
+						inPaintTransparentArea(destData,1,0,0,new InpaintListener() {
+							
+							@Override
+							public void createMixedImage(ImageData imageData) {
+								destData=imageData;
+								readyDest=true;
+								inpainting=false;
+							}
+							
+							@Override
+							public void createInpainteMaks(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override
+							public void createInpaintImage(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+							
+							@Override
+							public void createGreyScaleMaks(ImageData imageData) {
+								// TODO Auto-generated method stub
+								
+							}
+						});
+						return;
+						
+						
+						
+					}
+					
+					Poisson.setImageDatas(srcData,destData, maskData,resultData);
+					ImageData poisoned=Poisson.blend(iteration, 0, 0);
+					listener.onPoissoned(poisoned);
+					cancel();
+					
+				}
+				
+			};
+			timer.scheduleRepeating(50);
+		}
+	}
+	
+	public static  void inPaintTransparentArea(ImageData data,final int inpaintRadius,final int expand,final int fade,final InpaintListener listener){
+		Canvas canvas=CanvasUtils.copyTo(data, null);
+		new LoggingImageElementLoader(){
+			@Override
+			public void onLoad(ImageElement imageElement) {
+				InpaintEngine engine=new InpaintEngine();
+				
+				List<MaskData> inpaintmasks=Lists.newArrayList(new MaskData().fade(fade).expand(expand));
+				engine.doInpaint(imageElement, inpaintRadius, inpaintmasks,listener);
+			}
+		}.load(canvas);
+	}
+	
+	public static interface PoissonListener{
+		public void onPoissoned(ImageData data);
+	}
+	
 
 	public ImageData from(Canvas canvas,ImageElement element){
 		ImageElementUtils.copytoCanvas(element, canvas);
