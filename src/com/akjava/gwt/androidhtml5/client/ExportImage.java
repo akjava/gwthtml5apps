@@ -1185,7 +1185,7 @@ public class ExportImage extends Html5DemoEntryPoint {
 		TextMetrics metrix=canvas.getContext2d().measureText(text);
 		
 		int dx=(int) ((rect.getWidth()-metrix.getWidth())/2);
-		int dy=rect.getHeight()/2;
+		int dy=(int) (rect.getHeight()/2);
 		
 		//int size=parseFontSize(canvas.getContext2d().getFont());
 		//double descentOffset=(double)size/4; offset no need anymore

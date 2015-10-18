@@ -27,7 +27,7 @@ import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
-import com.akjava.lib.common.graphics.Rect;
+import com.akjava.lib.common.graphics.IntRect;
 import com.google.common.base.Function;
 import com.google.common.base.Optional;
 import com.google.common.collect.Lists;
@@ -1228,7 +1228,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		
 		String title=titleBox.getText();
-		Rect rect;
+		IntRect rect;
 		
 		
 		int align=CanvasUtils.ALIGN_CENTER;
