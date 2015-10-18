@@ -9,6 +9,8 @@ import com.akjava.gwt.androidhtml5.client.ImageMaskDataEditor.ImageMaskData;
 import com.akjava.gwt.androidhtml5.client.TransparentIt.XYPoint;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.GWTHTMLUtils;
+import com.akjava.gwt.lib.client.ImageElementListener;
+import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.CursorUtils;
 import com.google.common.collect.Lists;
@@ -21,6 +23,7 @@ import com.google.gwt.dom.client.Style.Cursor;
 import com.google.gwt.editor.client.LeafValueEditor;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
@@ -29,6 +32,7 @@ import com.google.gwt.event.dom.client.MouseOverHandler;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.text.shared.Renderer;
+import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
@@ -47,6 +51,7 @@ public ImageMaskDataEditor(){
 	this(null,null);
 }
 
+ String backgroundDataUrl;//temporaly
 
 /**
  * possible share canvas,but not complete because of some event listener
@@ -170,8 +175,17 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 		}
 	});
 	pens.add(uneraseR);
-	pens.add(new Label("unerase"));
+	pens.add(new Label("Unerase"));
 	controler.add(pens);
+	
+	Button crop=new Button("crop",new ClickHandler() {
+		
+		@Override
+		public void onClick(ClickEvent event) {
+			doCropSrcs();
+		}
+	});
+	pens.add(crop);
 	
 	CanvasDragMoveControler dragControler=new CanvasDragMoveControler(this.canvas, new MoveListener() {
 
@@ -258,6 +272,30 @@ public ImageMaskDataEditor(@Nullable Canvas canvas,@Nullable Canvas overlayCanva
 	});
 	
 }
+
+protected void doCropSrcs() {
+	resetCanvas();
+	ImageElementUtils.createWithLoader(backgroundDataUrl,new ImageElementListener() {
+		
+		@Override
+		public void onLoad(ImageElement element) {
+			//Window.open(overlayCanvas.toDataUrl(), "hello", null);
+			canvas.getContext2d().save();
+			canvas.getContext2d().setGlobalCompositeOperation(Composite.DESTINATION_OUT);
+			canvas.getContext2d().drawImage(element, 0, 0);//TODO support scale
+			canvas.getContext2d().restore();
+			updateCanvas();
+		}
+		
+		@Override
+		public void onError(String url, ErrorEvent event) {
+			// TODO Auto-generated method stub
+			
+		}
+	});
+
+}
+
 
 private void updateCursor(){
 	if(penMode==MODE_ERASE){

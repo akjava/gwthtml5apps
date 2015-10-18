@@ -40,6 +40,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.user.client.ui.Button;
+import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
@@ -241,15 +242,15 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			
 			posScaleAngleDataEditor=new ImagePosScaleAngleEditor(){
 				public void doOverLayer(Canvas canvas) {
-					
-					CanvasUtils.setBackgroundImage(imageMaskDataEditor.getCanvas(), canvas.toDataUrl(),imageMaskDataEditor.getScaledCanvasWidth(),imageMaskDataEditor.getScaledCanvasHeight());//link image
+					imageMaskDataEditor.backgroundDataUrl=canvas.toDataUrl();
+					CanvasUtils.setBackgroundImage(imageMaskDataEditor.getCanvas(), imageMaskDataEditor.backgroundDataUrl,imageMaskDataEditor.getScaledCanvasWidth(),imageMaskDataEditor.getScaledCanvasHeight());//link image
 					
 					canvas.getContext2d().save();
 					canvas.getContext2d().setGlobalAlpha(0.5);
 					canvas.getContext2d().drawImage(layerCanvas.getCanvasElement(), 0, 0);
 					canvas.getContext2d().restore();
 					if(possitionIteration!=0){
-					executer.doPoisson(possitionIteration);//for preview,//this make slow
+					executer.doPoisson(possitionIteration,false);//for preview,//this make slow
 					}
 				}
 			};
@@ -293,7 +294,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.0.1";
 	}
 
 	@Override
@@ -383,11 +384,24 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			@Override
 			public void uploaded(File file, String text) {
 				
-				destImageElement=ImageElementUtils.create(text);
-				mixCanvas.setDest(destImageElement);
-				PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+				ImageElementUtils.createWithLoader(text, new ImageElementListener() {
+					
+					@Override
+					public void onLoad(ImageElement element) {
+						destImageElement=element;
+						mixCanvas.setDest(destImageElement);
+						PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+						
+						driver.edit(newData);
+					}
+					
+					@Override
+					public void onError(String url, ErrorEvent event) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
 				
-				driver.edit(newData);
 			}
 		}, true);
 		h.add(destUpLoad);
@@ -397,21 +411,37 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		FileUploadForm srcUpLoad=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			@Override
-			public void uploaded(File file, String text) {
-				ImageMaskData maskData=null;
-				try{
-					PoissonImageData oldData=driver.flush();
-					maskData=oldData.getImageMaskData();
-				}catch (Exception e) {
-					//it happen on initial
-				}
-				srcImageElement=ImageElementUtils.create(text);
-				PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+			public void uploaded(File file, final String text) {
+				ImageElementUtils.createWithLoader(text, new ImageElementListener() {
+					
+					@Override
+					public void onLoad(ImageElement element) {
+						ImageMaskData maskData=null;
+						try{
+							PoissonImageData oldData=driver.flush();
+							maskData=oldData.getImageMaskData();
+						}catch (Exception e) {
+							//it happen on initial
+						}
+						srcImageElement=element;
+						PoissonImageData newData=new PoissonImageData(destImageElement,srcImageElement);
+						
+						if(maskData!=null){
+							newData.getImageMaskData().setImageData(ImageDataUtils.copy(sharedCanvas,maskData.getImageData()));
+						}
+						driver.edit(newData);
+					}
+					
+					@Override
+					public void onError(String url, ErrorEvent event) {
+						// TODO Auto-generated method stub
+						
+					}
+				});
 				
-				if(maskData!=null){
-					newData.getImageMaskData().setImageData(ImageDataUtils.copy(sharedCanvas,maskData.getImageData()));
-				}
-				driver.edit(newData);
+				
+				
+				
 			}
 		}, true);
 		h.add(srcUpLoad);
@@ -437,7 +467,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		editorPanel.add(previewIterationRange);
 		editor.setPossitionIteration(initialValue);
 		
-		updateIterationRange = new LabeledInputRange("Update-Iteration:",20,400,100,"140px","400px") {
+		updateIterationRange = new LabeledInputRange("Update-Iteration:",1,400,100,"140px","400px") {
 			
 			@Override
 			public void onValueChanged(int newValue) {
@@ -460,12 +490,14 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	    	Button updateBt=new ExecuteButton("Update"){
 				@Override
 				public void executeOnClick() {
-					doPoisson(updateIterationRange.getValue());
+					doPoisson(updateIterationRange.getValue(),inpaintCheck.getValue());
 				}
 	    	};
-	    	
-	    
 	    editorPanel.add(updateBt);
+	    
+	    inpaintCheck = new CheckBox();
+	    editorPanel.add(inpaintCheck);
+	    
 	    
 	    panel.add(editorPanel);
 	    
@@ -541,7 +573,8 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	
 	
 	private Canvas sharedCanvas=Canvas.createIfSupported();
-	public void doPoisson(int iteration){
+	private CheckBox inpaintCheck;
+	public void doPoisson(int iteration,boolean doInpaint){
 		LogUtils.log("poison:"+iteration);
 		if(possing){
 			return;
@@ -553,9 +586,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		containers.clear();
 		
 		
-		PoissonImageData data=driver.flush();//possible called before data set and make that broken
+		PoissonImageData poissonData=driver.flush();//possible called before data set and make that broken
 		
-		if(data.getOverrayImage()==null){//not initialized
+		if(poissonData.getOverrayImage()==null){//not initialized
 			LogUtils.log("overrayImage is null");
 			possing=false;
 			return;
@@ -565,6 +598,11 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		Rect transParentAreaRect=canvasTools.getTransparentArea(128, 16, 16);
 		//LogUtils.log(transParentAreaRect);
+		
+		if(transParentAreaRect.getWidth()==0 || transParentAreaRect.getHeight()==0){
+			LogUtils.log("no rect,quit");
+			return;
+		}
 		
 		ImageData maskBaseImageData=canvasTools.getImageData(transParentAreaRect);
 		
@@ -593,7 +631,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		*/
 		
 		//CanvasUtils.createCanvas(ImageElement)
-		Canvas pCanvas=ImageElementUtils.copytoCanvas(data.getImageMaskData().getImageElement(), null);
+		Canvas pCanvas=ImageElementUtils.copytoCanvas(poissonData.getImageMaskData().getImageElement(), null);
 		CanvasTools resultCanvas=CanvasTools.from(pCanvas);
 		ImageData destData=resultCanvas.getImageData(transParentAreaRect);
 		ImageData resultData=resultCanvas.getImageData(transParentAreaRect);
@@ -601,9 +639,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		
 		//set
 		//create method size only?
-		Canvas srcCanvas=CanvasUtils.createCanvas(data.getImageMaskData().getImageElement().getWidth(),data.getImageMaskData().getImageElement().getHeight());
-		PositionScaleAngleData psa=data.getPosScaleAngleData();
-		CanvasUtils.drawCenter(srcCanvas, data.getOverrayImage(),(int)psa.getPositionX(),(int)psa.getPositionY(),psa.getScale(),psa.getScale(),psa.getAngle(),1);
+		Canvas srcCanvas=CanvasUtils.createCanvas(poissonData.getImageMaskData().getImageElement().getWidth(),poissonData.getImageMaskData().getImageElement().getHeight());
+		PositionScaleAngleData psa=poissonData.getPosScaleAngleData();
+		CanvasUtils.drawCenter(srcCanvas, poissonData.getOverrayImage(),(int)psa.getPositionX(),(int)psa.getPositionY(),psa.getScale(),psa.getScale(),psa.getAngle(),1);
 		
 		ImageData srcData=CanvasTools.from(srcCanvas).getImageData(transParentAreaRect);
 		
