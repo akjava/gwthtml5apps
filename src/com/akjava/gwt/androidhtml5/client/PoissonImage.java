@@ -29,6 +29,7 @@ import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.AsyncMultiCaller;
 import com.akjava.gwt.lib.client.experimental.ExecuteButton;
 import com.akjava.gwt.lib.client.experimental.ImageDataUtils;
+import com.akjava.gwt.lib.client.experimental.LoggingImageElementLoader;
 import com.akjava.lib.common.graphics.Rect;
 import com.google.common.base.Optional;
 import com.google.common.base.Predicate;
@@ -147,11 +148,16 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			}else{
 				if(poissonedImage!=null){
 					if(useMask){
-						canvas.getContext2d().drawImage(maskCanvas.getCanvasElement(),0,0);
+						
+						ImageData data=sourceInImageData(ImageDataUtils.create(null, poissonedImage),ImageDataUtils.copyFrom(maskCanvas));
+						ImageDataUtils.putImageData(data,canvas);
+						
+						/*canvas.getContext2d().drawImage(maskCanvas.getCanvasElement(),0,0);
 						canvas.getContext2d().save();
 						canvas.getContext2d().setGlobalCompositeOperation(Composite.SOURCE_IN);
 						canvas.getContext2d().drawImage(poissonedImage,0,0);
-						canvas.getContext2d().restore();
+						canvas.getContext2d().restore();*/
+						
 					}else{
 						canvas.getContext2d().drawImage(poissonedImage,0,0);
 					}
@@ -941,6 +947,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 					
 					Poisson.setImageDatas(srcData,destData, maskData,resultData);
 					ImageData poisoned=Poisson.blend(iteration, 0, 0);
+					
+					
+					
 					listener.onPoissoned(poisoned);
 					cancel();
 					
@@ -949,6 +958,32 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			};
 			timer.scheduleRepeating(50);
 		}
+	}
+	
+	//TODO move to imageData?
+	/**
+	 * draw only not-alpha on maskdata
+	 * @param imageData
+	 * @param maskData
+	 * @return
+	 */
+	public static ImageData sourceInImageData(ImageData imageData,ImageData maskData){
+		//check & warn
+		Canvas imageCanvas=CanvasUtils.copyTo(imageData, null);
+		Canvas maskCanvas=CanvasUtils.copyTo(maskData, null);
+		
+		Canvas canvas=CanvasUtils.copyToSizeOnly(imageCanvas, null);
+		canvas.getContext2d().drawImage(maskCanvas.getCanvasElement(), 0, 0);
+	
+		canvas.getContext2d().setGlobalCompositeOperation(Composite.SOURCE_IN);
+		canvas.getContext2d().drawImage(imageCanvas.getCanvasElement(),0,0);
+		
+		imageCanvas=null;
+		maskCanvas=null;
+		
+		ImageData data=ImageDataUtils.copyFrom(canvas);
+		canvas=null;
+		return data;
 	}
 	
 	public static  void inPaintTransparentArea(ImageData data,final int inpaintRadius,final int expand,final int fade,final InpaintListener listener){

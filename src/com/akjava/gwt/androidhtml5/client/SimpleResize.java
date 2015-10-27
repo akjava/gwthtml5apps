@@ -19,6 +19,7 @@ import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.lib.client.CanvasResizer;
 import com.akjava.gwt.lib.client.CanvasUtils;
+import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.JSDownScale;
 import com.akjava.gwt.lib.client.LogUtils;
@@ -46,6 +47,7 @@ import com.google.gwt.dom.client.ImageElement;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.ErrorEvent;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.safehtml.shared.SafeHtml;
@@ -515,11 +517,26 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		return ValuesUtils.toDouble(size.substring(ind+1), 1);
 	}
 	
-	protected void loadFile(File file, String asStringText) {
+	protected void loadFile(final File file, String asStringText) {
+		ImageElementUtils.createWithLoader(asStringText, new ImageElementListener() {
+			
+			@Override
+			public void onLoad(ImageElement element) {
+				loadFile(file,element);
+			}
+			
+			@Override
+			public void onError(String url, ErrorEvent event) {
+				LogUtils.log(event.getNativeEvent());
+			}
+		});
+		
+	}
+	protected void loadFile(File file, ImageElement element) {
 		try{
 		boolean hasWidth=sizeMode==SIZE_WIDTH;
 			//TODO create method
-		ImageElement element=ImageElementUtils.create(asStringText);
+		
 		String dataUrl;
 		//boolean isJpeg=false;
 		String exportMime="image/png";
@@ -568,7 +585,7 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		
 		
 		if(useHighQuality){
-			ImageElementUtils.copytoCanvas(asStringText, canvas);
+			ImageElementUtils.copytoCanvas(element.getSrc(), canvas);
 			
 			double convertScale;
 			if(sizeMode==SIZE_WIDTH){
@@ -806,10 +823,16 @@ DropDockDataUrlRootPanel root=new DropDockDataUrlRootPanel(Unit.PX,false){
 		return textConstants.SimpleResize();
 	}
 
+	/**
+	 * 
+	 * history
+	 * 1.2.1 fix imageloader wait.
+	 */
 	@Override
 	public String getAppVersion() {
-		return "1.2";
+		return "1.2.1";
 	}
+	
 	
 	@Override
 	public Panel getLinkContainer() {

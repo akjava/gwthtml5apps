@@ -84,18 +84,23 @@ public class Inpaint extends Html5DemoEntryPoint {
 			@Override
 			public void loadFile(String pareht, Optional<File> optional, String dataUrl) {
 				for(File file:optional.asSet()){
+				
 					
-					if(!GWT.isProdMode()){
-						ImageElement element=ImageElementUtils.create(dataUrl);
-						if(element.getWidth()+element.getHeight()>150){
-							Window.alert("hey this is dev mode,made your pc freeze.use on production mode");
-						}else{
+					ImageElementUtils.createWithLoader(dataUrl, new ImageElementListener() {
+						
+						@Override
+						public void onLoad(ImageElement element) {
+							if(element.getWidth()+element.getHeight()>150){
+								Window.alert("hey this is dev mode,made your pc freeze.use on production mode");
+							}
 							uploadImage(element);
 						}
-					}else{
-						ImageElement element=ImageElementUtils.create(dataUrl);
-						uploadImage(element);
-					}
+						
+						@Override
+						public void onError(String url, ErrorEvent event) {
+							LogUtils.log(event.getNativeEvent());
+						}
+					});
 				}
 			}
 			
@@ -966,9 +971,13 @@ public class Inpaint extends Html5DemoEntryPoint {
 		return "Inpaint";
 	}
 
+	/**
+	 * version history
+	 * 1.0.1 fixed imageelement loading problem
+	 */
 	@Override
 	public String getAppVersion() {
-		return "1.0";
+		return "1.0.1";
 	}
 	
 	@Override
