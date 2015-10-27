@@ -17,12 +17,14 @@ import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
 import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.inpaint.client.InPaint;
+import com.akjava.gwt.inpaint.client.InpaintEngine;
+import com.akjava.gwt.inpaint.client.InpaintEngine.InpaintListener;
 import com.akjava.gwt.lib.client.CanvasUtils;
 import com.akjava.gwt.lib.client.ImageElementListener;
-import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
 import com.akjava.gwt.lib.client.experimental.ImageDataUtils;
+import com.akjava.gwt.lib.client.experimental.LoggingImageElementLoader;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
 import com.akjava.lib.common.utils.Benchmark;
@@ -36,11 +38,12 @@ import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.ErrorEvent;
+import com.google.gwt.event.logical.shared.ValueChangeEvent;
+import com.google.gwt.event.logical.shared.ValueChangeHandler;
 import com.google.gwt.user.cellview.client.CellTable;
 import com.google.gwt.user.cellview.client.TextColumn;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
-import com.google.gwt.user.client.Window.Location;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.DockLayoutPanel;
@@ -48,6 +51,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Image;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.TabLayoutPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
@@ -138,9 +142,17 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 		FileUploadForm upload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			@Override
-			public void uploaded(File file, String value) {
+			public void uploaded(File file,final String value) {
 				if(file!=null){
-				uploadImage(ImageElementUtils.create(value));
+					new LoggingImageElementLoader(){
+
+						@Override
+						public void onLoad(ImageElement imageElement) {
+							uploadImage(imageElement);
+						}
+						
+					}.load(value);
+				
 				}
 				//loadFile(file, value);
 			}
@@ -150,7 +162,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 		//
 		
 	    
-	  
+	 
 	    
 		
 		
@@ -191,33 +203,100 @@ public class Inpaint extends Html5DemoEntryPoint {
 			
 			@Override
 			public void onClick(ClickEvent event) {
-				doInPaint(selectedElement);
+				if(maskImageButton.getValue()){
+					doInPaint(selectedElement,maskImageElement);
+				}else{
+					doInPaint(selectedElement);
+				}
+				
 			}
 		});
 		h4.add(updateBt);
 		updateBt.setEnabled(false);
 		
-		//test
-		HorizontalPanel masks=new HorizontalPanel();
-		masks.add(new Label("Mask-image:"));
-		controler.add(masks);
+		
+		controler.add(new Label("Mask Mode"));
+		
+		HorizontalPanel switcher=new HorizontalPanel();
+		controler.add(switcher);
+		switcher.setWidth(eastWidth+"px");
+		
+		
+		VerticalPanel transparentPanel=new VerticalPanel();
+		
+		RadioButton transparentButton=new RadioButton("mode","Image's transparent");
+		transparentButton.setValue(true);
+		transparentButton.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> event) {
+				if(event.getValue()){
+					editor.setVisible(true);
+				}
+			}
+		});
+		transparentPanel.add(transparentButton);
+		
+		switcher.add(transparentPanel);
+		
+		maskImageButton = new RadioButton("mode","Mask Image(Keep black area)");
+		maskImageButton.setEnabled(false);
+		maskImageButton.addValueChangeHandler(new ValueChangeHandler<Boolean>() {
+			
+			@Override
+			public void onValueChange(ValueChangeEvent<Boolean> event) {
+				if(event.getValue()){
+					editor.setVisible(false);
+				}
+			}
+		});
+		
+		
+		VerticalPanel maskImagesPanel=new VerticalPanel();
+	
+		final Label imageLabel=new Label();
+		switcher.add(maskImagesPanel);
+		maskImagesPanel.add(maskImageButton);
+		
+		final Button repreviewButton=new Button("Re preview Mask",new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				doRepreview();
+			}
+		});
+		maskImagesPanel.add(repreviewButton);
+		repreviewButton.setEnabled(false);
 		
 		FileUploadForm maskUpload=FileUtils.createSingleFileUploadForm(new DataURLListener() {
 			
 			@Override
 			public void uploaded(File file, String text) {
-				maskImageElement=ImageElementUtils.create(text);
+				imageLabel.setText(file.getFileName());
+				new LoggingImageElementLoader(){
+
+					@Override
+					public void onLoad(ImageElement imageElement) {
+						maskImageElement=imageElement;
+						maskImageButton.setEnabled(true);
+						maskImageButton.setValue(true,true);
+						repreviewButton.setEnabled(true);
+						doRepreview();
+					}}.load(text);
 			}
 		});
-		masks.add(maskUpload);
-		Button inpaintWithMask = new Button("Inpaint with Mask",new ClickHandler() {
-			
-			@Override
-			public void onClick(ClickEvent event) {
-				doInPaint(selectedElement,maskImageElement);
-			}
-		});
-		masks.add(inpaintWithMask);
+		maskImagesPanel.add(maskUpload);
+		
+		maskImagesPanel.add(imageLabel);
+		
+		
+		//test
+		HorizontalPanel masks=new HorizontalPanel();
+		masks.add(new Label("Mask-image:"));
+		//controler.add(masks);
+		
+		
+		
 		
 		
 		updateMaskBt = new Button("Preview Mask",new ClickHandler() {
@@ -228,7 +307,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 			}
 		});
 		updateMaskBt.setEnabled(false);
-		h4.add(updateMaskBt);
+		transparentPanel.add(updateMaskBt);
 		
 		Button addMaskBt = new Button("add New Mask",new ClickHandler() {
 			
@@ -240,7 +319,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				maskDataTableSet.setSelected(data, true);
 			}
 		});
-		h4.add(addMaskBt);
+		//h4.add(addMaskBt);
 		
 		Button removeMaskBt = new Button("Remove Mask",new ClickHandler() {
 			
@@ -254,10 +333,10 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 			}
 		});
-		h4.add(removeMaskBt);
+		//h4.add(removeMaskBt);
 		
 		
-		controler.add(new Label("Current MaskData"));
+		//controler.add(new Label("Current MaskData"));
 		editor = new MaskDataEditor();    
 	    maskDataDriver.initialize(editor);
 	    controler.add(editor);
@@ -310,10 +389,38 @@ public class Inpaint extends Html5DemoEntryPoint {
 		
 		//cell list
 		
-		eastPanel.add(scroll);
+		//eastPanel.add(scroll);
 		
-		dock.addWest(eastPanel, 400);
+		dock.addWest(eastPanel, eastWidth);
 	}
+	protected void doRepreview() {
+		LogUtils.log("doRepreview1");
+		int margin=InpaintEngine.INPAINT_MARGIN;
+		if(maskImageElement==null){
+			 Window.alert("no mask element");
+			 return;
+		}
+		LogUtils.log("doRepreview1");
+		ImageElementUtils.copytoCanvasWithMargin(maskImageElement, sharedCanvas,true,margin,true);
+		
+		Canvas grayscale=CanvasUtils.convertToGrayScale(sharedCanvas, null);
+		CanvasUtils.copyTo(grayscale, sharedCanvas);
+		
+		
+		ImageData maskData=CanvasUtils.getImageData(sharedCanvas);
+		
+		greyScaleMaskPanel.clear();
+		
+		addToPanel(greyScaleMaskPanel,maskData);
+		
+		mainTab.selectTab(1);
+		LogUtils.log("doRepreview4");
+		//CanvasUtils.copyTo(maskData,sharedCanvas);
+		//String dataUrl=sharedCanvas.toDataUrl();
+		//listener.createGreyScaleMaks(maskData);
+	}
+
+	private int eastWidth=400;
 	
 	
 	
@@ -622,13 +729,72 @@ public class Inpaint extends Html5DemoEntryPoint {
 		}
 		
 	}
+	private synchronized void addToPanel(final Panel panel,ImageData imageData){
+		ImageDataUtils.rezieAndImageData(imageData, sharedCanvas);
+		new LoggingImageElementLoader(){
+
+			@Override
+			public void onLoad(ImageElement imageElement) {
+				panel.add(new Image(imageElement.getSrc()));
+			}
+			
+		}.load(sharedCanvas.toDataUrl());
+	}
 	
 	protected void doInPaint(final ImageElement element,final ImageElement maskImage) {
-		final MaskData data=maskDataDriver.flush();
-		
-		
+		InpaintEngine engine=new InpaintEngine();
 		updateBt.setEnabled(false);
-	
+		
+		greyScaleMaskPanel.clear();
+		inpaintMaskPanel.clear();
+		inpaintPanel.clear();
+		mixedPanel.clear();
+		
+		engine.doInpaint(element, radiuseRange.getValue(), maskImage, new InpaintListener(){
+			private Canvas canvas=Canvas.createIfSupported();//shared canvas possible conflict
+			@Override
+			public void createMixedImage(ImageData imageData) {
+				updateBt.setEnabled(true);
+				addToPanel(mixedPanel,imageData);
+				mainTab.selectTab(3);//final tab
+			}
+
+			@Override
+			public void createInpaintImage(ImageData imageData) {
+				addToPanel(inpaintPanel,imageData);
+			}
+
+			@Override
+			public void createGreyScaleMaks(ImageData imageData) {
+				addToPanel(greyScaleMaskPanel,imageData);
+			}
+
+			@Override
+			public void createInpainteMaks(ImageData imageData) {
+				addToPanel(inpaintMaskPanel,imageData);
+			}
+			
+			private synchronized void addToPanel(final Panel panel,ImageData imageData){
+				ImageDataUtils.rezieAndImageData(imageData, canvas);
+				new LoggingImageElementLoader(){
+
+					@Override
+					public void onLoad(ImageElement imageElement) {
+						panel.add(new Image(imageElement.getSrc()));
+					}
+					
+				}.load(canvas.toDataUrl());
+			}
+			
+			
+		});
+		
+		
+		
+		
+		
+		/*
+		final MaskData data=maskDataDriver.flush();
 		this.selectedElement=element;
 		
 		Timer timer=new Timer(){
@@ -668,12 +834,12 @@ public class Inpaint extends Html5DemoEntryPoint {
 				//created by maskData
 				Uint8Array merged=null;
 				
-				/*
+				
 				Uint8Array expanded=InPaint.expandMaskByte(merged,  imageData.getWidth(),data.getExpand());
 				createAndInsertImage(expanded,resultPanel);
 				
 				grayByte=InPaint.expandMaskByteAsGray(expanded,  imageData.getWidth(),data.getFade());
-				*/
+				
 				
 				
 				
@@ -786,7 +952,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				mainTab.selectTab(3);//final tab
 			}
 		};
-		timer.schedule(50);
+		timer.schedule(50);*/
 	
 		
 	}
@@ -815,7 +981,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 				
 				//resultPanel.add(new Image(element.getSrc()));
 				//use edge case
-				int margin=2;
+				int margin=InpaintEngine.INPAINT_MARGIN;
 				
 				Benchmark.start("expand");
 				if(data.getColor()=="#000000" || data.isTransparent()){//should not expand
@@ -965,6 +1131,8 @@ public class Inpaint extends Html5DemoEntryPoint {
 
 	private TabLayoutPanel mainTab;
 
+	private RadioButton maskImageButton;
+
 
 	@Override
 	public String getAppName() {
@@ -977,7 +1145,7 @@ public class Inpaint extends Html5DemoEntryPoint {
 	 */
 	@Override
 	public String getAppVersion() {
-		return "1.0.1";
+		return "1.1";
 	}
 	
 	@Override

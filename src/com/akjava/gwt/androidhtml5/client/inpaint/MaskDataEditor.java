@@ -18,7 +18,7 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 	ColorBox colorEditor;
 	InputRangeWidget expandEditor;
 	InputRangeWidget fadeEditor;
-	CheckBox similarColorEditor;
+	CheckBox similarColorEditor;//deprecated this is useless
 	CheckBox invertEditor;
 	InputRangeWidget maxLengthEditor;
 
@@ -31,15 +31,15 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 		this.add(h1);
 		
 		transparentEditor = new CheckBox("transparent");
-		h1.add(transparentEditor);
+		//h1.add(transparentEditor);
 		
 		colorEditor = new ColorBox();
 		
 		
-		h1.add(colorEditor);
+		//h1.add(colorEditor);
 		
 		similarColorEditor = new CheckBox("similarColor");
-		h1.add(similarColorEditor);
+		//h1.add(similarColorEditor);
 		
 		useClipEditor = new CheckBox("use clip");
 		h1.add(useClipEditor);
@@ -57,11 +57,11 @@ public class MaskDataEditor extends VerticalPanel implements Editor<MaskData>{
 		
 		HorizontalPanel h2=new HorizontalPanel();
 		h2.setVerticalAlignment(HorizontalPanel.ALIGN_MIDDLE);
-		this.add(h2);
+		//this.add(h2);
 		final Label maxLengthLabel=new Label("max-simiar:");
 		h2.add(maxLengthLabel);
 		maxLengthEditor = HTML5InputRange.createInputRange(1, 256, 1);
-		h2.add(maxLengthEditor);
+		//h2.add(maxLengthEditor);
 		maxLengthEditor.setWidth(260);
 		maxLengthEditor.addInputRangeListener(new InputRangeListener() {
 			@Override
