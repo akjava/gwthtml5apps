@@ -6,7 +6,7 @@ public class MaskData {
 private boolean transparent=true;//most use
 private String color="#ffffff";
 private int expand=2;
-private int fade=5;
+private int fade=0;
 private boolean similarColor;
 private int maxLength=16;
 private Rect clipRect=new Rect(0,0,0,0);

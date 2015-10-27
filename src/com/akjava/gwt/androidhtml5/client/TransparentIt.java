@@ -14,8 +14,8 @@ import com.akjava.gwt.html5.client.file.File;
 import com.akjava.gwt.html5.client.file.FilePredicates;
 import com.akjava.gwt.html5.client.file.FileUploadForm;
 import com.akjava.gwt.html5.client.file.FileUtils;
-import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.html5.client.file.FileUtils.DataURLListener;
+import com.akjava.gwt.html5.client.file.Uint8Array;
 import com.akjava.gwt.html5.client.file.ui.DropDockDataUrlRootPanel;
 import com.akjava.gwt.html5.client.input.ColorBox;
 import com.akjava.gwt.lib.client.CanvasUtils;
@@ -25,6 +25,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
+import com.akjava.gwt.lib.client.experimental.LoggingImageElementLoader;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
 import com.akjava.gwt.lib.client.widget.cell.SimpleCellTable;
@@ -736,9 +737,21 @@ public class TransparentIt extends Html5DemoEntryPoint {
 
 			@Override
 			public void uploaded(File file, String asStringText) {
-				bgImage=ImageElementUtils.create(asStringText);
+				ImageElementUtils.createWithLoader(asStringText,new ImageElementListener() {
+					
+					@Override
+					public void onLoad(ImageElement element) {
+						bgImage=element;
+						updateBgImage(bgImage);
+					}
+					
+					@Override
+					public void onError(String url, ErrorEvent event) {
+						LogUtils.log(event.getNativeEvent());
+					}
+				});
 				
-				updateBgImage(bgImage);
+				
 			}
 		}, false);
 		
@@ -1596,40 +1609,50 @@ public class TransparentIt extends Html5DemoEntryPoint {
 	 * only need when export,usually css draw backgorund
 	 * @param withBg
 	 */
-	public void updateCanvas(boolean withBg){
+	public void updateCanvas(final boolean withBg){
 		if(selection==null){
 			return;
 		}
-		ImageElement selectionImage=ImageElementUtils.create(selection.getDataUrl());
-		ImageElementUtils.copytoCanvas(selectionImage, canvas,false);//just same size
 		
-		//change scale
-		if(currentScale!=1){
-			canvas.setWidth((canvas.getCoordinateSpaceWidth()*currentScale)+"px");
-			canvas.setHeight((canvas.getCoordinateSpaceHeight()*currentScale)+"px");
-		}
-		
-		CanvasUtils.clear(canvas);
-		CanvasUtils.clear(overlayCanvas);//should clear for old bg
-		
-		if(withBg){
-		if(bgImage!=null){
-			//bugs,not effect on bgcolor with bgimage,bgimage not repeated like css
-			CanvasUtils.drawImage(canvas, bgImage);
-		}else{
-			if(!isTransparent()){
-				canvas.getContext2d().setFillStyle(getBgColor());
+		new LoggingImageElementLoader() {
+			
+			@Override
+			public void onLoad(ImageElement selectionImage) {
+				//ImageElement selectionImage=ImageElementUtils.create(selection.getDataUrl());
+				ImageElementUtils.copytoCanvas(selectionImage, canvas,false);//just same size
 				
-				canvas.getContext2d().fillRect(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
+				//change scale
+				if(currentScale!=1){
+					canvas.setWidth((canvas.getCoordinateSpaceWidth()*currentScale)+"px");
+					canvas.setHeight((canvas.getCoordinateSpaceHeight()*currentScale)+"px");
+				}
+				
+				CanvasUtils.clear(canvas);
+				CanvasUtils.clear(overlayCanvas);//should clear for old bg
+				
+				if(withBg){
+				if(bgImage!=null){
+					//bugs,not effect on bgcolor with bgimage,bgimage not repeated like css
+					CanvasUtils.drawImage(canvas, bgImage);
+				}else{
+					if(!isTransparent()){
+						canvas.getContext2d().setFillStyle(getBgColor());
+						
+						canvas.getContext2d().fillRect(0, 0, canvas.getCoordinateSpaceWidth(), canvas.getCoordinateSpaceHeight());
+					}
+				}
+				}
+				
+				
+				
+				CanvasUtils.drawImage(canvas, selectionImage);
+				
+				ImageElementUtils.copytoCanvas(selectionImage, overlayCanvas,false);
+				
 			}
-		}
-		}
+		}.load(selection.getDataUrl());
 		
 		
-		
-		CanvasUtils.drawImage(canvas, selectionImage);
-		
-		ImageElementUtils.copytoCanvas(selectionImage, overlayCanvas,false);
 	}
 
 	public abstract class HtmlColumn<T> extends Column<T,SafeHtml>{
