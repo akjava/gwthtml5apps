@@ -22,7 +22,7 @@ import com.akjava.gwt.lib.client.ImageElementListener;
 import com.akjava.gwt.lib.client.ImageElementLoader;
 import com.akjava.gwt.lib.client.ImageElementUtils;
 import com.akjava.gwt.lib.client.LogUtils;
-import com.akjava.gwt.lib.client.canvas.CanvasTextUtils;
+import com.akjava.gwt.lib.client.canvas.IntRectCanvasTextUtils;
 import com.akjava.gwt.lib.client.widget.EnterKeySupportTextBox;
 import com.akjava.gwt.lib.client.widget.cell.ButtonColumn;
 import com.akjava.gwt.lib.client.widget.cell.EasyCellTableObjects;
@@ -1022,14 +1022,14 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 	 *
 	 */
 	
-	public class DataToImageElement implements Function<ImageUrlData,ImageElement>{
+/*	public class DataToImageElement implements Function<ImageUrlData,ImageElement>{
 
 		@Override
 		public ImageElement apply(ImageUrlData input) {
 			return ImageElementUtils.create(input.getDataUrl());
 		}
 		
-	}
+	}*/
 	
 	
 	
@@ -1252,7 +1252,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		
 		int margin=marginBox.getValue();
 		
-		rect=CanvasTextUtils.getAlignRect(canvas,imageWidth-margin*2,imageHeight-margin*2,title,align,valign);
+		rect=IntRectCanvasTextUtils.getAlignRect(canvas,imageWidth-margin*2,imageHeight-margin*2,title,align,valign);
 		rect.setX(rect.getX()+margin+clipSX);
 		rect.setY(rect.getY()+margin+clipSY);
 		//rect.setY(clipSY+25);
@@ -1262,7 +1262,7 @@ public class SimpleLogo extends Html5DemoEntryPoint {
 		canvas.getContext2d().save();
 		double transp=(double)transparentTextBox.getValue()/100;
 		canvas.getContext2d().setGlobalAlpha(transp);
-		CanvasTextUtils.drawCenterInRect(canvas, title, rect);
+		IntRectCanvasTextUtils.drawCenterInRect(canvas, title, rect);
 		canvas.getContext2d().restore();
 		
 		//this is faild

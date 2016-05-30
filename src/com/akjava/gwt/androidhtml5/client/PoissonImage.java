@@ -8,6 +8,7 @@ import javax.annotation.Nullable;
 
 import com.akjava.gwt.androidhtml5.client.ImageMaskDataEditor.ImageMaskData;
 import com.akjava.gwt.androidhtml5.client.ImagePosScaleAngleEditor.PositionScaleAngleData;
+import com.akjava.gwt.androidhtml5.client.PoissonImage.LabeledInputRange;
 import com.akjava.gwt.html5.client.HTML5InputRange;
 import com.akjava.gwt.html5.client.InputRangeListener;
 import com.akjava.gwt.html5.client.InputRangeWidget;
@@ -54,6 +55,7 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.ScrollPanel;
+import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 
@@ -61,10 +63,11 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 
 	 interface Driver extends SimpleBeanEditorDriver< PoissonImageData,  PoissonImageDataEditor> {}
 	 Driver driver = GWT.create(Driver.class);
-	private VerticalPanel containers;
+	//private VerticalPanel containers;
 	
-	public  static class SimpleMixCanvas extends VerticalPanel{
+	public  static class SimpleMixCanvas extends TabPanel{
 		private Canvas canvas;
+		private Canvas originalCanvas;
 		private boolean showOrigin=true;
 		public boolean isShowOrigin() {
 			return showOrigin;
@@ -100,6 +103,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		public SimpleMixCanvas(){
 			canvas=CanvasUtils.createCanvas(100, 100);
 			
+			originalCanvas=CanvasUtils.createCanvas(100,100);
+			
+			/*
 			canvas.addClickHandler(new ClickHandler() {
 				
 				@Override
@@ -109,10 +115,14 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 				}
 			});
 			CanvasUtils.disableSelection(canvas);
-			add(canvas);
+			*/
+			
+			add(originalCanvas,"Original-dest");
+			add(canvas,"Poisonned");
 		}
 		public void setDest(ImageElement origin){
 			ImageElementUtils.copytoCanvas(origin, canvas, false);
+			ImageElementUtils.copytoCanvas(origin, originalCanvas, true);
 			this.origin=origin;
 			update();
 		}
@@ -143,9 +153,11 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 				
 				//CanvasTools.from(canvas).clear().ignoreNull().drawImage(origin)
 			if(origin!=null){
-			canvas.getContext2d().drawImage(origin, 0, 0);
+			originalCanvas.getContext2d().drawImage(origin, 0, 0);
 			}
+			selectTab(0);
 			}else{
+				selectTab(1);
 				if(poissonedImage!=null){
 					if(useMask){
 						
@@ -264,7 +276,9 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 				@Override
 				public void updateCanvas() {
 					//copy size
-					CanvasUtils.createCanvas(layerCanvas, getCanvas().getCoordinateSpaceWidth(), getCanvas().getCoordinateSpaceHeight());
+					if(layerCanvas.getCoordinateSpaceWidth()!=getCanvas().getCoordinateSpaceWidth() || layerCanvas.getCoordinateSpaceHeight()!=getCanvas().getCoordinateSpaceHeight()){
+						CanvasUtils.createCanvas(layerCanvas, getCanvas().getCoordinateSpaceWidth(), getCanvas().getCoordinateSpaceHeight());
+					}
 					CanvasUtils.fillRect(layerCanvas, "rgba(0,0,0,1)");
 					layerCanvas.getContext2d().save();
 					layerCanvas.getContext2d().setGlobalCompositeOperation(Composite.XOR);
@@ -364,6 +378,10 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	
 	private ImageElement destImageElement,srcImageElement;
 	private CheckBox maskSrcCheck;
+
+	private CheckBox mixSrcCheck;
+
+	private LabeledInputRange mixSrcRange;
 	@Override
 	public Panel getCenterPanel() {
 		
@@ -505,7 +523,10 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		editorPanel.add(previewIterationRange);
 		editor.setPossitionIteration(initialValue);
 		
-		updateIterationRange = new LabeledInputRange("Update-Iteration:",1,400,100,"140px","400px") {
+		/**
+		 * over iteration around 500,seems no effects.
+		 */
+		updateIterationRange = new LabeledInputRange("Update-Iteration:",1,600,100,"140px","600px") {
 			
 			@Override
 			public void onValueChanged(int newValue) {
@@ -521,7 +542,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		editorPanel.add(updateIterationRange);
 		
 		
-		containers = new VerticalPanel();
+		//containers = new VerticalPanel();
 		
 			
 	    	
@@ -541,6 +562,29 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 	    maskSrcCheck.setTitle("mask area only");
 	    editorPanel.add(maskSrcCheck);
 	    
+	    HorizontalPanel mixSrcPanel=new HorizontalPanel();
+	    mixSrcPanel.setSpacing(2);
+	    mixSrcCheck = new CheckBox("mix src image:");
+	    mixSrcCheck.setTitle("draw masked src image with global alpha");
+	    mixSrcPanel.add(mixSrcCheck);
+	    
+	    mixSrcRange = new LabeledInputRange("global-alpha:",1,100,50,"100px","200px") {
+			
+			@Override
+			public void onValueChanged(int newValue) {
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public String generateValueText(int newValue) {
+				return ""+newValue;
+			}
+		};
+		mixSrcPanel.add(mixSrcRange);
+	    
+	    
+	    editorPanel.add(mixSrcPanel);
 	    
 	    panel.add(editorPanel);
 	    
@@ -550,7 +594,14 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		mixCanvas = new SimpleMixCanvas();
 		
 		h2.add(mixCanvas);
-	    h2.add(containers);
+		
+		
+		TabPanel tab2=new TabPanel();
+		
+		previewCanvas=Canvas.createIfSupported();
+		tab2.add(previewCanvas,"Preview");
+		tab2.selectTab(0);
+	    h2.add(tab2);
 	    
 	    return scroll;
 	}
@@ -614,7 +665,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		public abstract void onAllImageLoaded(Optional<List<ImageElement>> imageElements,List<String> faildPaths);
 	};
 	
-	
+	private Canvas previewCanvas;
 	private Canvas sharedCanvas=Canvas.createIfSupported();
 	private CheckBox inpaintCheck;
 	public void doPoisson(final int iteration,boolean doInpaint){
@@ -628,7 +679,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		possing=true;
 
 		
-		containers.clear();
+		
 		
 		
 		PoissonImageData poissonData=driver.flush();//possible called before data set and make that broken
@@ -677,8 +728,8 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 		*/
 		
 		//CanvasUtils.createCanvas(ImageElement)
-		final Canvas pCanvas=ImageElementUtils.copytoCanvas(poissonData.getImageMaskData().getImageElement(), null);
-		final CanvasTools resultCanvas=CanvasTools.from(pCanvas);
+		ImageElementUtils.copytoCanvas(poissonData.getImageMaskData().getImageElement(), previewCanvas);
+		final CanvasTools resultCanvas=CanvasTools.from(previewCanvas);
 		final ImageData destData=resultCanvas.getImageData(transParentAreaRect);
 		final ImageData resultData=resultCanvas.getImageData(transParentAreaRect);
 		
@@ -741,7 +792,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 							//CanvasUtils.copyTo(poisoned, pCanvas);
 							
 							if(iteration==updateIterationRange.getValue()){
-							mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
+							mixCanvas.setPoissonedImage(ImageElementUtils.create(previewCanvas.toDataUrl()));
 							mixCanvas.setShowOrigin(false);
 							mixCanvas.setUseMask(maskSrcCheck.getValue());
 							mixCanvas.setMaskCanvas(srcCanvas);
@@ -749,7 +800,7 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 							}else{
 								//only preview -mode
 							}
-							containers.add(pCanvas);
+							//containers.add(previewCanvas);
 							
 							possing=false;
 						}
@@ -811,21 +862,55 @@ public  class PoissonImage extends AbstractDropEastDemoEntryPoint implements Poi
 			
 			//containers.add(CanvasUtils.createCanvas(null, poisoned));
 			
+			
+			
+			if(mixSrcCheck.getValue()){
+			
+				for(int x=0;x<maskData.getWidth();x++){
+					for(int y=0;y<maskData.getHeight();y++){
+						
+						srcData.setAlphaAt(maskData.getAlphaAt(x, y), x, y);
+					}
+				}
+				
+				
+				double globalAlpha=(double)mixSrcRange.getValue()/100;
+				Canvas srcCanvas2=CanvasUtils.createFrom(srcData);
+				Canvas poisonedCanvas=CanvasUtils.createFrom(poisoned);
+				poisonedCanvas.getContext2d().setGlobalAlpha(globalAlpha);
+				poisonedCanvas.getContext2d().drawImage(srcCanvas2.getCanvasElement(), 0, 0);
+				poisoned=ImageDataUtils.copyFrom(poisonedCanvas);
+				}
+			
+			
+			
 			resultCanvas.putImageData(transParentAreaRect, poisoned);
 			
+			//TODO methods createFrom()
+			//Canvas destCanvas=CanvasUtils.createCanvas(destData.getWidth(), destData.getHeight());
+			//destCanvas.getContext2d().putImageData(destData, 0, 0);
+			
+			//white is mask
+			//copy to alpha
 			
 			//CanvasUtils.copyTo(poisoned, pCanvas);
 			
 			if(iteration==updateIterationRange.getValue()){
-			mixCanvas.setPoissonedImage(ImageElementUtils.create(pCanvas.toDataUrl()));
-			mixCanvas.setUseMask(maskSrcCheck.getValue());
-			mixCanvas.setMaskCanvas(srcCanvas);
-			mixCanvas.setShowOrigin(false);
-			mixCanvas.update();
+				new LoggingImageElementLoader(){
+					@Override
+					public void onLoad(ImageElement imageElement) {
+						mixCanvas.setPoissonedImage(imageElement);
+						mixCanvas.setUseMask(maskSrcCheck.getValue());
+						mixCanvas.setMaskCanvas(srcCanvas);
+						mixCanvas.setShowOrigin(false);
+						mixCanvas.update();
+					}
+					
+				}.load(previewCanvas);
 			}else{
 				//only preview -mode
 			}
-			containers.add(pCanvas);
+			//containers.add(previewCanvas);
 			
 			possing=false;
 		}
